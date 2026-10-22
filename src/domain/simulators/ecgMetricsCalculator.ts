@@ -502,7 +502,7 @@ export function getWaveAnchors(
 
   switch (rhythm as string) {
     case "av_block_first_degree":
-      // PR kéo dài (>= 260ms), P xuất hiện sớm ở 0.055s, QRS bắt đầu ở 0.290s, R ở 0.320s
+      // PR kéo dài (>= 260ms), P xuất hiện ở 0.055s, Q ở 0.290s, R ở 0.320s
       rPeak = 0.320;
       qrsOnset = 0.290;
       pOnset = Math.max(0.010, qrsOnset - prSec);

@@ -1,9 +1,9 @@
 {
   "meta": {
     "project_name": "GameYhoc",
-    "last_updated": "2026-10-22T21:48:00.000000",
+    "last_updated": "2026-10-22T23:13:00.000000",
     "overall_progress_percent": 100,
-    "current_phase": "Milestone M16 Completed: RR Caliper Strict Containment & Consecutive Rhythm Strip Precision (Triệt Tiêu Hoàn Toàn Lỗi Bắt Dính Ngoài Lề Trái & Chuẩn Hóa 2 Khoảng R-R Liên Tiếp)",
+    "current_phase": "Milestone M17 Completed: Dual-Segment Consecutive RR Comparison Caliper Engine & Precision Wave Snapping (Thước Đo So Sánh Nhịp Kép 3 Mốc R1-R2-R3 Nối Tiếp Liền Mạch & Bắt Dính Đỉnh Sóng Tuyệt Đối)",
     "status": "COMPLETED"
   },
   "milestones": [
@@ -500,6 +500,33 @@
         {
           "id": "T16.4",
           "desc": "Phase 04 - Bộ test toàn diện 49/49 tests pass 100%, TypeScript 0 lỗi, Next.js production build 13/13 static routes thành công",
+          "status": "DONE"
+        }
+      ]
+    },
+    {
+      "id": "M17",
+      "title": "Milestone M17: Dual-Segment Consecutive RR Comparison Caliper Engine & Precision Wave Snapping",
+      "status": "COMPLETED",
+      "tasks": [
+        {
+          "id": "T17.1",
+          "desc": "Phase 01 - Đồng bộ toán học mốc anchors.rPeak và tích hợp bộ dò cực trị động snapToWaveExtremum cho toàn bộ mốc đo t1, t2 của thước kẹp RR, triệt tiêu 100% hiện tượng lệch đỉnh sóng",
+          "status": "DONE"
+        },
+        {
+          "id": "T17.2",
+          "desc": "Phase 02 - Thiết kế Thước Đo So Sánh Kép 3 mốc (R1 -> R2 -> R3) trên dải nhịp Lead II, nối liền nhau tại đỉnh R2, thanh đo ngang đồng bộ độ cao calY tạo đường đo thẳng tắp liền mạch",
+          "status": "DONE"
+        },
+        {
+          "id": "T17.3",
+          "desc": "Phase 03 - Tinh gọn nhãn R-R1 và R-R2 chống đè chữ, bổ sung badge đối chiếu lâm sàng '✓ Đều đặn: R-R1 = R-R2 (65 bpm)' tại điểm nối R2; hỗ trợ vẽ thước kép trên các chuyển đạo 12-lead khi đủ 3 nhát bóp",
+          "status": "DONE"
+        },
+        {
+          "id": "T17.4",
+          "desc": "Phase 04 - Bộ kiểm thử tự động tests/consecutive_rr_comparison_caliper.test.js xác thực 52/52 tests pass 100%, TypeScript 0 lỗi",
           "status": "DONE"
         }
       ]

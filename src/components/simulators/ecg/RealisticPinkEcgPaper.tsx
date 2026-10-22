@@ -748,43 +748,44 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
           );
         });
         if (isRrActive) {
+          // XÓA BỎ các nhãn RR tĩnh cũ (nếu có) để triệt tiêu nguy cơ xung đột hoặc đè nhãn
+          annotations = annotations.filter((a) => a.waveComponent !== "RR");
+
           if (isRhythmStrip) {
-            // Trên dải nhịp Lead II kéo dài: Đảm bảo có 2 khoảng R-R kế tiếp nhau (R1-R2 và R2-R3)
-            const currentRrCount = annotations.filter((a) => a.waveComponent === "RR").length;
-            if (currentRrCount === 0) {
-              annotations.push({
-                leadId: "II",
-                waveComponent: "RR",
-                label: `|<── R-R₁ • ${metrics.heartRate} bpm ──>|`,
-                targetCyclePhase: 0.22,
-                color: "#d97706",
-                badgePlacement: "interval",
-              });
-              annotations.push({
-                leadId: "II",
-                waveComponent: "RR",
-                label: `|<── R-R₂ • ${metrics.heartRate} bpm (kế tiếp) ──>|`,
-                targetCyclePhase: 0.22,
-                color: "#d97706",
-                badgePlacement: "interval",
-              });
-            } else if (currentRrCount === 1) {
-              annotations.push({
-                leadId: "II",
-                waveComponent: "RR",
-                label: `|<── R-R (kế tiếp) • ${metrics.heartRate} bpm ──>|`,
-                targetCyclePhase: 0.22,
-                color: "#d97706",
-                badgePlacement: "interval",
-              });
-            }
+            // Trên dải nhịp Lead II kéo dài: Luôn luôn tạo 2 khoảng R-R kế tiếp nhau (R1-R2 và R2-R3) nối liền nhau
+            annotations.push({
+              leadId: "II",
+              waveComponent: "RR",
+              label: `|<── R-R₁ • ${metrics.heartRate} bpm ──>|`,
+              targetCyclePhase: 0.22,
+              color: "#10b981",
+              badgePlacement: "interval",
+            });
+            annotations.push({
+              leadId: "II",
+              waveComponent: "RR",
+              label: `|<── R-R₂ • ${metrics.heartRate} bpm (kế tiếp) ──>|`,
+              targetCyclePhase: 0.22,
+              color: "#10b981",
+              badgePlacement: "interval",
+            });
           } else {
             // Trên 12 đạo trình độc lập: Bổ sung R-R Caliper trên TẤT CẢ các đạo trình
-            if (!annotations.some((a) => a.waveComponent === "RR")) {
+            annotations.push({
+              leadId: leadId,
+              waveComponent: "RR",
+              label: `|<── R-R • ${leadId} • ${metrics.heartRate} bpm ──>|`,
+              targetCyclePhase: 0.22,
+              color: "#d97706",
+              badgePlacement: "interval",
+            });
+            // Nếu ô chuyển đạo đủ rộng chứa được 2 chu kỳ liên tiếp (ví dụ màn hình dọc hoặc nhịp nhanh)
+            const curLeadLen = leadEndX - traceStart;
+            if (curLeadLen >= (2 * cycleDuration * pixelsPerSecond) + 12) {
               annotations.push({
                 leadId: leadId,
                 waveComponent: "RR",
-                label: `|<── R-R • ${leadId} • ${metrics.heartRate} bpm ──>|`,
+                label: `|<── R-R₂ • ${leadId} • ${metrics.heartRate} bpm (kế tiếp) ──>|`,
                 targetCyclePhase: 0.22,
                 color: "#d97706",
                 badgePlacement: "interval",
@@ -989,10 +990,19 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
               ann.waveComponent === "QT"
             ) {
               if (ann.waveComponent === "RR") {
-                const isConsecutive = isRhythmStrip && (ann.label.includes("R-R₂") || ann.label.includes("kế tiếp"));
+                const isConsecutive = ann.label.includes("R-R₂") || ann.label.includes("kế tiếp");
                 const cycleToUse = isConsecutive ? k + 1 : k;
-                const t1 = cycleToUse * cycleDuration + anchors.rPeak;
-                const t2 = (cycleToUse + 1) * cycleDuration + anchors.rPeak;
+
+                // Dynamic Wave Snapping: Bắt dính cực trị QRS theo từng chuyển đạo thực tế
+                const isNegativeQrs = calcLead === "aVR" || (calcLead === "V1" && rhythm !== "rbbb");
+                const extremumType: "min" | "max" = isNegativeQrs ? "min" : "max";
+
+                const rawT1 = cycleToUse * cycleDuration + anchors.rPeak;
+                const rawT2 = (cycleToUse + 1) * cycleDuration + anchors.rPeak;
+
+                const t1 = snapToWaveExtremum(rawT1, calcLead, extremumType, 0.040, 0.001);
+                const t2 = snapToWaveExtremum(rawT2, calcLead, extremumType, 0.040, 0.001);
+
                 const x1 = traceStart + (t1 - tMin) * pixelsPerSecond;
                 const x2 = traceStart + (t2 - tMin) * pixelsPerSecond;
 
@@ -1007,28 +1017,39 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                   if (calY < midY - (isPortraitMode ? 36 : 46)) calY = midY - (isPortraitMode ? 36 : 46);
 
                   let labelText = isRhythmStrip
-                    ? (ann.label.includes("kế tiếp") || ann.label.includes("R-R₂"))
-                      ? `|<── R-R₂ = ${deltaMs}ms (${boxes} ô lớn) • Đều ${bpm} bpm ──>|`
+                    ? isConsecutive
+                      ? `|<── R-R₂ = ${deltaMs}ms (${boxes} ô lớn) ──>|`
                       : `|<── R-R₁ = ${deltaMs}ms (${boxes} ô lớn) • Tiêu chuẩn: Đều 60 - 100 chu kỳ/phút ──>|`
                     : `|<── R-R = ${deltaMs}ms (${boxes} ô) • ${bpm} bpm • Chuẩn: 60-100 ──>|`;
+
                   if (rhythm === "atrial_fibrillation") {
                     labelText = isRhythmStrip
-                      ? `|<── R-R = ${deltaMs}ms (${boxes} ô) [Không đều] • Tiêu chuẩn: Loạn nhịp hoàn toàn ──>|`
-                      : `|<── R-R = ${deltaMs}ms [Không đều] • Chuẩn: Loạn nhịp ──>|`;
+                      ? isConsecutive
+                        ? `|<── R-R₂ = ${deltaMs}ms (${boxes} ô) • Tiêu chuẩn: Loạn nhịp hoàn toàn ──>|`
+                        : `|<── R-R₁ = ${deltaMs}ms (${boxes} ô) • Tiêu chuẩn: Loạn nhịp hoàn toàn ──>|`
+                      : `|<── R-R = ${deltaMs}ms [Loạn nhịp] ──>|`;
                   } else if (bpm > 100) {
                     labelText = isRhythmStrip
-                      ? `|<── R-R = ${deltaMs}ms (${boxes} ô lớn) • ${bpm} bpm • Tiêu chuẩn: Nhịp nhanh > 100 bpm ──>|`
+                      ? isConsecutive
+                        ? `|<── R-R₂ = ${deltaMs}ms (${boxes} ô lớn) ──>|`
+                        : `|<── R-R₁ = ${deltaMs}ms (${boxes} ô lớn) • ${bpm} bpm ──>|`
                       : `|<── R-R = ${deltaMs}ms • ${bpm} bpm • Chuẩn: >100 ──>|`;
                   } else if (bpm < 60) {
                     labelText = isRhythmStrip
-                      ? `|<── R-R = ${deltaMs}ms (${boxes} ô lớn) • ${bpm} bpm • Tiêu chuẩn: Nhịp chậm < 60 bpm ──>|`
+                      ? isConsecutive
+                        ? `|<── R-R₂ = ${deltaMs}ms (${boxes} ô lớn) ──>|`
+                        : `|<── R-R₁ = ${deltaMs}ms (${boxes} ô lớn) ──>|`
                       : `|<── R-R = ${deltaMs}ms • ${bpm} bpm • Chuẩn: <60 ──>|`;
                   }
 
                   ctx.font = "bold 8px monospace";
                   let tw = ctx.measureText(labelText).width;
-                  if (tw + 12 > leadLen) {
-                    labelText = `|<── R-R = ${deltaMs}ms • ${bpm} bpm ──>|`;
+                  if (tw + 12 > (x2 - x1)) {
+                    labelText = isRhythmStrip
+                      ? isConsecutive
+                        ? `|<- R-R₂: ${deltaMs}ms ->|`
+                        : `|<- R-R₁: ${deltaMs}ms ->|`
+                      : `|<- R-R: ${deltaMs}ms ->|`;
                     tw = ctx.measureText(labelText).width;
                   }
 
@@ -1402,6 +1423,16 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
           }
         }
 
+        // Đồng bộ độ cao calY cho các thước kẹp RR liên tiếp trên dải nhịp để tạo thanh đo phẳng liền mạch
+        if (isRhythmStrip) {
+          const rrItems = itemsToRender.filter((it) => it.isInterval && it.ann.waveComponent === "RR");
+          if (rrItems.length >= 2) {
+            const unifiedCalY = Math.min(rrItems[0].targetY, rrItems[1].targetY);
+            rrItems[0].targetY = unifiedCalY;
+            rrItems[1].targetY = unifiedCalY;
+          }
+        }
+
         // Render each resolved item
         for (const item of itemsToRender) {
           if (item.isInterval && item.x1 !== undefined && item.x2 !== undefined) {
@@ -1607,6 +1638,47 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
             ctx.fillStyle = "#ffffff";
             ctx.font = "bold 8.5px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
             ctx.fillText(item.displayText, pillX + 4, pillY + 10);
+            ctx.restore();
+          }
+        }
+
+        // Nếu là dải nhịp Lead II kéo dài và có đủ 2 đoạn liên tiếp R-R1 và R-R2:
+        // Vẽ badge đối chiếu so sánh lâm sàng tại điểm nối R2 (Junction)
+        if (isRhythmStrip) {
+          const rrItems = itemsToRender.filter((it) => it.isInterval && it.ann.waveComponent === "RR");
+          if (rrItems.length >= 2) {
+            const it1 = rrItems[0];
+            const it2 = rrItems[1];
+            const junctionX = it1.x2 ?? it2.x1 ?? (it1.targetX + it2.targetX) / 2;
+            const deltaMs1 = Math.round((((it1.x2 || 0) - (it1.x1 || 0)) / pixelsPerSecond) * 1000);
+            const deltaMs2 = Math.round((((it2.x2 || 0) - (it2.x1 || 0)) / pixelsPerSecond) * 1000);
+            const diffMs = Math.abs(deltaMs1 - deltaMs2);
+            const isRegular = diffMs <= 160;
+
+            const compText = isRegular
+              ? `✓ Đều đặn: R-R₁ = R-R₂ = ${deltaMs1}ms (${bpm} bpm)`
+              : `✕ Loạn nhịp: ΔRR = ${diffMs}ms`;
+
+            ctx.save();
+            ctx.font = "bold 8px monospace";
+            const ctw = ctx.measureText(compText).width;
+            const cPillW = ctw + 12;
+            const cPillH = 14;
+            const cPillX = Math.max(traceStart + 4, Math.min(leadEndX - cPillW - 4, junctionX - cPillW / 2));
+            const cPillY = it1.targetY - 18;
+
+            ctx.fillStyle = isRegular ? "rgba(6, 78, 59, 0.94)" : "rgba(136, 19, 55, 0.94)";
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(cPillX, cPillY, cPillW, cPillH, 3);
+            else ctx.rect(cPillX, cPillY, cPillW, cPillH);
+            ctx.fill();
+
+            ctx.strokeStyle = isRegular ? "#10b981" : "#f43f5e";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText(compText, cPillX + 6, cPillY + 10);
             ctx.restore();
           }
         }
