@@ -1,6 +1,3 @@
-// Comprehensive 12-Lead Multi-Factorial Annotations Data for all 31 ECG Pathologies
-// Generated for MedSim ECG Workstation with full multi-lead coverage & zero orphan criteria
-
 export interface EcgAnnotationItem {
   leadId: string;
   waveComponent: string;
@@ -1369,7 +1366,7 @@ export const COMPREHENSIVE_FALLBACK_ANNOTATIONS: Record<string, EcgAnnotationIte
     {
       "leadId": "II",
       "waveComponent": "P",
-      "label": "▲ Dải nhịp: Sóng P xoang dương rõ nét",
+      "label": "▲ Dải nhịp: Sóng P xoang trục bình thường",
       "targetCyclePhase": 0.12,
       "color": "#059669",
       "badgePlacement": "top",
@@ -1378,7 +1375,7 @@ export const COMPREHENSIVE_FALLBACK_ANNOTATIONS: Record<string, EcgAnnotationIte
     {
       "leadId": "DII",
       "waveComponent": "PR",
-      "label": "↔ PR bình thường 160ms (4.0 ô nhỏ)",
+      "label": "↔ PR bình thường 152ms (3.8 ô nhỏ)",
       "targetCyclePhase": 0.12,
       "intervalEndPhase": 0.28,
       "color": "#059669",
@@ -1388,7 +1385,7 @@ export const COMPREHENSIVE_FALLBACK_ANNOTATIONS: Record<string, EcgAnnotationIte
     {
       "leadId": "V1",
       "waveComponent": "PR",
-      "label": "↔ PR = 160ms cố định (0.16s)",
+      "label": "↔ PR = 152ms cố định (3.8 ô nhỏ)",
       "targetCyclePhase": 0.12,
       "intervalEndPhase": 0.28,
       "color": "#059669",
@@ -1398,7 +1395,7 @@ export const COMPREHENSIVE_FALLBACK_ANNOTATIONS: Record<string, EcgAnnotationIte
     {
       "leadId": "II",
       "waveComponent": "PR",
-      "label": "↔ Dải nhịp: PR bình thường 160ms",
+      "label": "↔ Dải nhịp: PR bình thường 152ms (Cố định 0.12s - 0.20s)",
       "targetCyclePhase": 0.12,
       "intervalEndPhase": 0.28,
       "color": "#059669",
@@ -1418,7 +1415,7 @@ export const COMPREHENSIVE_FALLBACK_ANNOTATIONS: Record<string, EcgAnnotationIte
     {
       "leadId": "II",
       "waveComponent": "RR",
-      "label": "↔ Dải nhịp: R-R đều đặn 800ms (75 bpm)",
+      "label": "↔ Dải nhịp: R-R đều đặn 800ms (75 bpm • Chuẩn: 60-100 bpm)",
       "targetCyclePhase": 0.2,
       "intervalEndPhase": 0.8,
       "color": "#059669",
@@ -1428,7 +1425,7 @@ export const COMPREHENSIVE_FALLBACK_ANNOTATIONS: Record<string, EcgAnnotationIte
     {
       "leadId": "V1",
       "waveComponent": "QRS",
-      "label": "QRS hẹp 85ms (< 120ms)",
+      "label": "QRS hẹp 84ms (< 120ms)",
       "targetCyclePhase": 0.24,
       "color": "#059669",
       "badgePlacement": "top",
@@ -1437,7 +1434,7 @@ export const COMPREHENSIVE_FALLBACK_ANNOTATIONS: Record<string, EcgAnnotationIte
     {
       "leadId": "V5",
       "waveComponent": "QRS",
-      "label": "QRS hẹp 85ms, R cao bình thường",
+      "label": "QRS hẹp 84ms, R cao bình thường",
       "targetCyclePhase": 0.24,
       "color": "#059669",
       "badgePlacement": "top",
@@ -1455,7 +1452,7 @@ export const COMPREHENSIVE_FALLBACK_ANNOTATIONS: Record<string, EcgAnnotationIte
     {
       "leadId": "II",
       "waveComponent": "ST",
-      "label": "ST đẳng điện, T dương bình thường",
+      "label": "Dải nhịp: ST đẳng điện, sóng T bình thường",
       "targetCyclePhase": 0.35,
       "color": "#059669",
       "badgePlacement": "top",

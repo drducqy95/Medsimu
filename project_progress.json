@@ -1,9 +1,9 @@
 {
   "meta": {
     "project_name": "GameYhoc",
-    "last_updated": "2026-10-22T10:55:00.000000",
+    "last_updated": "2026-10-22T12:15:00.000000",
     "overall_progress_percent": 100,
-    "current_phase": "Milestone M8 Completed: Ánh Xạ Đa Yếu Tố 139 Tiêu Chuẩn, Thước Đo R-R & Biên Độ Chuẩn Y Khoa Kèm Nút Bật/Tắt Tiêu Chuẩn",
+    "current_phase": "Milestone M9 Completed: Chuẩn Hóa Khớp 100% Nội Dung Tiêu Chuẩn Với Thước Đo Giải Phẫu Sóng & Số Đo Thực Tế Bệnh Nhân",
     "status": "COMPLETED"
   },
   "milestones": [
@@ -284,6 +284,33 @@
         {
           "id": "T8.5",
           "desc": "Phase 05 - Bộ kiểm thử tự động xác thực thước đo R-R/biên độ, 0 tiêu chuẩn mồ côi, 100% tests pass & push GitHub",
+          "status": "DONE"
+        }
+      ]
+    },
+    {
+      "id": "M9",
+      "title": "Milestone M9: Chuẩn Hóa Khớp 100% Nội Dung Tiêu Chuẩn Với Thước Đo Giải Phẫu Sóng & Số Đo Thực Tế Bệnh Nhân",
+      "status": "COMPLETED",
+      "tasks": [
+        {
+          "id": "T9.1",
+          "desc": "Phase 01 - Định vị giải phẫu chính xác P_onset đến QRS_onset, đồng bộ thước kẹp PR khớp đúng metrics.prIntervalMs (152ms = 3.8 ô nhỏ) và vẽ 2 vạch gióng mảnh nét đứt xuống caliper",
+          "status": "DONE"
+        },
+        {
+          "id": "T9.2",
+          "desc": "Phase 02 - Tích hợp đầy đủ nội dung tiêu chuẩn chẩn đoán y khoa vào thước kẹp và nhãn sóng (PR 0.12-0.20s cố định, R-R đều 60-100, ST chênh vòm, Sokolow-Lyon, P trục xoang)",
+          "status": "DONE"
+        },
+        {
+          "id": "T9.3",
+          "desc": "Phase 03 - Rà soát & làm sạch văn bản tiêu chuẩn cho 31 bệnh lý, triệt tiêu tiền tố lặp trong CSDL SQLite và đồng bộ ecgAnnotationsData.ts",
+          "status": "DONE"
+        },
+        {
+          "id": "T9.4",
+          "desc": "Phase 04 - Bộ kiểm thử tự động 31/31 tests pass, TypeScript 0 lỗi & Next.js production build thành công 100%",
           "status": "DONE"
         }
       ]

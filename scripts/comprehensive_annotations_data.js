@@ -263,24 +263,24 @@ const ALL_COMPREHENSIVE_ANNOTATIONS = {
     { leadId: "DII", waveComponent: "P", label: "Sóng P xoang dương trước QRS", targetCyclePhase: 0.12, color: "#059669", badgePlacement: "top", criterionIndex: 0 },
     { leadId: "V1", waveComponent: "P", label: "Sóng P hai pha (+/-) nhẹ", targetCyclePhase: 0.12, color: "#059669", badgePlacement: "top", criterionIndex: 0 },
     { leadId: "II", waveComponent: "P", label: "Sóng P đồng dạng đi trước mỗi nhát QRS", targetCyclePhase: 0.12, color: "#059669", badgePlacement: "top", criterionIndex: 0 },
-    // Crit 1: Sóng P âm ở aVR, dương ở DI, DII, aVF
+    // Crit 1: Trục sóng P bình thường: Dương ở DI, DII, aVF; Luôn luôn âm ở aVR
     { leadId: "DI", waveComponent: "P", label: "▲ Sóng P dương ở DI (+0.12 mV)", targetCyclePhase: 0.12, color: "#059669", badgePlacement: "top", criterionIndex: 1 },
     { leadId: "DII", waveComponent: "P", label: "▲ Sóng P dương ở DII (+0.15 mV)", targetCyclePhase: 0.12, color: "#059669", badgePlacement: "top", criterionIndex: 1 },
     { leadId: "aVF", waveComponent: "P", label: "▲ Sóng P dương ở aVF (+0.10 mV)", targetCyclePhase: 0.12, color: "#059669", badgePlacement: "top", criterionIndex: 1 },
     { leadId: "aVR", waveComponent: "P", label: "▼ Sóng P âm ở aVR (-0.12 mV)", targetCyclePhase: 0.12, color: "#059669", badgePlacement: "bottom", criterionIndex: 1 },
-    { leadId: "II", waveComponent: "P", label: "▲ Dải nhịp: Sóng P xoang dương rõ nét", targetCyclePhase: 0.12, color: "#059669", badgePlacement: "top", criterionIndex: 1 },
+    { leadId: "II", waveComponent: "P", label: "▲ Dải nhịp: Sóng P xoang trục bình thường", targetCyclePhase: 0.12, color: "#059669", badgePlacement: "top", criterionIndex: 1 },
     // Crit 2: Khoảng PR bình thường 120-200ms
-    { leadId: "DII", waveComponent: "PR", label: "↔ PR bình thường 160ms (4.0 ô nhỏ)", targetCyclePhase: 0.12, intervalEndPhase: 0.28, color: "#059669", badgePlacement: "interval", criterionIndex: 2 },
-    { leadId: "V1", waveComponent: "PR", label: "↔ PR = 160ms cố định (0.16s)", targetCyclePhase: 0.12, intervalEndPhase: 0.28, color: "#059669", badgePlacement: "interval", criterionIndex: 2 },
-    { leadId: "II", waveComponent: "PR", label: "↔ Dải nhịp: PR bình thường 160ms", targetCyclePhase: 0.12, intervalEndPhase: 0.28, color: "#059669", badgePlacement: "interval", criterionIndex: 2 },
+    { leadId: "DII", waveComponent: "PR", label: "↔ PR bình thường 152ms (3.8 ô nhỏ)", targetCyclePhase: 0.12, intervalEndPhase: 0.28, color: "#059669", badgePlacement: "interval", criterionIndex: 2 },
+    { leadId: "V1", waveComponent: "PR", label: "↔ PR = 152ms cố định (3.8 ô nhỏ)", targetCyclePhase: 0.12, intervalEndPhase: 0.28, color: "#059669", badgePlacement: "interval", criterionIndex: 2 },
+    { leadId: "II", waveComponent: "PR", label: "↔ Dải nhịp: PR bình thường 152ms (Cố định 0.12s - 0.20s)", targetCyclePhase: 0.12, intervalEndPhase: 0.28, color: "#059669", badgePlacement: "interval", criterionIndex: 2 },
     // Crit 3: R-R đều 60-100 bpm
     { leadId: "DII", waveComponent: "RR", label: "↔ R-R đều (HR = 75 bpm, 4.0 ô lớn)", targetCyclePhase: 0.20, intervalEndPhase: 0.80, color: "#059669", badgePlacement: "interval", criterionIndex: 3 },
-    { leadId: "II", waveComponent: "RR", label: "↔ Dải nhịp: R-R đều đặn 800ms (75 bpm)", targetCyclePhase: 0.20, intervalEndPhase: 0.80, color: "#059669", badgePlacement: "interval", criterionIndex: 3 },
+    { leadId: "II", waveComponent: "RR", label: "↔ Dải nhịp: R-R đều đặn 800ms (75 bpm • Chuẩn: 60-100 bpm)", targetCyclePhase: 0.20, intervalEndPhase: 0.80, color: "#059669", badgePlacement: "interval", criterionIndex: 3 },
     // Crit 4: QRS hẹp & ST đẳng điện
-    { leadId: "V1", waveComponent: "QRS", label: "QRS hẹp 85ms (< 120ms)", targetCyclePhase: 0.24, color: "#059669", badgePlacement: "top", criterionIndex: 4 },
-    { leadId: "V5", waveComponent: "QRS", label: "QRS hẹp 85ms, R cao bình thường", targetCyclePhase: 0.24, color: "#059669", badgePlacement: "top", criterionIndex: 4 },
+    { leadId: "V1", waveComponent: "QRS", label: "QRS hẹp 84ms (< 120ms)", targetCyclePhase: 0.24, color: "#059669", badgePlacement: "top", criterionIndex: 4 },
+    { leadId: "V5", waveComponent: "QRS", label: "QRS hẹp 84ms, R cao bình thường", targetCyclePhase: 0.24, color: "#059669", badgePlacement: "top", criterionIndex: 4 },
     { leadId: "DII", waveComponent: "ST", label: "ST đẳng điện (0.0 mV)", targetCyclePhase: 0.35, color: "#059669", badgePlacement: "top", criterionIndex: 4 },
-    { leadId: "II", waveComponent: "ST", label: "ST đẳng điện, T dương bình thường", targetCyclePhase: 0.35, color: "#059669", badgePlacement: "top", criterionIndex: 4 },
+    { leadId: "II", waveComponent: "ST", label: "Dải nhịp: ST đẳng điện, sóng T bình thường", targetCyclePhase: 0.35, color: "#059669", badgePlacement: "top", criterionIndex: 4 },
   ],
 
   // 16. sinus_bradycardia

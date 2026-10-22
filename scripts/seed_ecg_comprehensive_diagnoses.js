@@ -71,7 +71,7 @@ const diagnoses = [
     anatomical_region: "Nút xoang nhĩ (SA Node)",
     criteria: [
       "Sóng P xoang: Đồng dạng đi trước mỗi phức bộ QRS",
-      "Sóng P âm ở aVR: Sóng P âm ở aVR, dương ở DI, DII, aVF",
+      "Trục sóng P bình thường: Dương ở DI, DII, aVF; Luôn luôn âm ở aVR",
       "Khoảng PR bình thường: Cố định và bình thường từ 0.12s đến 0.20s (3 - 5 ô nhỏ)",
       "Khoảng cách R-R đều: Tần số tim bình thường 60 đến 100 chu kỳ/phút",
       "QRS hẹp & ST đẳng điện: QRS < 120ms, đoạn ST đẳng điện và sóng T bình thường",

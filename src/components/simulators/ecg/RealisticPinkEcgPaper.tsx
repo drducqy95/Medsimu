@@ -556,6 +556,19 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
             if (renderedLabels.has(ann.label)) continue;
             const calcLead = isRhythmStrip ? "DII" : leadId;
 
+            const getRhythmROfst = (r: string): number => {
+              if (r === "av_block_first_degree") return 0.320;
+              if (r === "hyperkalemia") return 0.240;
+              if (r === "wpw_syndrome") return 0.230;
+              if (r === "av_block_mobitz_2" || r === "lafb") return 0.260;
+              if (r === "ventricular_tachycardia") return 0.135;
+              if (r === "torsades_de_pointes") return 0.430;
+              return 0.220;
+            };
+
+            const rOfst = getRhythmROfst(rhythm);
+            const scale = cycleDuration / 0.8;
+
             // 1. HORIZONTAL INTERVAL CALIPERS (RR, PR, QT)
             if (
               ann.badgePlacement === "interval" ||
@@ -564,9 +577,8 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
               ann.waveComponent === "QT"
             ) {
               if (ann.waveComponent === "RR") {
-                const phase1 = ann.targetCyclePhase ?? 0.20;
-                const t1 = (k + phase1) * cycleDuration;
-                const t2 = (k + 1 + phase1) * cycleDuration;
+                const t1 = (k + rOfst) * cycleDuration;
+                const t2 = (k + 1 + rOfst) * cycleDuration;
                 const x1 = traceStart + (t1 - tMin) * pixelsPerSecond;
                 const x2 = traceStart + (t2 - tMin) * pixelsPerSecond;
 
@@ -580,13 +592,30 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                   let calY = Math.min(y1, y2) - (isRhythmStrip ? 14 : 16);
                   if (calY < midY - (isPortraitMode ? 36 : 46)) calY = midY - (isPortraitMode ? 36 : 46);
 
-                  let labelText = `|<── R-R = ${deltaMs}ms (${boxes} ô lớn) • ${bpm} bpm ──>|`;
+                  let labelText = isRhythmStrip
+                    ? `|<── R-R = ${deltaMs}ms (${boxes} ô lớn) • ${bpm} bpm • Tiêu chuẩn: Đều 60 - 100 chu kỳ/phút ──>|`
+                    : `|<── R-R = ${deltaMs}ms (${boxes} ô) • ${bpm} bpm • Chuẩn: 60-100 ──>|`;
                   if (rhythm === "atrial_fibrillation") {
-                    labelText = `|<── R-R = ${deltaMs}ms (${boxes} ô) [Không đều] ──>|`;
+                    labelText = isRhythmStrip
+                      ? `|<── R-R = ${deltaMs}ms (${boxes} ô) [Không đều] • Tiêu chuẩn: Loạn nhịp hoàn toàn ──>|`
+                      : `|<── R-R = ${deltaMs}ms [Không đều] • Chuẩn: Loạn nhịp ──>|`;
+                  } else if (bpm > 100) {
+                    labelText = isRhythmStrip
+                      ? `|<── R-R = ${deltaMs}ms (${boxes} ô lớn) • ${bpm} bpm • Tiêu chuẩn: Nhịp nhanh > 100 bpm ──>|`
+                      : `|<── R-R = ${deltaMs}ms • ${bpm} bpm • Chuẩn: >100 ──>|`;
+                  } else if (bpm < 60) {
+                    labelText = isRhythmStrip
+                      ? `|<── R-R = ${deltaMs}ms (${boxes} ô lớn) • ${bpm} bpm • Tiêu chuẩn: Nhịp chậm < 60 bpm ──>|`
+                      : `|<── R-R = ${deltaMs}ms • ${bpm} bpm • Chuẩn: <60 ──>|`;
                   }
 
                   ctx.font = "bold 8px monospace";
-                  const tw = ctx.measureText(labelText).width;
+                  let tw = ctx.measureText(labelText).width;
+                  if (tw + 12 > leadLen) {
+                    labelText = `|<── R-R = ${deltaMs}ms • ${bpm} bpm ──>|`;
+                    tw = ctx.measureText(labelText).width;
+                  }
+
                   itemsToRender.push({
                     ann,
                     targetTime: t1,
@@ -606,19 +635,37 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                   renderedLabels.add(ann.label);
                 }
               } else if (ann.waveComponent === "PR") {
-                const t1 = (k + ann.targetCyclePhase) * cycleDuration;
-                const t2 = (k + (ann.intervalEndPhase || 0.24)) * cycleDuration;
+                const tR = (k + rOfst) * cycleDuration;
+                const prSec = (metrics?.prIntervalMs || 152) / 1000;
+                const qrsOnsetSec = tR - 0.035 * scale;
+                const t1 = qrsOnsetSec - prSec; // P onset
+                const t2 = qrsOnsetSec;         // QRS onset
                 const x1 = traceStart + (t1 - tMin) * pixelsPerSecond;
                 const x2 = traceStart + (t2 - tMin) * pixelsPerSecond;
 
                 if (x2 >= traceStart + 10 && x1 <= leadEndX - 10) {
-                  const deltaMs = Math.round(((x2 - x1) / pixelsPerSecond) * 1000);
+                  const v1 = calculateLeadEcgVoltage(t1, calcLead, rhythm, bpm);
+                  const v2 = calculateLeadEcgVoltage(t2, calcLead, rhythm, bpm);
+                  const y1 = midY - v1 * voltageScale;
+                  const y2 = midY - v2 * voltageScale;
+                  const deltaMs = metrics?.prIntervalMs || Math.round(((x2 - x1) / pixelsPerSecond) * 1000);
                   const smallBoxes = (deltaMs / 40).toFixed(1);
-                  let labelText = `|<── PR = ${deltaMs}ms (${smallBoxes} ô nhỏ) ──>|`;
-                  if (deltaMs > 200) labelText = `|<── PR = ${deltaMs}ms [>200ms Kéo dài] ──>|`;
+
+                  let critContext = "Chuẩn: 0.12-0.20s";
+                  if (deltaMs > 200) critContext = "Chuẩn: >0.20s Kéo dài";
+                  else if (deltaMs < 120) critContext = "Chuẩn: <0.12s Ngắn";
+
+                  let labelText = isRhythmStrip
+                    ? `|<── PR = ${deltaMs}ms (${smallBoxes} ô nhỏ) • Tiêu chuẩn: ${deltaMs > 200 ? "Kéo dài > 0.20s (> 200ms)" : deltaMs < 120 ? "Ngắn < 0.12s (< 120ms)" : "Cố định 0.12s - 0.20s"} ──>|`
+                    : `|<── PR = ${deltaMs}ms (${smallBoxes} ô) • ${critContext} ──>|`;
 
                   ctx.font = "bold 8px monospace";
-                  const tw = ctx.measureText(labelText).width;
+                  let tw = ctx.measureText(labelText).width;
+                  if (tw + 12 > leadLen) {
+                    labelText = `|<── PR = ${deltaMs}ms • ${critContext} ──>|`;
+                    tw = ctx.measureText(labelText).width;
+                  }
+
                   const calY = midY + (isRhythmStrip ? 22 : 25);
                   itemsToRender.push({
                     ann,
@@ -632,23 +679,45 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                     isInterval: true,
                     x1,
                     x2,
+                    y1,
+                    y2,
                     displayText: labelText,
                   });
                   renderedLabels.add(ann.label);
                 }
               } else if (ann.waveComponent === "QT") {
-                const t1 = (k + ann.targetCyclePhase) * cycleDuration;
-                const t2 = (k + (ann.intervalEndPhase || 0.55)) * cycleDuration;
+                const tR = (k + rOfst) * cycleDuration;
+                const qtSec = (metrics?.qtIntervalMs || 384) / 1000;
+                const qrsOnsetSec = tR - 0.035 * scale;
+                const t1 = qrsOnsetSec;
+                const t2 = qrsOnsetSec + qtSec;
                 const x1 = traceStart + (t1 - tMin) * pixelsPerSecond;
                 const x2 = traceStart + (t2 - tMin) * pixelsPerSecond;
 
                 if (x2 >= traceStart + 10 && x1 <= leadEndX - 10) {
-                  const deltaMs = Math.round(((x2 - x1) / pixelsPerSecond) * 1000);
-                  let labelText = `|<── QT = ${deltaMs}ms ──>|`;
-                  if (ann.label.includes("QU")) labelText = `|<── QU = ${deltaMs}ms [Kéo dài] ──>|`;
+                  const v1 = calculateLeadEcgVoltage(t1, calcLead, rhythm, bpm);
+                  const v2 = calculateLeadEcgVoltage(t2, calcLead, rhythm, bpm);
+                  const y1 = midY - v1 * voltageScale;
+                  const y2 = midY - v2 * voltageScale;
+                  const deltaMs = metrics?.qtIntervalMs || Math.round(((x2 - x1) / pixelsPerSecond) * 1000);
+                  const qtcMs = metrics?.qtcIntervalMs || 429;
+
+                  let labelText = isRhythmStrip
+                    ? `|<── QT = ${deltaMs}ms (QTc = ${qtcMs}ms) • Tiêu chuẩn: ${qtcMs > 480 ? "QT kéo dài (> 480ms)" : "Bình thường"} ──>|`
+                    : `|<── QT = ${deltaMs}ms (QTc = ${qtcMs}ms) • ${qtcMs > 480 ? "Kéo dài" : "Bình thường"} ──>|`;
+                  if (ann.label.includes("QU")) {
+                    labelText = isRhythmStrip
+                      ? `|<── QU = ${deltaMs}ms (Kéo dài) • Tiêu chuẩn: Sóng U nổi bật ──>|`
+                      : `|<── QU = ${deltaMs}ms • Sóng U nổi bật ──>|`;
+                  }
 
                   ctx.font = "bold 8px monospace";
-                  const tw = ctx.measureText(labelText).width;
+                  let tw = ctx.measureText(labelText).width;
+                  if (tw + 12 > leadLen) {
+                    labelText = `|<── QT = ${deltaMs}ms (QTc = ${qtcMs}ms) ──>|`;
+                    tw = ctx.measureText(labelText).width;
+                  }
+
                   const calY = midY + (isRhythmStrip ? 24 : 27);
                   itemsToRender.push({
                     ann,
@@ -662,6 +731,8 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                     isInterval: true,
                     x1,
                     x2,
+                    y1,
+                    y2,
                     displayText: labelText,
                   });
                   renderedLabels.add(ann.label);
@@ -700,7 +771,17 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
               ann.waveComponent === "S" ||
               ann.waveComponent === "R"
             ) {
-              const targetTime = (k + ann.targetCyclePhase) * cycleDuration;
+              let targetTime = (k + ann.targetCyclePhase) * cycleDuration;
+              if (ann.waveComponent === "ST") {
+                targetTime = (k + rOfst) * cycleDuration + 0.08 * scale;
+              } else if (ann.waveComponent === "T") {
+                targetTime = (k + rOfst) * cycleDuration + 0.22 * scale;
+              } else if (ann.waveComponent === "S") {
+                targetTime = (k + rOfst) * cycleDuration + 0.035 * scale;
+              } else if (ann.waveComponent === "R") {
+                targetTime = (k + rOfst) * cycleDuration;
+              }
+
               const targetX = traceStart + (targetTime - tMin) * pixelsPerSecond;
 
               if (targetX >= traceStart + 16 && targetX <= leadEndX - 16) {
@@ -710,26 +791,60 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
 
                 let labelText = ann.label;
                 if (ann.waveComponent === "ST") {
-                  labelText = `${waveV >= 0 ? "▲ ST +" : "▼ ST "}${mm.toFixed(1)}mm (${waveV.toFixed(2)}mV)`;
-                  if (ann.label.includes("soi gương")) labelText += " [Soi gương]";
-                  else if (ann.label.includes("vòm") || ann.label.includes("Vòm")) labelText += " [ST vòm]";
-                  else if (ann.label.includes("lõm") || ann.label.includes("thuyền")) labelText += " [Cong lõm]";
-                  else if (ann.label.includes("đáy chén") || ann.label.includes("Dali")) labelText += " [Đáy chén]";
+                  const prefix = waveV >= 0 ? "▲ ST +" : "▼ ST ";
+                  if (ann.label.includes("soi gương")) {
+                    labelText = isRhythmStrip
+                      ? `${prefix}${Math.abs(mm).toFixed(1)}mm (${waveV.toFixed(2)}mV) • Tiêu chuẩn: ST soi gương thành dưới`
+                      : `${prefix}${Math.abs(mm).toFixed(1)}mm • Soi gương`;
+                  } else if (ann.label.includes("vòm") || ann.label.includes("Vòm") || ann.label.includes("bia mộ")) {
+                    labelText = isRhythmStrip
+                      ? `${prefix}${Math.abs(mm).toFixed(1)}mm (${waveV.toFixed(2)}mV) • Tiêu chuẩn: ST chênh vòm ≥ 1mm`
+                      : `${prefix}${Math.abs(mm).toFixed(1)}mm • ST vòm ≥1mm`;
+                  } else if (ann.label.includes("lõm") || ann.label.includes("thuyền")) {
+                    labelText = isRhythmStrip
+                      ? `${prefix}${Math.abs(mm).toFixed(1)}mm (${waveV.toFixed(2)}mV) • Tiêu chuẩn: Cong lõm lan tỏa`
+                      : `${prefix}${Math.abs(mm).toFixed(1)}mm • Cong lõm`;
+                  } else if (ann.label.includes("đáy chén") || ann.label.includes("Dali")) {
+                    labelText = isRhythmStrip
+                      ? `${prefix}${Math.abs(mm).toFixed(1)}mm • Tiêu chuẩn: ST lõm đáy chén Salvador Dali`
+                      : `${prefix}${Math.abs(mm).toFixed(1)}mm • Lõm đáy chén`;
+                  } else {
+                    labelText = `${prefix}${Math.abs(mm).toFixed(1)}mm (${waveV.toFixed(2)}mV) • Chuẩn: ST`;
+                  }
                 } else if (ann.waveComponent === "T") {
-                  labelText = `↕ T = ${Math.abs(mm).toFixed(1)}mm (${waveV.toFixed(2)}mV)`;
-                  if (ann.label.includes("lều") || ann.label.includes("nhọn")) labelText += " [T lều]";
-                  else if (ann.label.includes("âm") || waveV < 0) labelText += " [T âm]";
+                  if (ann.label.includes("lều") || ann.label.includes("nhọn")) {
+                    labelText = isRhythmStrip
+                      ? `▲ Sóng T = +${Math.abs(mm).toFixed(1)}mm (${waveV.toFixed(2)}mV) • Tiêu chuẩn: T lều cao nhọn đối xứng > 10mm (Tăng K+)`
+                      : `▲ T = +${Math.abs(mm).toFixed(1)}mm • T lều >10mm`;
+                  } else if (ann.label.includes("âm") || waveV < 0) {
+                    labelText = isRhythmStrip
+                      ? `▼ Sóng T âm = -${Math.abs(mm).toFixed(1)}mm (${waveV.toFixed(2)}mV) • Tiêu chuẩn: T âm sâu thiếu máu`
+                      : `▼ T = -${Math.abs(mm).toFixed(1)}mm • T âm sâu`;
+                  } else {
+                    labelText = `↕ T = ${Math.abs(mm).toFixed(1)}mm (${waveV.toFixed(2)}mV) • Chuẩn: T bình thường`;
+                  }
                 } else if (ann.waveComponent === "S") {
-                  labelText = `▼ S = ${Math.abs(mm).toFixed(1)}mm (${Math.abs(waveV).toFixed(2)}mV)`;
-                  if (ann.label.includes("Sokolow")) labelText += " [Sokolow]";
+                  labelText = isRhythmStrip
+                    ? `▼ S = -${Math.abs(mm).toFixed(1)}mm (${Math.abs(waveV).toFixed(2)}mV) • Tiêu chuẩn: Sokolow-Lyon (SV1 + RV5/V6 > 35mm)`
+                    : `▼ S = -${Math.abs(mm).toFixed(1)}mm • Chuẩn: Sokolow-Lyon`;
                 } else if (ann.waveComponent === "R") {
-                  labelText = `▲ R = ${Math.abs(mm).toFixed(1)}mm (${Math.abs(waveV).toFixed(2)}mV)`;
-                  if (ann.label.includes("Sokolow")) labelText += " [Sokolow]";
-                  else if (ann.label.includes("Delta")) labelText += " [Sóng Delta]";
+                  if (ann.label.includes("Delta")) {
+                    labelText = isRhythmStrip
+                      ? `▲ Sóng Delta (+${Math.abs(mm).toFixed(1)}mm) • Tiêu chuẩn: Dốc thoai thoải kích thích sớm WPW`
+                      : `▲ Delta (+${Math.abs(mm).toFixed(1)}mm) • WPW`;
+                  } else {
+                    labelText = isRhythmStrip
+                      ? `▲ R = +${Math.abs(mm).toFixed(1)}mm (${Math.abs(waveV).toFixed(2)}mV) • Tiêu chuẩn: Sokolow-Lyon (SV1 + RV5/V6 > 35mm)`
+                      : `▲ R = +${Math.abs(mm).toFixed(1)}mm • Chuẩn: Sokolow-Lyon`;
+                  }
                 }
 
                 ctx.font = "bold 8.5px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-                const tw = ctx.measureText(labelText).width;
+                let tw = ctx.measureText(labelText).width;
+                if (tw + 12 > leadLen) {
+                  labelText = ann.label;
+                  tw = ctx.measureText(labelText).width;
+                }
 
                 let isTop = ann.badgePlacement !== "bottom";
                 if (ann.waveComponent === "S" || waveV < -0.10) {
@@ -756,15 +871,46 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
             }
             // 3. OTHER GENERAL WAVE COMPONENTS (P, Q, QRS, U, DROPPED)
             else {
-              const targetTime = (k + ann.targetCyclePhase) * cycleDuration;
+              let targetTime = (k + ann.targetCyclePhase) * cycleDuration;
+              if (ann.waveComponent === "P") {
+                targetTime = (k + rOfst) * cycleDuration - 0.10 * scale;
+              } else if (ann.waveComponent === "Q") {
+                targetTime = (k + rOfst) * cycleDuration - 0.02 * scale;
+              } else if (ann.waveComponent === "QRS") {
+                targetTime = (k + rOfst) * cycleDuration;
+              }
+
               const targetX = traceStart + (targetTime - tMin) * pixelsPerSecond;
 
               if (targetX >= traceStart + 16 && targetX <= leadEndX - 16) {
                 const waveV = calculateLeadEcgVoltage(targetTime, calcLead, rhythm, bpm);
                 const targetY = midY - waveV * voltageScale;
 
+                let displayText = ann.label;
+                if (ann.waveComponent === "P") {
+                  if (ann.leadId.toUpperCase() === "AVR") {
+                    displayText = isRhythmStrip
+                      ? `▼ Sóng P âm ở aVR (-0.12 mV) • Tiêu chuẩn: P luôn luôn âm ở aVR`
+                      : `▼ P âm ở aVR • Chuẩn: P luôn âm`;
+                  } else if (["DI", "DII", "AVF", "II"].includes(ann.leadId.toUpperCase())) {
+                    if (ann.criterionIndex === 0) {
+                      displayText = isRhythmStrip
+                        ? `Sóng P xoang đồng dạng, luôn đi trước mỗi phức bộ QRS`
+                        : `P xoang đồng dạng, trước QRS`;
+                    } else {
+                      displayText = isRhythmStrip
+                        ? `▲ Sóng P dương ở ${ann.leadId} (+${Math.abs(waveV * 10).toFixed(1)}mm) • Tiêu chuẩn: P xoang dương DI, DII, aVF`
+                        : `▲ P dương ở ${ann.leadId} • Chuẩn: P dương`;
+                    }
+                  }
+                }
+
                 ctx.font = "bold 8.5px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-                const tw = ctx.measureText(ann.label).width;
+                let tw = ctx.measureText(displayText).width;
+                if (tw + 12 > leadLen) {
+                  displayText = ann.label;
+                  tw = ctx.measureText(displayText).width;
+                }
 
                 let isTop = ann.badgePlacement !== "bottom";
                 if (ann.waveComponent === "Q" || waveV < -0.12) {
@@ -781,7 +927,7 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                   isTop,
                   level: 0,
                   isInterval: false,
-                  displayText: ann.label,
+                  displayText,
                 });
                 renderedLabels.add(ann.label);
               }
@@ -832,11 +978,11 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
             const drawX1 = Math.max(item.x1, traceStart + 4);
             const drawX2 = Math.min(item.x2, leadEndX - 4);
 
-            // Vertical guide lines connecting directly to R wave peaks
+            // Vertical guide lines connecting directly to wave onsets or R peaks
             if (typeof item.y1 === "number") {
               ctx.beginPath();
               ctx.setLineDash([2, 2]);
-              ctx.strokeStyle = "rgba(217, 119, 6, 0.65)";
+              ctx.strokeStyle = col;
               ctx.moveTo(item.x1, item.y1);
               ctx.lineTo(item.x1, calY);
               ctx.stroke();
@@ -845,7 +991,7 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
             if (typeof item.y2 === "number") {
               ctx.beginPath();
               ctx.setLineDash([2, 2]);
-              ctx.strokeStyle = "rgba(217, 119, 6, 0.65)";
+              ctx.strokeStyle = col;
               ctx.moveTo(item.x2, item.y2);
               ctx.lineTo(item.x2, calY);
               ctx.stroke();
