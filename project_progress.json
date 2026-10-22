@@ -1,9 +1,9 @@
 {
   "meta": {
     "project_name": "GameYhoc",
-    "last_updated": "2026-10-22T23:13:00.000000",
+    "last_updated": "2026-10-23T06:23:00.000000",
     "overall_progress_percent": 100,
-    "current_phase": "Milestone M17 Completed: Dual-Segment Consecutive RR Comparison Caliper Engine & Precision Wave Snapping (Thước Đo So Sánh Nhịp Kép 3 Mốc R1-R2-R3 Nối Tiếp Liền Mạch & Bắt Dính Đỉnh Sóng Tuyệt Đối)",
+    "current_phase": "Milestone M18 Completed: Wenckebach (Mobitz I) Precision Criteria Mapping & Multi-Lead Vector Engine (Chuỗi Thước Đo PR Tăng Dần 160ms-240ms-320ms, Cô Lập Sóng P Không Dẫn, Phục Hồi PR Ngắn Nhất Sau Nhát Rớt & Vector 12 Chuyển Đạo Chuẩn Khắc Phục Lỗi aVR/V1)",
     "status": "COMPLETED"
   },
   "milestones": [
@@ -527,6 +527,33 @@
         {
           "id": "T17.4",
           "desc": "Phase 04 - Bộ kiểm thử tự động tests/consecutive_rr_comparison_caliper.test.js xác thực 52/52 tests pass 100%, TypeScript 0 lỗi",
+          "status": "DONE"
+        }
+      ]
+    },
+    {
+      "id": "M18",
+      "title": "Milestone M18: Wenckebach (Mobitz I) Precision Criteria Mapping & Multi-Lead Vector Engine",
+      "status": "COMPLETED",
+      "tasks": [
+        {
+          "id": "T18.1",
+          "desc": "Phase 01 - Dynamic Wenckebach PR Progression Engine: Hiển thị chuỗi thước đo PR tăng dần qua 3 chu kỳ (160ms -> 240ms -> 320ms) cho Tiêu chuẩn 1 và bắt dính nhát PR ngắn nhất (160ms) sau nhát rớt cho Tiêu chuẩn 3",
+          "status": "DONE"
+        },
+        {
+          "id": "T18.2",
+          "desc": "Phase 02 - Semantic Isolation & Elimination of P Stacking: Sửa isPActive ngăn chặn nhãn trục P lạc đề; ghim chính xác sóng P không dẫn duy nhất cho Tiêu chuẩn 2, triệt tiêu 100% lỗi đè 3 nhãn",
+          "status": "DONE"
+        },
+        {
+          "id": "T18.3",
+          "desc": "Phase 03 - Progressive RR Shortening & Adaptive Badge: Tùy biến badge so sánh cho nhịp Mobitz I: hiển thị '[✓ R-R ngắn dần trước nhát rớt: R-R1 > R-R2]' thay vì nhãn sai '✓ Đều đặn'",
+          "status": "DONE"
+        },
+        {
+          "id": "T18.4",
+          "desc": "Phase 04 - 12-Lead Vector Projection & Automated Verification: Bổ sung vector giải phẫu Mobitz I (aVR âm, V1 rS), viết suite test tests/wenckebach_criteria_mapping.test.js, kiểm thử 100% pass và build Next.js",
           "status": "DONE"
         }
       ]

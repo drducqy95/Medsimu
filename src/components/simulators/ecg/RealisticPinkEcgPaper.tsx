@@ -317,7 +317,11 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
         cLower.includes("sóng q") ||
         cLower.includes("q hoại tử") ||
         cLower.includes("sóng t") ||
-        cLower.includes("t tối cấp")
+        cLower.includes("t tối cấp") ||
+        cLower.includes("không dẫn") ||
+        cLower.includes("rớt") ||
+        cLower.includes("rơi") ||
+        cLower.includes("wenckebach")
       ) {
         return false;
       }
@@ -333,6 +337,18 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
         cLower.includes("sóng f") ||
         cLower.includes("răng cưa") ||
         cLower.includes("p:")
+      );
+    }
+
+    // 4B. SÓNG P KHÔNG DẪN / RỚT NHÁT QRS (Dropped Beats in AV Block Mobitz I / II)
+    if (wave === "DROPPED") {
+      return (
+        cLower.includes("không dẫn") ||
+        cLower.includes("rớt") ||
+        cLower.includes("rơi") ||
+        cLower.includes("nghẽn") ||
+        cLower.includes("wenckebach") ||
+        cLower.includes("block av")
       );
     }
 
@@ -835,7 +851,14 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
             c.includes("sóng q") ||
             c.includes("q hoại tử") ||
             c.includes("sóng t") ||
-            c.includes("t tối cấp")
+            c.includes("t tối cấp") ||
+            c.includes("không dẫn") ||
+            c.includes("rớt") ||
+            c.includes("rơi") ||
+            c.includes("block") ||
+            c.includes("nghẽn") ||
+            c.includes("wenckebach") ||
+            c.includes("mobitz")
           ) {
             return false;
           }
@@ -973,6 +996,312 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
           return bestT;
         };
 
+        // =========================================================================
+        // SPECIALIZED RENDERER: BLOCK NHĨ THẤT ĐỘ II MOBITZ I (CHU KỲ WENCKEBACH)
+        // =========================================================================
+        let handledWenckebach = false;
+        if (rhythm === "av_block_mobitz_1" && (isRhythmStrip || normLead === "DII" || normLead === "II")) {
+          handledWenckebach = true;
+          const cycleT = 0.85;
+          const totalCycle = cycleT * 4; // 3.4s cho chu kỳ 4 nhát
+          const startCycleK = Math.floor(tMin / totalCycle);
+          const endCycleK = Math.ceil((tMin + leadDuration) / totalCycle);
+          const calcLead = isRhythmStrip ? "DII" : leadId;
+
+          // TIÊU CHUẨN 1 (Index 0): Khoảng PR dài dần ra qua từng chu kỳ liên tiếp
+          if (activeCriteriaIndices.has(0)) {
+            for (let k = startCycleK; k <= endCycleK; k++) {
+              const baseT = k * totalCycle;
+              // Beat 0: PR = 160ms (P: 0.06s, QRS: 0.22s)
+              const t1_0 = baseT + 0.038;
+              const t2_0 = baseT + 0.200;
+              const x1_0 = traceStart + (t1_0 - tMin) * pixelsPerSecond;
+              const x2_0 = traceStart + (t2_0 - tMin) * pixelsPerSecond;
+
+              // Beat 1: PR = 240ms (P: 0.91s, QRS: 1.15s)
+              const t1_1 = baseT + 0.85 + 0.038;
+              const t2_1 = baseT + 0.85 + 0.280;
+              const x1_1 = traceStart + (t1_1 - tMin) * pixelsPerSecond;
+              const x2_1 = traceStart + (t2_1 - tMin) * pixelsPerSecond;
+
+              // Beat 2: PR = 320ms (P: 1.76s, QRS: 2.08s)
+              const t1_2 = baseT + 1.70 + 0.038;
+              const t2_2 = baseT + 1.70 + 0.360;
+              const x1_2 = traceStart + (t1_2 - tMin) * pixelsPerSecond;
+              const x2_2 = traceStart + (t2_2 - tMin) * pixelsPerSecond;
+
+              const calY = midY + (isRhythmStrip ? 22 : 25);
+
+              // Thước 1 (PR1 = 160ms)
+              if (x1_0 >= traceStart + 4 && x2_0 <= leadEndX - 4) {
+                const v1 = calculateLeadEcgVoltage(t1_0, calcLead, rhythm, bpm);
+                const v2 = calculateLeadEcgVoltage(t2_0, calcLead, rhythm, bpm);
+                itemsToRender.push({
+                  ann: { leadId: "II", waveComponent: "PR", label: "PR1_160", color: "#059669", targetCyclePhase: 0.1 },
+                  targetTime: t1_0,
+                  targetX: (x1_0 + x2_0) / 2,
+                  targetY: calY,
+                  pillW: 108,
+                  pillH: 14,
+                  isTop: false,
+                  level: 0,
+                  isInterval: true,
+                  x1: x1_0,
+                  x2: x2_0,
+                  y1: midY - v1 * voltageScale,
+                  y2: midY - v2 * voltageScale,
+                  displayText: `|<── PR₁ = 160ms ──>|`,
+                });
+              }
+
+              // Thước 2 (PR2 = 240ms)
+              if (x1_1 >= traceStart + 4 && x2_1 <= leadEndX - 4) {
+                const v1 = calculateLeadEcgVoltage(t1_1, calcLead, rhythm, bpm);
+                const v2 = calculateLeadEcgVoltage(t2_1, calcLead, rhythm, bpm);
+                itemsToRender.push({
+                  ann: { leadId: "II", waveComponent: "PR", label: "PR2_240", color: "#d97706", targetCyclePhase: 0.1 },
+                  targetTime: t1_1,
+                  targetX: (x1_1 + x2_1) / 2,
+                  targetY: calY,
+                  pillW: 108,
+                  pillH: 14,
+                  isTop: false,
+                  level: 0,
+                  isInterval: true,
+                  x1: x1_1,
+                  x2: x2_1,
+                  y1: midY - v1 * voltageScale,
+                  y2: midY - v2 * voltageScale,
+                  displayText: `|<── PR₂ = 240ms ──>|`,
+                });
+              }
+
+              // Thước 3 (PR3 = 320ms)
+              if (x1_2 >= traceStart + 4 && x2_2 <= leadEndX - 4) {
+                const v1 = calculateLeadEcgVoltage(t1_2, calcLead, rhythm, bpm);
+                const v2 = calculateLeadEcgVoltage(t2_2, calcLead, rhythm, bpm);
+                itemsToRender.push({
+                  ann: { leadId: "II", waveComponent: "PR", label: "PR3_320", color: "#dc2626", targetCyclePhase: 0.1 },
+                  targetTime: t1_2,
+                  targetX: (x1_2 + x2_2) / 2,
+                  targetY: calY,
+                  pillW: 108,
+                  pillH: 14,
+                  isTop: false,
+                  level: 0,
+                  isInterval: true,
+                  x1: x1_2,
+                  x2: x2_2,
+                  y1: midY - v1 * voltageScale,
+                  y2: midY - v2 * voltageScale,
+                  displayText: `|<── PR₃ = 320ms ──>|`,
+                });
+              }
+
+              // Summary Badge phía trên: [✓ PR dài dần: 160ms → 240ms → 320ms]
+              if (x1_0 >= traceStart + 4 && x2_2 <= leadEndX - 4) {
+                const summaryMidX = (x1_0 + x2_2) / 2;
+                const summaryText = `✓ PR dài dần: 160ms → 240ms → 320ms`;
+                ctx.font = "bold 8.5px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+                const tw = ctx.measureText(summaryText).width;
+                itemsToRender.push({
+                  ann: { leadId: "II", waveComponent: "PR", label: "PR_SUMMARY", color: "#059669", targetCyclePhase: 0.1 },
+                  targetTime: baseT + 0.85,
+                  targetX: summaryMidX,
+                  targetY: midY - (isPortraitMode ? 32 : 36),
+                  pillW: tw + 12,
+                  pillH: 15,
+                  isTop: true,
+                  level: 0,
+                  isInterval: false,
+                  displayText: summaryText,
+                });
+                break;
+              }
+            }
+          }
+
+          // TIÊU CHUẨN 2 (Index 1): Cho đến khi có một sóng P hoàn toàn không dẫn được (rớt một phức bộ QRS)
+          if (activeCriteriaIndices.has(1)) {
+            for (let k = startCycleK; k <= endCycleK; k++) {
+              const baseT = k * totalCycle;
+              // Beat 3: P tại baseT + 2.61s
+              const rawTP = baseT + 2.55 + 0.06;
+              const tP = snapToWaveExtremum(rawTP, calcLead, "max", 0.030, 0.001);
+              const xP = traceStart + (tP - tMin) * pixelsPerSecond;
+
+              if (xP >= traceStart + 16 && xP <= leadEndX - 16) {
+                const vP = calculateLeadEcgVoltage(tP, calcLead, rhythm, bpm);
+                const yP = midY - vP * voltageScale;
+                const displayText = "❌ Sóng P không dẫn (Rớt phức bộ QRS)";
+                ctx.font = "bold 8.5px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+                const tw = ctx.measureText(displayText).width;
+
+                itemsToRender.push({
+                  ann: { leadId: "II", waveComponent: "DROPPED", label: "MOBITZ1_DROPPED", color: "#e11d48", targetCyclePhase: 0.1 },
+                  targetTime: tP,
+                  targetX: xP,
+                  targetY: yP,
+                  pillW: tw + 10,
+                  pillH: 15,
+                  isTop: true,
+                  level: 0,
+                  isInterval: false,
+                  displayText,
+                });
+                break;
+              }
+            }
+          }
+
+          // TIÊU CHUẨN 3 (Index 2): Sau nhát rớt, chu kỳ lặp lại với khoảng PR ngắn nhất
+          if (activeCriteriaIndices.has(2)) {
+            for (let k = startCycleK; k <= endCycleK; k++) {
+              const nextBaseT = (k + 1) * totalCycle;
+              // Beat 0 sau nhát rớt: P tại nextBaseT + 0.06s, QRS tại nextBaseT + 0.22s (PR = 160ms)
+              const t1 = nextBaseT + 0.038;
+              const t2 = nextBaseT + 0.200;
+              const x1 = traceStart + (t1 - tMin) * pixelsPerSecond;
+              const x2 = traceStart + (t2 - tMin) * pixelsPerSecond;
+
+              if (x1 >= traceStart + 6 && x2 <= leadEndX - 6) {
+                const v1 = calculateLeadEcgVoltage(t1, calcLead, rhythm, bpm);
+                const v2 = calculateLeadEcgVoltage(t2, calcLead, rhythm, bpm);
+                const calY = midY + (isRhythmStrip ? 22 : 25);
+                const caliperText = `|<── PR = 160ms (Ngắn nhất sau nhát rớt) ──>|`;
+                ctx.font = "bold 8px monospace";
+                const twCaliper = ctx.measureText(caliperText).width;
+
+                itemsToRender.push({
+                  ann: { leadId: "II", waveComponent: "PR", label: "PR_SHORTEST", color: "#059669", targetCyclePhase: 0.1 },
+                  targetTime: t1,
+                  targetX: (x1 + x2) / 2,
+                  targetY: calY,
+                  pillW: twCaliper + 8,
+                  pillH: 14,
+                  isTop: false,
+                  level: 0,
+                  isInterval: true,
+                  x1,
+                  x2,
+                  y1: midY - v1 * voltageScale,
+                  y2: midY - v2 * voltageScale,
+                  displayText: caliperText,
+                });
+
+                // Badge phía trên: [✓ Chu kỳ mới: PR hồi phục 160ms]
+                const badgeText = `✓ Chu kỳ mới: PR hồi phục 160ms`;
+                ctx.font = "bold 8.5px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+                const twBadge = ctx.measureText(badgeText).width;
+
+                itemsToRender.push({
+                  ann: { leadId: "II", waveComponent: "PR", label: "PR_RECOV_BADGE", color: "#059669", targetCyclePhase: 0.1 },
+                  targetTime: t1,
+                  targetX: (x1 + x2) / 2,
+                  targetY: midY - (isPortraitMode ? 32 : 36),
+                  pillW: twBadge + 10,
+                  pillH: 15,
+                  isTop: true,
+                  level: 0,
+                  isInterval: false,
+                  displayText: badgeText,
+                });
+                break;
+              }
+            }
+          }
+
+          // TIÊU CHUẨN 4 (Index 3): Khoảng R-R ngắn dần trước nhát rớt; phức bộ QRS thường hẹp (< 0.12s)
+          if (activeCriteriaIndices.has(3)) {
+            for (let k = startCycleK; k <= endCycleK; k++) {
+              const baseT = k * totalCycle;
+              // R0, R1, R2 trước nhát rớt
+              const rawR0 = baseT + 0.22;
+              const rawR1 = baseT + 0.85 + 0.30;
+              const rawR2 = baseT + 1.70 + 0.38;
+
+              const tR0 = snapToWaveExtremum(rawR0, calcLead, "max", 0.035, 0.001);
+              const tR1 = snapToWaveExtremum(rawR1, calcLead, "max", 0.035, 0.001);
+              const tR2 = snapToWaveExtremum(rawR2, calcLead, "max", 0.035, 0.001);
+
+              const xR0 = traceStart + (tR0 - tMin) * pixelsPerSecond;
+              const xR1 = traceStart + (tR1 - tMin) * pixelsPerSecond;
+              const xR2 = traceStart + (tR2 - tMin) * pixelsPerSecond;
+
+              if (xR0 >= traceStart + 6 && xR2 <= leadEndX - 6) {
+                const v0 = calculateLeadEcgVoltage(tR0, calcLead, rhythm, bpm);
+                const v1 = calculateLeadEcgVoltage(tR1, calcLead, rhythm, bpm);
+                const v2 = calculateLeadEcgVoltage(tR2, calcLead, rhythm, bpm);
+                const y0 = midY - v0 * voltageScale;
+                const y1 = midY - v1 * voltageScale;
+                const y2 = midY - v2 * voltageScale;
+
+                let calY = Math.min(y0, y1, y2) - (isRhythmStrip ? 14 : 16);
+                if (calY < midY - (isPortraitMode ? 36 : 46)) calY = midY - (isPortraitMode ? 36 : 46);
+
+                const deltaMs1 = Math.round(((xR1 - xR0) / pixelsPerSecond) * 1000);
+                const deltaMs2 = Math.round(((xR2 - xR1) / pixelsPerSecond) * 1000);
+
+                // Thước 1 (R0 -> R1)
+                itemsToRender.push({
+                  ann: { leadId: "II", waveComponent: "RR", label: "RR1_MOBITZ", color: "#10b981", targetCyclePhase: 0.1 },
+                  targetTime: tR0,
+                  targetX: (xR0 + xR1) / 2,
+                  targetY: calY,
+                  pillW: 94,
+                  pillH: 14,
+                  isTop: true,
+                  level: 0,
+                  isInterval: true,
+                  x1: xR0,
+                  x2: xR1,
+                  y1: y0,
+                  y2: y1,
+                  displayText: `|<- R-R₁: ${deltaMs1}ms ->|`,
+                });
+
+                // Thước 2 (R1 -> R2) nối liền tại R1
+                itemsToRender.push({
+                  ann: { leadId: "II", waveComponent: "RR", label: "RR2_MOBITZ", color: "#10b981", targetCyclePhase: 0.1 },
+                  targetTime: tR1,
+                  targetX: (xR1 + xR2) / 2,
+                  targetY: calY,
+                  pillW: 94,
+                  pillH: 14,
+                  isTop: true,
+                  level: 0,
+                  isInterval: true,
+                  x1: xR1,
+                  x2: xR2,
+                  y1: y1,
+                  y2: y2,
+                  displayText: `|<- R-R₂: ${deltaMs2}ms ->|`,
+                });
+
+                // Badge tại điểm nối R1: [✓ R-R ngắn dần trước nhát rớt: ... → ... (QRS hẹp 88ms)]
+                const compText = `✓ R-R ngắn dần trước nhát rớt: ${deltaMs1}ms → ${deltaMs2}ms (QRS hẹp ${metrics.qrsDurationMs || 88}ms)`;
+                ctx.font = "bold 8px monospace";
+                const twComp = ctx.measureText(compText).width;
+
+                itemsToRender.push({
+                  ann: { leadId: "II", waveComponent: "RR", label: "RR_COMP_MOBITZ", color: "#10b981", targetCyclePhase: 0.1 },
+                  targetTime: tR1,
+                  targetX: xR1,
+                  targetY: calY - 16,
+                  pillW: twComp + 8,
+                  pillH: 14,
+                  isTop: true,
+                  level: 0,
+                  isInterval: false,
+                  displayText: compText,
+                });
+                break;
+              }
+            }
+          }
+        }
+
+        if (!handledWenckebach) {
         for (const k of candidateCycles) {
           if (renderedLabels.size >= annotations.length) break;
 
@@ -1392,6 +1721,7 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
             }
           }
         }
+        }
 
         if (itemsToRender.length === 0) return;
 
@@ -1643,8 +1973,8 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
         }
 
         // Nếu là dải nhịp Lead II kéo dài và có đủ 2 đoạn liên tiếp R-R1 và R-R2:
-        // Vẽ badge đối chiếu so sánh lâm sàng tại điểm nối R2 (Junction)
-        if (isRhythmStrip) {
+        // Vẽ badge đối chiếu so sánh lâm sàng tại điểm nối R2 (Junction) (ngoại trừ Mobitz 1 đã có badge chuyên sâu)
+        if (isRhythmStrip && rhythm !== "av_block_mobitz_1") {
           const rrItems = itemsToRender.filter((it) => it.isInterval && it.ann.waveComponent === "RR");
           if (rrItems.length >= 2) {
             const it1 = rrItems[0];

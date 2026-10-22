@@ -359,7 +359,7 @@ export const COMPREHENSIVE_FALLBACK_ANNOTATIONS: Record<string, EcgAnnotationIte
     {
       "leadId": "II",
       "waveComponent": "PR",
-      "label": "↔ Chu kỳ Wenckebach: PR dãn dài dần",
+      "label": "PR dài dần qua từng chu kỳ (160ms → 320ms)",
       "targetCyclePhase": 0.06,
       "intervalEndPhase": 0.3,
       "color": "#d97706",
@@ -378,7 +378,7 @@ export const COMPREHENSIVE_FALLBACK_ANNOTATIONS: Record<string, EcgAnnotationIte
     {
       "leadId": "II",
       "waveComponent": "DROPPED",
-      "label": "❌ Rớt 1 nhát QRS chu kỳ Wenckebach",
+      "label": "❌ Sóng P không dẫn (Rớt phức bộ QRS)",
       "targetCyclePhase": 0.06,
       "color": "#e11d48",
       "badgePlacement": "top",
@@ -397,7 +397,7 @@ export const COMPREHENSIVE_FALLBACK_ANNOTATIONS: Record<string, EcgAnnotationIte
     {
       "leadId": "II",
       "waveComponent": "PR",
-      "label": "Khoảng PR hồi phục chu kỳ mới",
+      "label": "PR lập lại ngắn nhất sau nhát rớt (160ms)",
       "targetCyclePhase": 0.08,
       "intervalEndPhase": 0.24,
       "color": "#059669",

@@ -1029,9 +1029,59 @@ export function calculateLeadEcgVoltage(
     const beatIndex = Math.floor(phaseIn4 / cycleT);
     const tInBeat = phaseIn4 - beatIndex * cycleT;
 
+    let pAmp = 0.15;
+    let qAmp = -0.12;
+    let rAmp = 1.55;
+    let sAmp = -0.32;
+    let tAmp = 0.32;
+
+    if (normLead === "aVR") {
+      pAmp = -0.14;
+      qAmp = 0.10;
+      rAmp = -1.30;
+      sAmp = 0.25;
+      tAmp = -0.30;
+    } else if (normLead === "V1") {
+      pAmp = 0.10;
+      qAmp = 0.00;
+      rAmp = 0.35;
+      sAmp = -1.10;
+      tAmp = 0.15;
+    } else if (normLead === "V2") {
+      pAmp = 0.12;
+      qAmp = -0.05;
+      rAmp = 0.75;
+      sAmp = -0.85;
+      tAmp = 0.25;
+    } else if (normLead === "V3") {
+      pAmp = 0.14;
+      qAmp = -0.08;
+      rAmp = 1.15;
+      sAmp = -0.55;
+      tAmp = 0.30;
+    } else if (normLead === "V5" || normLead === "V6") {
+      pAmp = 0.15;
+      qAmp = -0.12;
+      rAmp = 1.85;
+      sAmp = -0.20;
+      tAmp = 0.40;
+    } else if (normLead === "DI" || normLead === "I" || normLead === "aVL") {
+      pAmp = 0.12;
+      qAmp = -0.10;
+      rAmp = 1.35;
+      sAmp = -0.25;
+      tAmp = 0.30;
+    } else if (normLead === "DIII" || normLead === "III") {
+      pAmp = 0.12;
+      qAmp = -0.10;
+      rAmp = 1.25;
+      sAmp = -0.30;
+      tAmp = 0.25;
+    }
+
     // Sóng P at 0.06s in every beat
     const pDiff = tInBeat - 0.06;
-    const pWave = 0.15 * Math.exp(-(pDiff * pDiff) / (2 * 0.022 * 0.022));
+    const pWave = pAmp * Math.exp(-(pDiff * pDiff) / (2 * 0.022 * 0.022));
 
     if (beatIndex === 3) {
       // Beat 4: DROPPED BEAT! Sóng P có mặt nhưng không có QRS và T!
@@ -1045,10 +1095,10 @@ export function calculateLeadEcgVoltage(
     const sDiff = tInBeat - (qrsMu + 0.03);
     const tDiff = tInBeat - (qrsMu + 0.24);
 
-    const qWave = -0.12 * Math.exp(-(qDiff * qDiff) / (2 * 0.010 * 0.010));
-    const rWave = 1.55 * Math.exp(-(rDiff * rDiff) / (2 * 0.014 * 0.014));
-    const sWave = -0.32 * Math.exp(-(sDiff * sDiff) / (2 * 0.015 * 0.015));
-    const tWave = 0.32 * Math.exp(-(tDiff * tDiff) / (2 * 0.045 * 0.045));
+    const qWave = qAmp * Math.exp(-(qDiff * qDiff) / (2 * 0.010 * 0.010));
+    const rWave = rAmp * Math.exp(-(rDiff * rDiff) / (2 * 0.014 * 0.014));
+    const sWave = sAmp * Math.exp(-(sDiff * sDiff) / (2 * 0.015 * 0.015));
+    const tWave = tAmp * Math.exp(-(tDiff * tDiff) / (2 * 0.045 * 0.045));
 
     return pWave + qWave + rWave + sWave + tWave;
   }
