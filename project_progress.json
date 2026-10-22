@@ -1,9 +1,9 @@
 {
   "meta": {
     "project_name": "GameYhoc",
-    "last_updated": "2026-10-22T12:15:00.000000",
+    "last_updated": "2026-10-22T13:06:00.000000",
     "overall_progress_percent": 100,
-    "current_phase": "Milestone M9 Completed: Chuẩn Hóa Khớp 100% Nội Dung Tiêu Chuẩn Với Thước Đo Giải Phẫu Sóng & Số Đo Thực Tế Bệnh Nhân",
+    "current_phase": "Milestone M10 Completed: Hoàn Thiện Engine Định Vị Sóng Chuẩn Xác & Thước Kẹp PR Tuyệt Đối Không Sai Lệch",
     "status": "COMPLETED"
   },
   "milestones": [
@@ -311,6 +311,33 @@
         {
           "id": "T9.4",
           "desc": "Phase 04 - Bộ kiểm thử tự động 31/31 tests pass, TypeScript 0 lỗi & Next.js production build thành công 100%",
+          "status": "DONE"
+        }
+      ]
+    },
+    {
+      "id": "M10",
+      "title": "Milestone M10: Hoàn Thiện Engine Định Vị Sóng Chuẩn Xác & Thước Kẹp PR Tuyệt Đối Không Sai Lệch",
+      "status": "COMPLETED",
+      "tasks": [
+        {
+          "id": "T10.1",
+          "desc": "Phase 01 - Phân tích nguyên nhân sai lệch thời gian thực (loại bỏ phép nhân sai chu kỳ k + rOfst) và xây dựng module chuẩn getWaveAnchors trong ecgMetricsCalculator.ts",
+          "status": "DONE"
+        },
+        {
+          "id": "T10.2",
+          "desc": "Phase 02 - Chuẩn hóa công thức tọa độ t = tCycleStart + anchors.* cho toàn bộ thước kẹp (PR, RR, QT) và thước biên độ đứng (ST, T, S, R)",
+          "status": "DONE"
+        },
+        {
+          "id": "T10.3",
+          "desc": "Phase 03 - Định vị thước kẹp PR khớp tuyệt đối: vạch x1 hạ từ chân sóng P (0.033s), vạch x2 hạ từ chân sóng Q (0.185s), độ dài thước 152ms (3.8 ô nhỏ), ôm khít khoảng PR",
+          "status": "DONE"
+        },
+        {
+          "id": "T10.4",
+          "desc": "Phase 04 - Kiểm thử tự động 32/32 tests pass 100%, TypeScript 0 lỗi, Next.js build 13/13 static routes thành công",
           "status": "DONE"
         }
       ]

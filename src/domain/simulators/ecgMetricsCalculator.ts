@@ -379,3 +379,175 @@ export function computeEcgMetrics(
     severity,
   };
 }
+
+export interface WaveAnchors {
+  rPeak: number;
+  qrsOnset: number;
+  pOnset: number;
+  pPeak: number;
+  sPeak: number;
+  jPoint: number;
+  stMid: number;
+  tPeak: number;
+  tEnd: number;
+}
+
+export function getWaveAnchors(
+  rhythm: EcgRhythmType | string,
+  metrics?: Partial<EcgCalculatedMetrics>
+): WaveAnchors {
+  // Mặc định cho Normal Sinus và các nhịp cơ bản
+  let rPeak = 0.220;
+  let qrsOnset = 0.185;
+  const prMs = metrics?.prIntervalMs || 152;
+  const prSec = prMs / 1000;
+  let pOnset = Math.max(0.010, qrsOnset - prSec);
+  let pPeak = 0.120;
+  let sPeak = 0.250;
+  let jPoint = 0.280;
+  let stMid = 0.320;
+  let tPeak = 0.460;
+  let tEnd = 0.580;
+
+  switch (rhythm as string) {
+    case "av_block_first_degree":
+      // PR kéo dài (>= 260ms), P xuất hiện sớm ở 0.04s, QRS bắt đầu ở 0.290s, R ở 0.320s
+      rPeak = 0.320;
+      qrsOnset = 0.290;
+      pOnset = Math.max(0.010, qrsOnset - prSec);
+      pPeak = 0.040;
+      sPeak = 0.350;
+      jPoint = 0.380;
+      stMid = 0.420;
+      tPeak = 0.540;
+      tEnd = 0.660;
+      break;
+
+    case "wpw_syndrome":
+      // Kích thích sớm: P ở 0.08s, Delta wave bắt đầu ở 0.130s, R ở 0.230s
+      rPeak = 0.230;
+      qrsOnset = 0.130;
+      pOnset = Math.max(0.010, qrsOnset - (metrics?.prIntervalMs || 100) / 1000);
+      pPeak = 0.080;
+      sPeak = 0.280;
+      jPoint = 0.320;
+      stMid = 0.350;
+      tPeak = 0.460;
+      tEnd = 0.580;
+      break;
+
+    case "stemi_inferior":
+      // ST elevation vòm ở 0.305s
+      rPeak = 0.220;
+      qrsOnset = 0.185;
+      pOnset = Math.max(0.010, qrsOnset - prSec);
+      pPeak = 0.120;
+      sPeak = 0.250;
+      jPoint = 0.260;
+      stMid = 0.305;
+      tPeak = 0.460;
+      tEnd = 0.580;
+      break;
+
+    case "stemi_anterior":
+      // Tombstone ST elevation ở 0.320s
+      rPeak = 0.220;
+      qrsOnset = 0.185;
+      pOnset = Math.max(0.010, qrsOnset - prSec);
+      pPeak = 0.120;
+      sPeak = 0.250;
+      jPoint = 0.260;
+      stMid = 0.320;
+      tPeak = 0.480;
+      tEnd = 0.620;
+      break;
+
+    case "hyperkalemia":
+      // T lều cao nhọn ở 0.450s, QRS dãn rộng R ở 0.240s
+      rPeak = 0.240;
+      qrsOnset = 0.180;
+      pOnset = Math.max(0.010, qrsOnset - prSec);
+      pPeak = 0.120;
+      sPeak = 0.290;
+      jPoint = 0.340;
+      stMid = 0.380;
+      tPeak = 0.450;
+      tEnd = 0.550;
+      break;
+
+    case "lvh_strain":
+      rPeak = 0.220;
+      qrsOnset = 0.185;
+      pOnset = Math.max(0.010, qrsOnset - prSec);
+      pPeak = 0.120;
+      sPeak = 0.250;
+      jPoint = 0.270;
+      stMid = 0.320;
+      tPeak = 0.460;
+      tEnd = 0.580;
+      break;
+
+    case "brugada_type1":
+      rPeak = 0.210;
+      qrsOnset = 0.185;
+      pOnset = Math.max(0.010, qrsOnset - prSec);
+      pPeak = 0.120;
+      sPeak = 0.240;
+      jPoint = 0.250;
+      stMid = 0.300;
+      tPeak = 0.440;
+      tEnd = 0.560;
+      break;
+
+    case "av_block_mobitz_2":
+      rPeak = 0.260;
+      qrsOnset = 0.240;
+      pOnset = Math.max(0.010, qrsOnset - prSec);
+      pPeak = 0.080;
+      sPeak = 0.290;
+      jPoint = 0.320;
+      stMid = 0.360;
+      tPeak = 0.500;
+      tEnd = 0.620;
+      break;
+
+    case "ventricular_tachycardia":
+      rPeak = 0.140;
+      qrsOnset = 0.080;
+      pOnset = 0.020;
+      pPeak = 0.050;
+      sPeak = 0.220;
+      jPoint = 0.260;
+      stMid = 0.270;
+      tPeak = 0.290;
+      tEnd = 0.340;
+      break;
+
+    case "torsades_de_pointes":
+      rPeak = 0.100;
+      qrsOnset = 0.050;
+      pOnset = 0.020;
+      pPeak = 0.040;
+      sPeak = 0.180;
+      jPoint = 0.220;
+      stMid = 0.230;
+      tPeak = 0.250;
+      tEnd = 0.300;
+      break;
+
+    default:
+      break;
+  }
+
+  return {
+    rPeak,
+    qrsOnset,
+    pOnset,
+    pPeak,
+    sPeak,
+    jPoint,
+    stMid,
+    tPeak,
+    tEnd,
+  };
+}

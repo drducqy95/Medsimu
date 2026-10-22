@@ -7,7 +7,7 @@ import {
   playMonitorBeep,
   ECG_RHYTHM_DEFINITIONS,
 } from "@/domain/simulators/ecgWaveforms";
-import { computeEcgMetrics } from "@/domain/simulators/ecgMetricsCalculator";
+import { computeEcgMetrics, getWaveAnchors } from "@/domain/simulators/ecgMetricsCalculator";
 import { COMPREHENSIVE_FALLBACK_ANNOTATIONS } from "@/domain/simulators/ecgAnnotationsData";
 import { EcgLeadFocusModal } from "./EcgLeadFocusModal";
 import {
@@ -549,25 +549,16 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
           return distA - distB;
         });
 
+        const anchors = getWaveAnchors(rhythm, metrics);
+
         for (const k of candidateCycles) {
           if (renderedLabels.size >= annotations.length) break;
+
+          const tCycleStart = k * cycleDuration;
 
           for (const ann of annotations) {
             if (renderedLabels.has(ann.label)) continue;
             const calcLead = isRhythmStrip ? "DII" : leadId;
-
-            const getRhythmROfst = (r: string): number => {
-              if (r === "av_block_first_degree") return 0.320;
-              if (r === "hyperkalemia") return 0.240;
-              if (r === "wpw_syndrome") return 0.230;
-              if (r === "av_block_mobitz_2" || r === "lafb") return 0.260;
-              if (r === "ventricular_tachycardia") return 0.135;
-              if (r === "torsades_de_pointes") return 0.430;
-              return 0.220;
-            };
-
-            const rOfst = getRhythmROfst(rhythm);
-            const scale = cycleDuration / 0.8;
 
             // 1. HORIZONTAL INTERVAL CALIPERS (RR, PR, QT)
             if (
@@ -577,8 +568,8 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
               ann.waveComponent === "QT"
             ) {
               if (ann.waveComponent === "RR") {
-                const t1 = (k + rOfst) * cycleDuration;
-                const t2 = (k + 1 + rOfst) * cycleDuration;
+                const t1 = tCycleStart + anchors.rPeak;
+                const t2 = tCycleStart + cycleDuration + anchors.rPeak;
                 const x1 = traceStart + (t1 - tMin) * pixelsPerSecond;
                 const x2 = traceStart + (t2 - tMin) * pixelsPerSecond;
 
@@ -635,11 +626,8 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                   renderedLabels.add(ann.label);
                 }
               } else if (ann.waveComponent === "PR") {
-                const tR = (k + rOfst) * cycleDuration;
-                const prSec = (metrics?.prIntervalMs || 152) / 1000;
-                const qrsOnsetSec = tR - 0.035 * scale;
-                const t1 = qrsOnsetSec - prSec; // P onset
-                const t2 = qrsOnsetSec;         // QRS onset
+                const t1 = tCycleStart + anchors.pOnset;
+                const t2 = tCycleStart + anchors.qrsOnset;
                 const x1 = traceStart + (t1 - tMin) * pixelsPerSecond;
                 const x2 = traceStart + (t2 - tMin) * pixelsPerSecond;
 
@@ -686,11 +674,9 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                   renderedLabels.add(ann.label);
                 }
               } else if (ann.waveComponent === "QT") {
-                const tR = (k + rOfst) * cycleDuration;
                 const qtSec = (metrics?.qtIntervalMs || 384) / 1000;
-                const qrsOnsetSec = tR - 0.035 * scale;
-                const t1 = qrsOnsetSec;
-                const t2 = qrsOnsetSec + qtSec;
+                const t1 = tCycleStart + anchors.qrsOnset;
+                const t2 = t1 + qtSec;
                 const x1 = traceStart + (t1 - tMin) * pixelsPerSecond;
                 const x2 = traceStart + (t2 - tMin) * pixelsPerSecond;
 
@@ -738,8 +724,8 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                   renderedLabels.add(ann.label);
                 }
               } else if (typeof ann.intervalEndPhase === "number") {
-                const t1 = (k + ann.targetCyclePhase) * cycleDuration;
-                const t2 = (k + ann.intervalEndPhase) * cycleDuration;
+                const t1 = tCycleStart + ann.targetCyclePhase * cycleDuration;
+                const t2 = tCycleStart + ann.intervalEndPhase * cycleDuration;
                 const x1 = traceStart + (t1 - tMin) * pixelsPerSecond;
                 const x2 = traceStart + (t2 - tMin) * pixelsPerSecond;
 
@@ -771,15 +757,15 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
               ann.waveComponent === "S" ||
               ann.waveComponent === "R"
             ) {
-              let targetTime = (k + ann.targetCyclePhase) * cycleDuration;
+              let targetTime = tCycleStart + ann.targetCyclePhase * cycleDuration;
               if (ann.waveComponent === "ST") {
-                targetTime = (k + rOfst) * cycleDuration + 0.08 * scale;
+                targetTime = tCycleStart + anchors.stMid;
               } else if (ann.waveComponent === "T") {
-                targetTime = (k + rOfst) * cycleDuration + 0.22 * scale;
+                targetTime = tCycleStart + anchors.tPeak;
               } else if (ann.waveComponent === "S") {
-                targetTime = (k + rOfst) * cycleDuration + 0.035 * scale;
+                targetTime = tCycleStart + anchors.sPeak;
               } else if (ann.waveComponent === "R") {
-                targetTime = (k + rOfst) * cycleDuration;
+                targetTime = tCycleStart + anchors.rPeak;
               }
 
               const targetX = traceStart + (targetTime - tMin) * pixelsPerSecond;
@@ -871,13 +857,13 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
             }
             // 3. OTHER GENERAL WAVE COMPONENTS (P, Q, QRS, U, DROPPED)
             else {
-              let targetTime = (k + ann.targetCyclePhase) * cycleDuration;
+              let targetTime = tCycleStart + ann.targetCyclePhase * cycleDuration;
               if (ann.waveComponent === "P") {
-                targetTime = (k + rOfst) * cycleDuration - 0.10 * scale;
+                targetTime = tCycleStart + anchors.pPeak;
               } else if (ann.waveComponent === "Q") {
-                targetTime = (k + rOfst) * cycleDuration - 0.02 * scale;
+                targetTime = tCycleStart + anchors.qrsOnset + 0.015;
               } else if (ann.waveComponent === "QRS") {
-                targetTime = (k + rOfst) * cycleDuration;
+                targetTime = tCycleStart + anchors.rPeak;
               }
 
               const targetX = traceStart + (targetTime - tMin) * pixelsPerSecond;
