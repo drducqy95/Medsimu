@@ -1,9 +1,9 @@
 {
   "meta": {
     "project_name": "GameYhoc",
-    "last_updated": "2026-10-22T13:06:00.000000",
+    "last_updated": "2026-10-22T15:27:00.000000",
     "overall_progress_percent": 100,
-    "current_phase": "Milestone M10 Completed: Hoàn Thiện Engine Định Vị Sóng Chuẩn Xác & Thước Kẹp PR Tuyệt Đối Không Sai Lệch",
+    "current_phase": "Milestone M11 Completed: Multi-Factorial Semantic Criteria Matching Engine (Khớp 100% Tiêu Chuẩn Lên Giấy Hồng 12 Chuyển Đạo)",
     "status": "COMPLETED"
   },
   "milestones": [
@@ -338,6 +338,33 @@
         {
           "id": "T10.4",
           "desc": "Phase 04 - Kiểm thử tự động 32/32 tests pass 100%, TypeScript 0 lỗi, Next.js build 13/13 static routes thành công",
+          "status": "DONE"
+        }
+      ]
+    },
+    {
+      "id": "M11",
+      "title": "Milestone M11: Multi-Factorial Semantic Criteria Matching Engine (Khớp 100% Tiêu Chuẩn Lên Giấy Hồng 12 Chuyển Đạo)",
+      "status": "COMPLETED",
+      "tasks": [
+        {
+          "id": "T11.1",
+          "desc": "Phase 01 - Khắc phục nguyên nhân gốc rễ lệch index trong ảnh chụp thực tế stemi_inferior, thay thế getAnnotationCriterionIndex bằng Multi-Factorial Semantic Matcher",
+          "status": "DONE"
+        },
+        {
+          "id": "T11.2",
+          "desc": "Phase 02 - Hỗ trợ kích hoạt đa yếu tố (Multi-factorial) cho tiêu chuẩn phức hợp (ST chênh vòm DII, DIII, aVF + ST soi gương DI, aVL; S1Q3T3; Sokolow-Lyon; Sóng P xoang)",
+          "status": "DONE"
+        },
+        {
+          "id": "T11.3",
+          "desc": "Phase 03 - Rà soát và bao phủ 100% không còn annotation mồ côi (Zero Orphan Annotations) trên toàn bộ 31 mặt bệnh lý",
+          "status": "DONE"
+        },
+        {
+          "id": "T11.4",
+          "desc": "Phase 04 - Bộ kiểm thử tự động 35/35 tests pass, TypeScript 0 lỗi, Next.js production build 13/13 static routes hoàn hảo",
           "status": "DONE"
         }
       ]

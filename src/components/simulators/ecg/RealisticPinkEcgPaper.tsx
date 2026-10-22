@@ -198,40 +198,219 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
     return cleaned.slice(0, 28) + "...";
   };
 
-  // Smart matcher linking an annotation to a criterion index
-  const getAnnotationCriterionIndex = (
+  // Multi-Factorial Semantic Matcher linking an annotation to diagnostic criteria
+  const isAnnotationMatchingCriterion = (
     ann: NonNullable<EcgDiagnosisData["annotations"]>[number],
-    criteria: string[]
-  ): number => {
-    if (typeof ann.criterionIndex === "number" && ann.criterionIndex >= 0 && ann.criterionIndex < criteria.length) {
-      return ann.criterionIndex;
+    crit: string,
+    critIdx: number,
+    allCriteria: string[]
+  ): boolean => {
+    if (!crit) return false;
+    const cLower = crit.toLowerCase();
+    const wave = (ann.waveComponent || "").toUpperCase();
+    const labelLower = (ann.label || "").toLowerCase();
+
+    // SPECIAL EMERGENCY: Rung thất (Ventricular Fibrillation)
+    if (
+      labelLower.includes("rung thất") ||
+      labelLower.includes("coarse vf") ||
+      labelLower.includes("fine vf") ||
+      labelLower.includes("sóng thô") ||
+      labelLower.includes("sóng mịn") ||
+      labelLower.includes("mất hoàn toàn") ||
+      labelLower.includes("mất phức bộ")
+    ) {
+      if (
+        cLower.includes("mất hoàn toàn") ||
+        cLower.includes("hỗn loạn") ||
+        cLower.includes("sóng thô") ||
+        cLower.includes("sóng mịn") ||
+        cLower.includes("rung thất") ||
+        cLower.includes("ngừng tuần hoàn")
+      ) {
+        if (labelLower.includes("sóng thô") && !cLower.includes("sóng thô")) return false;
+        if (labelLower.includes("sóng mịn") && !cLower.includes("sóng mịn")) return false;
+        return true;
+      }
     }
-    const labelLower = (ann.label + " " + ann.waveComponent + " " + ann.leadId).toLowerCase();
-    for (let i = 0; i < criteria.length; i++) {
-      const cLower = criteria[i].toLowerCase();
-      if (labelLower.includes("soi gương") && cLower.includes("soi gương")) return i;
-      if (labelLower.includes("q hoại tử") && (cLower.includes("sóng q") || cLower.includes("q hoại tử"))) return i;
-      if ((labelLower.includes("tombstone") || labelLower.includes("bia mộ")) &&
-          (cLower.includes("bia mộ") || cLower.includes("tombstoning"))) return i;
-      if (labelLower.includes("delta") && cLower.includes("delta")) return i;
-      if (labelLower.includes("coved") && (cLower.includes("coved") || cLower.includes("brugada"))) return i;
-      if (labelLower.includes("tai thỏ") && cLower.includes("tai thỏ")) return i;
-      if (labelLower.includes("lbbb") && cLower.includes("lbbb")) return i;
-      if (labelLower.includes("s1q3t3") && cLower.includes("s1q3t3")) return i;
-      if (labelLower.includes("lòng thuyền") && cLower.includes("lòng thuyền")) return i;
-      if (labelLower.includes("sóng u") && cLower.includes("sóng u")) return i;
-      if (labelLower.includes("đáy chén") && (cLower.includes("đáy chén") || cLower.includes("digoxin"))) return i;
-      if (labelLower.includes("sokolow") && cLower.includes("sokolow")) return i;
-      if (labelLower.includes("xoay trục") && cLower.includes("xoay")) return i;
-      if (labelLower.includes("thoát thất") && cLower.includes("thoát thất")) return i;
-      if (labelLower.includes("phân ly") && cLower.includes("phân ly")) return i;
-      if (labelLower.includes("răng cưa") && cLower.includes("răng cưa")) return i;
-      if (labelLower.includes("sóng f") && (cLower.includes("sóng f") || cLower.includes("lăn tăn"))) return i;
-      if (labelLower.includes("pr") && cLower.includes("pr")) return i;
-      if (labelLower.includes("sóng p") && cLower.includes("sóng p")) return i;
-      if (labelLower.includes("st chênh") && cLower.includes("st chênh")) return i;
+
+    // 1. HORIZONTAL INTERVAL CALIPER: RR (Tần số / Nhịp điệu)
+    if (wave === "RR") {
+      return (
+        cLower.includes("tần số") ||
+        cLower.includes("nhịp điệu") ||
+        cLower.includes("đều") ||
+        cLower.includes("loạn nhịp") ||
+        cLower.includes("không đều") ||
+        cLower.includes("r-r") ||
+        cLower.includes("nhịp nhanh") ||
+        cLower.includes("nhịp chậm") ||
+        cLower.includes("rung nhĩ") ||
+        cLower.includes("cuồng nhĩ") ||
+        cLower.includes("khoảng cách r-r") ||
+        cLower.includes("tần số tim") ||
+        critIdx === 0 ||
+        critIdx === 1
+      );
     }
-    return 0;
+
+    // 2. HORIZONTAL INTERVAL CALIPER: PR (Khoảng PR / Dẫn truyền nhĩ thất)
+    if (wave === "PR") {
+      return (
+        cLower.includes("khoảng pr") ||
+        cLower.includes("pr kéo dài") ||
+        cLower.includes("pr ngắn") ||
+        cLower.includes("pr chênh xuống") ||
+        cLower.includes("pr thay đổi") ||
+        cLower.includes("pr biến thiên") ||
+        cLower.includes("dẫn truyền nhĩ thất") ||
+        cLower.includes("block av") ||
+        cLower.includes("block nhĩ thất") ||
+        cLower.includes("phân ly") ||
+        cLower.includes("liên hệ") ||
+        cLower.includes("wenckebach") ||
+        cLower.includes("mobitz") ||
+        cLower.includes("kích thích sớm") ||
+        cLower.includes("wpw") ||
+        cLower.includes("pr:")
+      );
+    }
+
+    // 3. HORIZONTAL INTERVAL CALIPER: QT / QU (Khoảng QT / Tái cực muộn / Sóng U)
+    if (wave === "QT" || wave === "U") {
+      return (
+        cLower.includes("khoảng qt") ||
+        cLower.includes("qtc") ||
+        cLower.includes("qt kéo dài") ||
+        cLower.includes("qt ngắn") ||
+        cLower.includes("sóng u") ||
+        cLower.includes("khoảng qu") ||
+        cLower.includes("lqts") ||
+        cLower.includes("xoắn đỉnh")
+      );
+    }
+
+    // 4. SÓNG P (P Wave / Trục P)
+    if (wave === "P") {
+      return (
+        cLower.includes("sóng p") ||
+        cLower.includes("p xoang") ||
+        cLower.includes("trục sóng p") ||
+        cLower.includes("trục p") ||
+        cLower.includes("p âm") ||
+        cLower.includes("p dương") ||
+        cLower.includes("p hai pha") ||
+        cLower.includes("mất sóng p") ||
+        cLower.includes("sóng f") ||
+        cLower.includes("răng cưa") ||
+        cLower.includes("p:")
+      );
+    }
+
+    // 5. PHỨC BỘ QRS & SÓNG Q HOẠI TỬ
+    if (wave === "Q") {
+      return (
+        cLower.includes("sóng q") ||
+        cLower.includes("q hoại tử") ||
+        cLower.includes("q bệnh lý") ||
+        cLower.includes("q sâu") ||
+        cLower.includes("dạng qs") ||
+        cLower.includes("hoại tử") ||
+        (cLower.includes("phức bộ qrs") && (cLower.includes("sóng q") || cLower.includes("hoại tử") || cLower.includes("diii") || cLower.includes("avf")))
+      );
+    }
+
+    if (wave === "QRS") {
+      return (
+        cLower.includes("phức bộ qrs") ||
+        cLower.includes("qrs") ||
+        cLower.includes("tai thỏ") ||
+        cLower.includes("rbbb") ||
+        cLower.includes("lbbb") ||
+        cLower.includes("delta") ||
+        cLower.includes("dãn rộng") ||
+        cLower.includes("r nhỏ") ||
+        cLower.includes("mất r") ||
+        cLower.includes("rs cụt") ||
+        cLower.includes("qs hoại tử") ||
+        cLower.includes("s1q3t3") ||
+        cLower.includes("trục") ||
+        cLower.includes("lệch trái") ||
+        cLower.includes("lệch phải") ||
+        cLower.includes("nhánh nội điện")
+      );
+    }
+
+    // 6. ĐOẠN ST (ST Segment / Chênh vòm / Soi gương / Cong lõm / Coved)
+    if (wave === "ST") {
+      if (labelLower.includes("soi gương") || labelLower.includes("reciprocal")) {
+        return (
+          cLower.includes("soi gương") ||
+          cLower.includes("reciprocal") ||
+          cLower.includes("st chênh xuống ở di, avl") ||
+          cLower.includes("st soi gương") ||
+          (cLower.includes("đoạn st") && cLower.includes("soi gương"))
+        );
+      }
+      return (
+        cLower.includes("đoạn st") ||
+        cLower.includes("st chênh") ||
+        cLower.includes("vòm") ||
+        cLower.includes("bia mộ") ||
+        cLower.includes("tombston") ||
+        cLower.includes("cong lõm") ||
+        cLower.includes("lòng thuyền") ||
+        cLower.includes("đáy chén") ||
+        cLower.includes("salvador dali") ||
+        cLower.includes("coved") ||
+        cLower.includes("brugada") ||
+        cLower.includes("spodick") ||
+        cLower.includes("st đẳng điện")
+      );
+    }
+
+    // 7. SÓNG T (T Wave / T lều nhọn / T âm / T tối cấp)
+    if (wave === "T") {
+      return (
+        cLower.includes("sóng t") ||
+        cLower.includes("t lều") ||
+        cLower.includes("t cao nhọn") ||
+        cLower.includes("t đối xứng") ||
+        cLower.includes("t âm") ||
+        cLower.includes("t hai pha") ||
+        cLower.includes("t dẹt") ||
+        cLower.includes("t tối cấp") ||
+        cLower.includes("hyperacute") ||
+        cLower.includes("đoạn st & t") ||
+        cLower.includes("st-t")
+      );
+    }
+
+    // 8. SÓNG R, S (Biên độ thất / Sokolow-Lyon / S1Q3T3)
+    if (wave === "R" || wave === "S") {
+      if (labelLower.includes("delta") || labelLower.includes("wpw")) {
+        return cLower.includes("delta") || cLower.includes("wpw") || cLower.includes("kích thích sớm");
+      }
+      return (
+        cLower.includes("sokolow") ||
+        cLower.includes("sóng r") ||
+        cLower.includes("sóng s") ||
+        cLower.includes("phì đại") ||
+        cLower.includes("tăng gánh") ||
+        cLower.includes("sv1") ||
+        cLower.includes("rv5") ||
+        cLower.includes("rv6") ||
+        cLower.includes("s1q3t3") ||
+        cLower.includes("phức bộ qrs")
+      );
+    }
+
+    // Fallback: nếu có criterionIndex hợp lệ
+    if (typeof ann.criterionIndex === "number" && ann.criterionIndex === critIdx) {
+      return true;
+    }
+
+    return false;
   };
 
   // Refs for 60 FPS animation loop
@@ -494,9 +673,12 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
         });
 
         // 2. Chỉ lọc lấy các nhãn thuộc những tiêu chuẩn đang được kích hoạt (click bật [✓])
+        const activeIndicesList = Array.from(activeCriteriaIndices);
         annotations = annotations.filter((a) => {
-          const critIdx = getAnnotationCriterionIndex(a, diagnosisData.criteria);
-          return critIdx !== -1 && activeCriteriaIndices.has(critIdx);
+          return activeIndicesList.some((activeIdx) => {
+            const crit = diagnosisData.criteria[activeIdx];
+            return Boolean(crit && isAnnotationMatchingCriterion(a, crit, activeIdx, diagnosisData.criteria));
+          });
         });
 
         if (annotations.length === 0) return;
@@ -879,7 +1061,7 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                       ? `▼ Sóng P âm ở aVR (-0.12 mV) • Tiêu chuẩn: P luôn luôn âm ở aVR`
                       : `▼ P âm ở aVR • Chuẩn: P luôn âm`;
                   } else if (["DI", "DII", "AVF", "II"].includes(ann.leadId.toUpperCase())) {
-                    if (ann.criterionIndex === 0) {
+                    if (ann.label.includes("đồng dạng") || ann.label.includes("đi trước") || ann.label.includes("trước QRS")) {
                       displayText = isRhythmStrip
                         ? `Sóng P xoang đồng dạng, luôn đi trước mỗi phức bộ QRS`
                         : `P xoang đồng dạng, trước QRS`;
