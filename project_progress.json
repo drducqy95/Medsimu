@@ -1,9 +1,9 @@
 {
   "meta": {
     "project_name": "GameYhoc",
-    "last_updated": "2026-10-22T16:38:00.000000",
+    "last_updated": "2026-10-22T17:28:00.000000",
     "overall_progress_percent": 100,
-    "current_phase": "Milestone M12 Completed: Dynamic Baseline Synthesizer for 100% Clinical Criteria Coverage (Bao Phủ 100% Tiêu Chuẩn Nền Tảng: Tần Số, Nhịp Điệu, Sóng P, Khoảng PR)",
+    "current_phase": "Milestone M13 Completed: Zero Index Bias & Exact Semantic Precision (Đồng Bộ 100% Tiêu Chuẩn Y Khoa & Định Vị Chuẩn Xác Không Lệch Sóng)",
     "status": "COMPLETED"
   },
   "milestones": [
@@ -392,6 +392,33 @@
         {
           "id": "T12.4",
           "desc": "Phase 04 - Bộ test tự động tests/baseline_waves_coverage.test.js xác thực cả 6 tiêu chuẩn lâm sàng trong ca bệnh stemi_inferior, 37/37 tests pass, TypeScript 0 lỗi, Next.js build 13/13 static routes thành công",
+          "status": "DONE"
+        }
+      ]
+    },
+    {
+      "id": "M13",
+      "title": "Milestone M13: Zero Index Bias & Exact Semantic Precision (Đồng Bộ 100% Tiêu Chuẩn Y Khoa & Định Vị Chuẩn Xác Không Lệch Sóng)",
+      "status": "COMPLETED",
+      "tasks": [
+        {
+          "id": "T13.1",
+          "desc": "Phase 01 - Triệt tiêu 100% hard-coded index bias (idx === 0, 1, 2, 3 và critIdx === 0, 1), khắc phục dứt điểm việc tick Sóng Q hiện Sóng P xoang (Ảnh 1) và tick ST chênh vòm hiện Thước kẹp RR (Ảnh 2)",
+          "status": "DONE"
+        },
+        {
+          "id": "T13.2",
+          "desc": "Phase 02 - Xây dựng Single Source of Truth tĩnh (src/domain/simulators/ecgStaticDatabase.ts) cho toàn bộ 31 mặt bệnh lý từ SQLite, loại bỏ hoàn toàn tình trạng chuyển đổi desync từ 6 tiêu chuẩn chung sang 4 tiêu chuẩn bệnh học",
+          "status": "DONE"
+        },
+        {
+          "id": "T13.3",
+          "desc": "Phase 03 - Tinh chỉnh tính cô lập đối xứng (Symmetrical Isolation) giữa ST chênh vòm và ST soi gương và Sóng T tối cấp, đảm bảo tick tiêu chuẩn nào chỉ kích hoạt đúng các sóng của tiêu chuẩn đó",
+          "status": "DONE"
+        },
+        {
+          "id": "T13.4",
+          "desc": "Phase 04 - Bộ kiểm thử tự động tests/zero_index_bias_precision.test.js kiểm tra cô lập nghiêm ngặt, 40/40 tests pass 100%, TypeScript 0 lỗi, Next.js build 13/13 static routes thành công",
           "status": "DONE"
         }
       ]

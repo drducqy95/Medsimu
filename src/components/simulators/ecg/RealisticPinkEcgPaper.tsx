@@ -9,6 +9,7 @@ import {
 } from "@/domain/simulators/ecgWaveforms";
 import { computeEcgMetrics, getWaveAnchors } from "@/domain/simulators/ecgMetricsCalculator";
 import { COMPREHENSIVE_FALLBACK_ANNOTATIONS } from "@/domain/simulators/ecgAnnotationsData";
+import { ECG_STATIC_DATABASE } from "@/domain/simulators/ecgStaticDatabase";
 import { EcgLeadFocusModal } from "./EcgLeadFocusModal";
 import {
   Printer,
@@ -94,8 +95,12 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
   const [isHeartBeating, setIsHeartBeating] = useState<boolean>(false);
   const [currentDate, setCurrentDate] = useState<string>("");
 
-  // Criteria & SQLite Data State
+  // Criteria & SQLite Data State (Single Source of Truth)
   const [diagnosisData, setDiagnosisData] = useState<EcgDiagnosisData | null>(() => {
+    const staticItem = ECG_STATIC_DATABASE[rhythm];
+    if (staticItem) {
+      return staticItem as unknown as EcgDiagnosisData;
+    }
     const def = ECG_RHYTHM_DEFINITIONS.find((r) => r.id === rhythm);
     if (!def) return null;
     return {
@@ -104,13 +109,7 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
       nameEn: def.id,
       category: def.category,
       severity: def.category === "ventricular" || (def.id as string).startsWith("stemi") ? "critical" : "normal",
-      criteria: rhythm === "normal_sinus" ? [
-        "Sóng P xoang: Đồng dạng đi trước mỗi phức bộ QRS",
-        "Sóng P âm ở aVR: Sóng P âm ở aVR, dương ở DI, DII, aVF",
-        "Khoảng PR bình thường: Cố định và bình thường từ 0.12s đến 0.20s (3 - 5 ô nhỏ)",
-        "Khoảng cách R-R đều: Tần số tim bình thường 60 - 100 chu kỳ/phút",
-        "QRS hẹp & ST đẳng điện: QRS < 120ms, đoạn ST đẳng điện và sóng T bình thường",
-      ] : [
+      criteria: [
         `Tần số: ${def.ecgCharacteristics.rate}`,
         `Nhịp điệu: ${def.ecgCharacteristics.rhythm}`,
         `Sóng P: ${def.ecgCharacteristics.pWave}`,
@@ -236,6 +235,18 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
 
     // 1. HORIZONTAL INTERVAL CALIPER: RR (Tần số / Nhịp điệu)
     if (wave === "RR") {
+      if (
+        cLower.includes("st chênh") ||
+        cLower.includes("soi gương") ||
+        cLower.includes("sóng q") ||
+        cLower.includes("q hoại tử") ||
+        cLower.includes("sóng t") ||
+        cLower.includes("t tối cấp") ||
+        cLower.includes("khoảng pr") ||
+        cLower.includes("sóng p")
+      ) {
+        return false;
+      }
       return (
         cLower.includes("tần số") ||
         cLower.includes("nhịp điệu") ||
@@ -248,14 +259,22 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
         cLower.includes("rung nhĩ") ||
         cLower.includes("cuồng nhĩ") ||
         cLower.includes("khoảng cách r-r") ||
-        cLower.includes("tần số tim") ||
-        critIdx === 0 ||
-        critIdx === 1
+        cLower.includes("tần số tim")
       );
     }
 
     // 2. HORIZONTAL INTERVAL CALIPER: PR (Khoảng PR / Dẫn truyền nhĩ thất)
     if (wave === "PR") {
+      if (
+        cLower.includes("st chênh") ||
+        cLower.includes("soi gương") ||
+        cLower.includes("sóng q") ||
+        cLower.includes("q hoại tử") ||
+        cLower.includes("sóng t") ||
+        cLower.includes("t tối cấp")
+      ) {
+        return false;
+      }
       return (
         cLower.includes("khoảng pr") ||
         cLower.includes("pr kéo dài") ||
@@ -292,6 +311,16 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
 
     // 4. SÓNG P (P Wave / Trục P)
     if (wave === "P") {
+      if (
+        cLower.includes("st chênh") ||
+        cLower.includes("soi gương") ||
+        cLower.includes("sóng q") ||
+        cLower.includes("q hoại tử") ||
+        cLower.includes("sóng t") ||
+        cLower.includes("t tối cấp")
+      ) {
+        return false;
+      }
       return (
         cLower.includes("sóng p") ||
         cLower.includes("p xoang") ||
@@ -343,15 +372,24 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
 
     // 6. ĐOẠN ST (ST Segment / Chênh vòm / Soi gương / Cong lõm / Coved)
     if (wave === "ST") {
-      if (labelLower.includes("soi gương") || labelLower.includes("reciprocal")) {
-        return (
-          cLower.includes("soi gương") ||
-          cLower.includes("reciprocal") ||
-          cLower.includes("st chênh xuống ở di, avl") ||
-          cLower.includes("st soi gương") ||
-          (cLower.includes("đoạn st") && cLower.includes("soi gương"))
-        );
+      // Loại trừ các tiêu chuẩn của Sóng T (ví dụ: "Sóng T tối cấp... trước khi chuyển sang ST chênh vòm")
+      if (cLower.startsWith("sóng t") || cLower.includes("t tối cấp") || cLower.includes("t lều") || cLower.includes("t cao nhọn") || cLower.includes("t âm sâu")) {
+        return false;
       }
+
+      const isAnnReciprocal = labelLower.includes("soi gương") || labelLower.includes("reciprocal");
+      const isCritReciprocal = cLower.includes("soi gương") || cLower.includes("reciprocal");
+
+      // Nếu tiêu chuẩn là tiêu chuẩn soi gương -> CHỈ match các nhãn soi gương!
+      if (isCritReciprocal) {
+        return isAnnReciprocal;
+      }
+
+      // Ngược lại nếu tiêu chuẩn không phải soi gương -> TUYỆT ĐỐI KHÔNG match nhãn soi gương
+      if (isAnnReciprocal) {
+        return false;
+      }
+
       return (
         cLower.includes("đoạn st") ||
         cLower.includes("st chênh") ||
@@ -433,44 +471,44 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
     );
   }, []);
 
-  // Fetch Authoritative Diagnostic Criteria dynamically from SQLite API
+  // Fetch Authoritative Diagnostic Criteria dynamically from SQLite API (Single Source of Truth)
   useEffect(() => {
     let isMounted = true;
     setActiveCriteriaIndices(new Set()); // Mặc định không ánh xạ nhãn khi tải bệnh mới
-    const def = ECG_RHYTHM_DEFINITIONS.find((r) => r.id === rhythm);
-    if (def) {
-      setDiagnosisData({
-        id: def.id,
-        name: def.name,
-        nameEn: def.id,
-        category: def.category,
-        severity: def.category === "ventricular" || (def.id as string).startsWith("stemi") ? "critical" : "normal",
-        criteria: rhythm === "normal_sinus" ? [
-          "Sóng P xoang: Đồng dạng đi trước mỗi phức bộ QRS",
-          "Sóng P âm ở aVR: Sóng P âm ở aVR, dương ở DI, DII, aVF",
-          "Khoảng PR bình thường: Cố định và bình thường từ 0.12s đến 0.20s (3 - 5 ô nhỏ)",
-          "Khoảng cách R-R đều: Tần số tim bình thường 60 - 100 chu kỳ/phút",
-          "QRS hẹp & ST đẳng điện: QRS < 120ms, đoạn ST đẳng điện và sóng T bình thường",
-        ] : [
-          `Tần số: ${def.ecgCharacteristics.rate}`,
-          `Nhịp điệu: ${def.ecgCharacteristics.rhythm}`,
-          `Sóng P: ${def.ecgCharacteristics.pWave}`,
-          `Khoảng PR: ${def.ecgCharacteristics.prInterval}`,
-          `Phức bộ QRS: ${def.ecgCharacteristics.qrsComplex}`,
-          `Đoạn ST & T: ${def.ecgCharacteristics.stSegmentTwave}`,
-        ],
-        leadManifestations: {},
-        annotations: FALLBACK_ANNOTATIONS[rhythm] || [],
-        ecgMetrics: {
-          expected_hr: def.ecgCharacteristics.rate,
-          pr_interval: def.ecgCharacteristics.prInterval,
-          qrs_duration: def.ecgCharacteristics.qrsComplex,
-          qt_interval: "380 - 420 ms",
-          qrs_axis: "Bình thường",
-        },
-        clinicalAction: def.treatmentSummary,
-        differentialDiagnoses: [],
-      });
+
+    const staticItem = ECG_STATIC_DATABASE[rhythm];
+    if (staticItem) {
+      setDiagnosisData(staticItem as unknown as EcgDiagnosisData);
+    } else {
+      const def = ECG_RHYTHM_DEFINITIONS.find((r) => r.id === rhythm);
+      if (def) {
+        setDiagnosisData({
+          id: def.id,
+          name: def.name,
+          nameEn: def.id,
+          category: def.category,
+          severity: def.category === "ventricular" || (def.id as string).startsWith("stemi") ? "critical" : "normal",
+          criteria: [
+            `Tần số: ${def.ecgCharacteristics.rate}`,
+            `Nhịp điệu: ${def.ecgCharacteristics.rhythm}`,
+            `Sóng P: ${def.ecgCharacteristics.pWave}`,
+            `Khoảng PR: ${def.ecgCharacteristics.prInterval}`,
+            `Phức bộ QRS: ${def.ecgCharacteristics.qrsComplex}`,
+            `Đoạn ST & T: ${def.ecgCharacteristics.stSegmentTwave}`,
+          ],
+          leadManifestations: {},
+          annotations: FALLBACK_ANNOTATIONS[rhythm] || [],
+          ecgMetrics: {
+            expected_hr: def.ecgCharacteristics.rate,
+            pr_interval: def.ecgCharacteristics.prInterval,
+            qrs_duration: def.ecgCharacteristics.qrsComplex,
+            qt_interval: "380 - 420 ms",
+            qrs_axis: "Bình thường",
+          },
+          clinicalAction: def.treatmentSummary,
+          differentialDiagnoses: [],
+        });
+      }
     }
 
     fetch(`/api/simulators/ecg/diagnoses/${rhythm}`)
@@ -682,17 +720,31 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
         // thì các chuyển đạo đích luôn lập tức xuất hiện thước đo / nhãn sóng tương ứng.
         const normLead = isRhythmStrip ? "II" : leadId.toUpperCase();
 
-        // 3A. Thước kẹp R-R Caliper (Tiêu chuẩn 1 & 2: Tần số & Nhịp điệu)
+        // 3A. Thước kẹp R-R Caliper (Chỉ kích hoạt khi tiêu chuẩn ĐƯỢC CHỌN thực sự đề cập đến Tần số / Nhịp điệu)
         const isRrActive = activeIndicesList.some((idx) => {
           const c = diagnosisData.criteria[idx]?.toLowerCase() || "";
+          if (
+            c.includes("st chênh") ||
+            c.includes("soi gương") ||
+            c.includes("sóng q") ||
+            c.includes("q hoại tử") ||
+            c.includes("sóng t") ||
+            c.includes("t tối cấp") ||
+            c.includes("khoảng pr") ||
+            c.includes("sóng p")
+          ) {
+            return false;
+          }
           return (
             c.includes("tần số") ||
             c.includes("nhịp điệu") ||
             c.includes("đều") ||
             c.includes("loạn nhịp") ||
             c.includes("r-r") ||
-            idx === 0 ||
-            idx === 1
+            c.includes("nhịp nhanh") ||
+            c.includes("nhịp chậm") ||
+            c.includes("rung nhĩ") ||
+            c.includes("cuồng nhĩ")
           );
         });
         if (isRrActive && (normLead === "DII" || normLead === "II") && !annotations.some((a) => a.waveComponent === "RR")) {
@@ -706,16 +758,25 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
           });
         }
 
-        // 3B. Thước kẹp PR Caliper (Tiêu chuẩn 4: Khoảng PR)
+        // 3B. Thước kẹp PR Caliper (Chỉ kích hoạt khi tiêu chuẩn ĐƯỢC CHỌN thực sự đề cập đến Khoảng PR / Dẫn truyền nhĩ thất)
         const isPrActive = activeIndicesList.some((idx) => {
           const c = diagnosisData.criteria[idx]?.toLowerCase() || "";
+          if (
+            c.includes("st chênh") ||
+            c.includes("soi gương") ||
+            c.includes("sóng q") ||
+            c.includes("q hoại tử") ||
+            c.includes("sóng t") ||
+            c.includes("t tối cấp")
+          ) {
+            return false;
+          }
           return (
             c.includes("khoảng pr") ||
             c.includes("pr kéo dài") ||
             c.includes("pr ngắn") ||
             c.includes("dẫn truyền nhĩ") ||
-            c.includes("block av") ||
-            idx === 3
+            c.includes("block av")
           );
         });
         if (isPrActive && (normLead === "DII" || normLead === "II" || normLead === "V1") && !annotations.some((a) => a.waveComponent === "PR")) {
@@ -729,10 +790,28 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
           });
         }
 
-        // 3C. Nhãn Sóng P xoang (Tiêu chuẩn 3: Sóng P)
+        // 3C. Nhãn Sóng P xoang (Chỉ kích hoạt khi tiêu chuẩn ĐƯỢC CHỌN thực sự đề cập đến Sóng P)
         const isPActive = activeIndicesList.some((idx) => {
           const c = diagnosisData.criteria[idx]?.toLowerCase() || "";
-          return c.includes("sóng p") || c.includes("p xoang") || c.includes("trục sóng p") || idx === 2;
+          if (
+            c.includes("st chênh") ||
+            c.includes("soi gương") ||
+            c.includes("sóng q") ||
+            c.includes("q hoại tử") ||
+            c.includes("sóng t") ||
+            c.includes("t tối cấp")
+          ) {
+            return false;
+          }
+          return (
+            c.includes("sóng p") ||
+            c.includes("p xoang") ||
+            c.includes("trục sóng p") ||
+            c.includes("p phế") ||
+            c.includes("p nhĩ") ||
+            c.includes("p âm") ||
+            c.includes("p dương")
+          );
         });
         if (isPActive && !annotations.some((a) => a.waveComponent === "P")) {
           if (normLead === "AVR") {

@@ -1,8 +1,8 @@
 # 📚 Trinity Wiki Index
 
-_Auto-generated at 2026-10-22T06:43:50. Do not edit manually._
+_Auto-generated at 2026-10-22T16:45:50. Do not edit manually._
 
-**Total Pages:** 13
+**Total Pages:** 14
 
 ## Categories
 
@@ -10,7 +10,7 @@ _Auto-generated at 2026-10-22T06:43:50. Do not edit manually._
 |---|---|---|
 | entities | 2 | Modules, services, components |
 | decisions | 9 | Architecture decision records |
-| patterns | 2 | Reusable code/design patterns |
+| patterns | 3 | Reusable code/design patterns |
 | insights | 0 | Lessons learned, tips, gotchas |
 
 ## Entities (2)
@@ -34,9 +34,10 @@ _Auto-generated at 2026-10-22T06:43:50. Do not edit manually._
 | [Realistic 12-Lead Pink Millimeter ECG Paper Engine](.brain\wiki\decisions\realistic-12-lead-pink-millimeter-ecg-paper-engine.md) | active | 2026-10-21 | ecg, 12-lead, pink-paper, calipers |
 | [Three-Module Medical Learning and Simulation Architecture](.brain\wiki\decisions\three-module-medical-learning-and-simulation-architecture.md) | active | 2026-10-21 | architecture, 3-modules, simulation, paraclinical |
 
-## Patterns (2)
+## Patterns (3)
 
 | Page | Status | Updated | Tags |
 |---|---|---|---|
 | [HospitalNavbar - NextJsClientComponentError Pattern](.brain\wiki\patterns\hospitalnavbar-nextjsclientcomponenterror-pattern.md) | active | 2026-10-21 | HospitalNavbar, NextJsClientComponentError, auto-generated |
 | [Next.js App Router / Dev Server - ROUTE_RESOLUTION_ERROR Pattern](.brain\wiki\patterns\nextjs-app-router-dev-server-route-resolution-error-pattern.md) | active | 2026-10-21 | Next.js App Router / Dev Server, ROUTE_RESOLUTION_ERROR, auto-generated |
+| [Next.js Dev Server / Build Conflict - DEV_SERVER_CACHE_CORRUPTION Pattern](.brain\wiki\patterns\nextjs-dev-server-build-conflict-dev-server-cache-corruption-pattern.md) | active | 2026-10-22 | Next.js Dev Server / Build Conflict, DEV_SERVER_CACHE_CORRUPTION, auto-generated |

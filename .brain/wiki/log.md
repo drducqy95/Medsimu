@@ -17,3 +17,4 @@ _Append-only operation history._
 - `2026-10-22T06:39:41` — CREATE [decision] ECG Clinical Expansion Architecture → .brain\wiki\decisions\ecg-clinical-expansion-architecture.md
 - `2026-10-22T06:39:45` — CREATE [entity] ECG Comprehensive Clinical Suite → .brain\wiki\entities\ecg-comprehensive-clinical-suite.md
 - `2026-10-22T06:43:50` — CREATE [decision] ECG 9 Systematic Clinical Taxonomy → .brain\wiki\decisions\ecg-9-systematic-clinical-taxonomy.md
+- `2026-10-22T16:45:50` — CREATE [pattern] Next.js Dev Server / Build Conflict - DEV_SERVER_CACHE_CORRUPTION Pattern → .brain\wiki\patterns\nextjs-dev-server-build-conflict-dev-server-cache-corruption-pattern.md
