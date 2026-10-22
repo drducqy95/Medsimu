@@ -966,14 +966,27 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
 
         const anchors = getWaveAnchors(rhythm, metrics);
 
+        // Mốc ước tính ban đầu của đỉnh R (0.220s) - chính xác tuyệt đối trên mọi tần số tim
+        const dynamicRPeakOffset = anchors.rPeak;
+
         // Dynamic Wave Snapping Engine: Tự động bắt dính điểm cực trị toán học của sóng thực tế trên từng chuyển đạo
         const snapToWaveExtremum = (
           tCenterSec: number,
           targetLeadId: string,
-          extremumType: "min" | "max",
-          windowSec: number = 0.035,
-          stepSec: number = 0.001
+          extremumType: "min" | "max" | "auto" = "auto",
+          windowSec: number = 0.080,
+          stepSec: number = 0.0005
         ): number => {
+          let resolvedType = extremumType;
+          if (resolvedType === "auto") {
+            const vSample = calculateLeadEcgVoltage(tCenterSec, targetLeadId, rhythm, bpm);
+            const isNegativeDominant =
+              targetLeadId.toUpperCase() === "AVR" ||
+              (targetLeadId.toUpperCase() === "V1" && rhythm !== "rbbb") ||
+              vSample < -0.20;
+            resolvedType = isNegativeDominant ? "min" : "max";
+          }
+
           let bestT = tCenterSec;
           let bestV = calculateLeadEcgVoltage(tCenterSec, targetLeadId, rhythm, bpm);
           const tStart = tCenterSec - windowSec;
@@ -981,7 +994,7 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
 
           for (let t = tStart; t <= tEnd; t += stepSec) {
             const v = calculateLeadEcgVoltage(t, targetLeadId, rhythm, bpm);
-            if (extremumType === "min") {
+            if (resolvedType === "min") {
               if (v < bestV) {
                 bestV = v;
                 bestT = t;
@@ -1018,13 +1031,13 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
               const x1_0 = traceStart + (t1_0 - tMin) * pixelsPerSecond;
               const x2_0 = traceStart + (t2_0 - tMin) * pixelsPerSecond;
 
-              // Beat 1: PR = 240ms (P: 0.91s, QRS: 1.15s)
+              // Beat 1: PR = 280ms (P: 0.91s, QRS: 1.19s, QRS onset: 1.17s)
               const t1_1 = baseT + 0.85 + 0.038;
-              const t2_1 = baseT + 0.85 + 0.280;
+              const t2_1 = baseT + 0.85 + 0.320;
               const x1_1 = traceStart + (t1_1 - tMin) * pixelsPerSecond;
               const x2_1 = traceStart + (t2_1 - tMin) * pixelsPerSecond;
 
-              // Beat 2: PR = 320ms (P: 1.76s, QRS: 2.08s)
+              // Beat 2: PR = 320ms (P: 1.76s, QRS: 2.08s, QRS onset: 2.06s)
               const t1_2 = baseT + 1.70 + 0.038;
               const t2_2 = baseT + 1.70 + 0.360;
               const x1_2 = traceStart + (t1_2 - tMin) * pixelsPerSecond;
@@ -1054,12 +1067,12 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                 });
               }
 
-              // Thước 2 (PR2 = 240ms)
+              // Thước 2 (PR2 = 280ms)
               if (x1_1 >= traceStart + 4 && x2_1 <= leadEndX - 4) {
                 const v1 = calculateLeadEcgVoltage(t1_1, calcLead, rhythm, bpm);
                 const v2 = calculateLeadEcgVoltage(t2_1, calcLead, rhythm, bpm);
                 itemsToRender.push({
-                  ann: { leadId: "II", waveComponent: "PR", label: "PR2_240", color: "#d97706", targetCyclePhase: 0.1 },
+                  ann: { leadId: "II", waveComponent: "PR", label: "PR2_280", color: "#d97706", targetCyclePhase: 0.1 },
                   targetTime: t1_1,
                   targetX: (x1_1 + x2_1) / 2,
                   targetY: calY,
@@ -1072,7 +1085,7 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                   x2: x2_1,
                   y1: midY - v1 * voltageScale,
                   y2: midY - v2 * voltageScale,
-                  displayText: `|<── PR₂ = 240ms ──>|`,
+                  displayText: `|<── PR₂ = 280ms ──>|`,
                 });
               }
 
@@ -1098,10 +1111,10 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                 });
               }
 
-              // Summary Badge phía trên: [✓ PR dài dần: 160ms → 240ms → 320ms]
+              // Summary Badge phía trên: [✓ PR dài dần: 160ms → 280ms → 320ms]
               if (x1_0 >= traceStart + 4 && x2_2 <= leadEndX - 4) {
                 const summaryMidX = (x1_0 + x2_2) / 2;
-                const summaryText = `✓ PR dài dần: 160ms → 240ms → 320ms`;
+                const summaryText = `✓ PR dài dần: 160ms → 280ms → 320ms`;
                 ctx.font = "bold 8.5px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
                 const tw = ctx.measureText(summaryText).width;
                 itemsToRender.push({
@@ -1215,14 +1228,14 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
           if (activeCriteriaIndices.has(3)) {
             for (let k = startCycleK; k <= endCycleK; k++) {
               const baseT = k * totalCycle;
-              // R0, R1, R2 trước nhát rớt
+              // R0, R1, R2 trước nhát rớt (PR0 = 160ms, PR1 = 280ms, PR2 = 320ms)
               const rawR0 = baseT + 0.22;
-              const rawR1 = baseT + 0.85 + 0.30;
+              const rawR1 = baseT + 0.85 + 0.34;
               const rawR2 = baseT + 1.70 + 0.38;
 
-              const tR0 = snapToWaveExtremum(rawR0, calcLead, "max", 0.035, 0.001);
-              const tR1 = snapToWaveExtremum(rawR1, calcLead, "max", 0.035, 0.001);
-              const tR2 = snapToWaveExtremum(rawR2, calcLead, "max", 0.035, 0.001);
+              const tR0 = snapToWaveExtremum(rawR0, calcLead, "max", 0.080, 0.0005);
+              const tR1 = snapToWaveExtremum(rawR1, calcLead, "max", 0.080, 0.0005);
+              const tR2 = snapToWaveExtremum(rawR2, calcLead, "max", 0.080, 0.0005);
 
               const xR0 = traceStart + (tR0 - tMin) * pixelsPerSecond;
               const xR1 = traceStart + (tR1 - tMin) * pixelsPerSecond;
@@ -1242,7 +1255,7 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                 const deltaMs1 = Math.round(((xR1 - xR0) / pixelsPerSecond) * 1000);
                 const deltaMs2 = Math.round(((xR2 - xR1) / pixelsPerSecond) * 1000);
 
-                // Thước 1 (R0 -> R1)
+                // Thước 1 (R0 -> R1): 970ms
                 itemsToRender.push({
                   ann: { leadId: "II", waveComponent: "RR", label: "RR1_MOBITZ", color: "#10b981", targetCyclePhase: 0.1 },
                   targetTime: tR0,
@@ -1260,7 +1273,7 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                   displayText: `|<- R-R₁: ${deltaMs1}ms ->|`,
                 });
 
-                // Thước 2 (R1 -> R2) nối liền tại R1
+                // Thước 2 (R1 -> R2): 890ms (nối liền tại R1)
                 itemsToRender.push({
                   ann: { leadId: "II", waveComponent: "RR", label: "RR2_MOBITZ", color: "#10b981", targetCyclePhase: 0.1 },
                   targetTime: tR1,
@@ -1278,7 +1291,7 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                   displayText: `|<- R-R₂: ${deltaMs2}ms ->|`,
                 });
 
-                // Badge tại điểm nối R1: [✓ R-R ngắn dần trước nhát rớt: ... → ... (QRS hẹp 88ms)]
+                // Badge tại điểm nối R1: [✓ R-R ngắn dần trước nhát rớt: 970ms → 890ms (QRS hẹp 88ms)]
                 const compText = `✓ R-R ngắn dần trước nhát rớt: ${deltaMs1}ms → ${deltaMs2}ms (QRS hẹp ${metrics.qrsDurationMs || 88}ms)`;
                 ctx.font = "bold 8px monospace";
                 const twComp = ctx.measureText(compText).width;
@@ -1301,6 +1314,176 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
           }
         }
 
+        // =========================================================================
+        // LINEAR CONSECUTIVE RR CALIPER ENGINE (FOR 12 LEADS & RHYTHM STRIP)
+        // =========================================================================
+        const rrAnnotation = annotations.find((a) => a.waveComponent === "RR");
+        if (rrAnnotation && !handledWenckebach && !renderedLabels.has("RR_DONE")) {
+          const calcLead = isRhythmStrip ? "DII" : leadId;
+          const kStart = Math.floor((tMin - dynamicRPeakOffset - 0.2) / cycleDuration);
+          const kEnd = Math.ceil((tMin + leadDuration - dynamicRPeakOffset + 0.2) / cycleDuration);
+
+          const detectedRPeaks: Array<{
+            k: number;
+            tR: number;
+            xR: number;
+            yR: number;
+          }> = [];
+
+          for (let k = kStart; k <= kEnd; k++) {
+            const rawT = k * cycleDuration + dynamicRPeakOffset;
+            const tR = snapToWaveExtremum(rawT, calcLead, "auto", 0.080, 0.0005);
+            const xR = traceStart + (tR - tMin) * pixelsPerSecond;
+
+            if (xR >= traceStart + 6 && xR <= leadEndX - 6) {
+              const vR = calculateLeadEcgVoltage(tR, calcLead, rhythm, bpm);
+              const yR = midY - vR * voltageScale;
+              detectedRPeaks.push({ k, tR, xR, yR });
+            }
+          }
+
+          detectedRPeaks.sort((a, b) => a.xR - b.xR);
+
+          if (detectedRPeaks.length >= 3) {
+            // Có ít nhất 3 đỉnh R: Dựng chuỗi 2 khoảng liên tiếp R1 -> R2 và R2 -> R3 nối liền tại R2
+            const r1 = detectedRPeaks[0];
+            const r2 = detectedRPeaks[1];
+            const r3 = detectedRPeaks[2];
+
+            let calY = Math.min(r1.yR, r2.yR, r3.yR) - (isRhythmStrip ? 14 : 16);
+            if (calY < midY - (isPortraitMode ? 36 : 46)) calY = midY - (isPortraitMode ? 36 : 46);
+
+            const deltaMs1 = Math.round(((r2.xR - r1.xR) / pixelsPerSecond) * 1000);
+            const deltaMs2 = Math.round(((r3.xR - r2.xR) / pixelsPerSecond) * 1000);
+            const boxes1 = (deltaMs1 / 200).toFixed(1);
+            const boxes2 = (deltaMs2 / 200).toFixed(1);
+
+            let labelText1 = isRhythmStrip
+              ? `|<── R-R₁ = ${deltaMs1}ms (${boxes1} ô lớn) • Tiêu chuẩn: Đều 60 - 100 chu kỳ/phút ──>|`
+              : `|<── R-R₁ = ${deltaMs1}ms ──>|`;
+            let labelText2 = isRhythmStrip
+              ? `|<── R-R₂ = ${deltaMs2}ms (${boxes2} ô lớn) ──>|`
+              : `|<── R-R₂ = ${deltaMs2}ms ──>|`;
+
+            if (rhythm === "atrial_fibrillation") {
+              labelText1 = isRhythmStrip
+                ? `|<── R-R₁ = ${deltaMs1}ms (${boxes1} ô) • Tiêu chuẩn: Loạn nhịp hoàn toàn ──>|`
+                : `|<── R-R₁ = ${deltaMs1}ms [Loạn nhịp] ──>|`;
+              labelText2 = isRhythmStrip
+                ? `|<── R-R₂ = ${deltaMs2}ms (${boxes2} ô) • Tiêu chuẩn: Loạn nhịp hoàn toàn ──>|`
+                : `|<── R-R₂ = ${deltaMs2}ms [Loạn nhịp] ──>|`;
+            }
+
+            ctx.font = "bold 8px monospace";
+            if (ctx.measureText(labelText1).width + 12 > (r2.xR - r1.xR)) {
+              labelText1 = `|<- R-R₁: ${deltaMs1}ms ->|`;
+            }
+            if (ctx.measureText(labelText2).width + 12 > (r3.xR - r2.xR)) {
+              labelText2 = `|<- R-R₂: ${deltaMs2}ms ->|`;
+            }
+
+            // Đoạn 1: R1 -> R2
+            itemsToRender.push({
+              ann: { ...rrAnnotation, label: "RR_SEG1" },
+              targetTime: r1.tR,
+              targetX: (r1.xR + r2.xR) / 2,
+              targetY: calY,
+              pillW: ctx.measureText(labelText1).width + 8,
+              pillH: 14,
+              isTop: true,
+              level: 0,
+              isInterval: true,
+              x1: r1.xR,
+              x2: r2.xR,
+              y1: r1.yR,
+              y2: r2.yR,
+              displayText: labelText1,
+            });
+
+            // Đoạn 2: R2 -> R3 (nối liền tại R2!)
+            itemsToRender.push({
+              ann: { ...rrAnnotation, label: "RR_SEG2" },
+              targetTime: r2.tR,
+              targetX: (r2.xR + r3.xR) / 2,
+              targetY: calY,
+              pillW: ctx.measureText(labelText2).width + 8,
+              pillH: 14,
+              isTop: true,
+              level: 0,
+              isInterval: true,
+              x1: r2.xR,
+              x2: r3.xR,
+              y1: r2.yR,
+              y2: r3.yR,
+              displayText: labelText2,
+            });
+
+            // Badge đối chiếu so sánh lâm sàng tại điểm nối R2 (Junction)
+            const diffMs = Math.abs(deltaMs1 - deltaMs2);
+            const isRegular = diffMs <= 160 && rhythm !== "atrial_fibrillation" && rhythm !== "av_block_mobitz_1";
+            const compText = isRegular
+              ? isRhythmStrip
+                ? `✓ Đều đặn: R-R₁ = R-R₂ = ${deltaMs1}ms (${bpm} bpm)`
+                : `✓ Đều: R-R₁ = R-R₂`
+              : `✕ Loạn nhịp: ΔRR = ${diffMs}ms`;
+
+            const twComp = ctx.measureText(compText).width;
+            itemsToRender.push({
+              ann: { ...rrAnnotation, label: "RR_COMPARISON_BADGE" },
+              targetTime: r2.tR,
+              targetX: r2.xR,
+              targetY: calY - 16,
+              pillW: twComp + 8,
+              pillH: 14,
+              isTop: true,
+              level: 0,
+              isInterval: false,
+              displayText: compText,
+            });
+
+            renderedLabels.add(rrAnnotation.label);
+            renderedLabels.add("RR_DONE");
+          } else if (detectedRPeaks.length === 2) {
+            // Có đúng 2 đỉnh R: Dựng 1 thước đơn từ R1 -> R2
+            const r1 = detectedRPeaks[0];
+            const r2 = detectedRPeaks[1];
+
+            let calY = Math.min(r1.yR, r2.yR) - (isRhythmStrip ? 14 : 16);
+            if (calY < midY - (isPortraitMode ? 36 : 46)) calY = midY - (isPortraitMode ? 36 : 46);
+
+            const deltaMs = Math.round(((r2.xR - r1.xR) / pixelsPerSecond) * 1000);
+            const boxes = (deltaMs / 200).toFixed(1);
+            let labelText = isRhythmStrip
+              ? `|<── R-R = ${deltaMs}ms (${boxes} ô lớn) • ${bpm} bpm ──>|`
+              : `|<── R-R = ${deltaMs}ms ──>|`;
+
+            ctx.font = "bold 8px monospace";
+            if (ctx.measureText(labelText).width + 12 > (r2.xR - r1.xR)) {
+              labelText = `|<- R-R: ${deltaMs}ms ->|`;
+            }
+
+            itemsToRender.push({
+              ann: rrAnnotation,
+              targetTime: r1.tR,
+              targetX: (r1.xR + r2.xR) / 2,
+              targetY: calY,
+              pillW: ctx.measureText(labelText).width + 8,
+              pillH: 14,
+              isTop: true,
+              level: 0,
+              isInterval: true,
+              x1: r1.xR,
+              x2: r2.xR,
+              y1: r1.yR,
+              y2: r2.yR,
+              displayText: labelText,
+            });
+
+            renderedLabels.add(rrAnnotation.label);
+            renderedLabels.add("RR_DONE");
+          }
+        }
+
         if (!handledWenckebach) {
         for (const k of candidateCycles) {
           if (renderedLabels.size >= annotations.length) break;
@@ -1319,87 +1502,8 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
               ann.waveComponent === "QT"
             ) {
               if (ann.waveComponent === "RR") {
-                const isConsecutive = ann.label.includes("R-R₂") || ann.label.includes("kế tiếp");
-                const cycleToUse = isConsecutive ? k + 1 : k;
-
-                // Dynamic Wave Snapping: Bắt dính cực trị QRS theo từng chuyển đạo thực tế
-                const isNegativeQrs = calcLead === "aVR" || (calcLead === "V1" && rhythm !== "rbbb");
-                const extremumType: "min" | "max" = isNegativeQrs ? "min" : "max";
-
-                const rawT1 = cycleToUse * cycleDuration + anchors.rPeak;
-                const rawT2 = (cycleToUse + 1) * cycleDuration + anchors.rPeak;
-
-                const t1 = snapToWaveExtremum(rawT1, calcLead, extremumType, 0.040, 0.001);
-                const t2 = snapToWaveExtremum(rawT2, calcLead, extremumType, 0.040, 0.001);
-
-                const x1 = traceStart + (t1 - tMin) * pixelsPerSecond;
-                const x2 = traceStart + (t2 - tMin) * pixelsPerSecond;
-
-                if (x1 >= traceStart + 6 && x2 <= leadEndX - 6) {
-                  const v1 = calculateLeadEcgVoltage(t1, calcLead, rhythm, bpm);
-                  const v2 = calculateLeadEcgVoltage(t2, calcLead, rhythm, bpm);
-                  const y1 = midY - v1 * voltageScale;
-                  const y2 = midY - v2 * voltageScale;
-                  const deltaMs = Math.round(((x2 - x1) / pixelsPerSecond) * 1000);
-                  const boxes = (deltaMs / 200).toFixed(1);
-                  let calY = Math.min(y1, y2) - (isRhythmStrip ? 14 : 16);
-                  if (calY < midY - (isPortraitMode ? 36 : 46)) calY = midY - (isPortraitMode ? 36 : 46);
-
-                  let labelText = isRhythmStrip
-                    ? isConsecutive
-                      ? `|<── R-R₂ = ${deltaMs}ms (${boxes} ô lớn) ──>|`
-                      : `|<── R-R₁ = ${deltaMs}ms (${boxes} ô lớn) • Tiêu chuẩn: Đều 60 - 100 chu kỳ/phút ──>|`
-                    : `|<── R-R = ${deltaMs}ms (${boxes} ô) • ${bpm} bpm • Chuẩn: 60-100 ──>|`;
-
-                  if (rhythm === "atrial_fibrillation") {
-                    labelText = isRhythmStrip
-                      ? isConsecutive
-                        ? `|<── R-R₂ = ${deltaMs}ms (${boxes} ô) • Tiêu chuẩn: Loạn nhịp hoàn toàn ──>|`
-                        : `|<── R-R₁ = ${deltaMs}ms (${boxes} ô) • Tiêu chuẩn: Loạn nhịp hoàn toàn ──>|`
-                      : `|<── R-R = ${deltaMs}ms [Loạn nhịp] ──>|`;
-                  } else if (bpm > 100) {
-                    labelText = isRhythmStrip
-                      ? isConsecutive
-                        ? `|<── R-R₂ = ${deltaMs}ms (${boxes} ô lớn) ──>|`
-                        : `|<── R-R₁ = ${deltaMs}ms (${boxes} ô lớn) • ${bpm} bpm ──>|`
-                      : `|<── R-R = ${deltaMs}ms • ${bpm} bpm • Chuẩn: >100 ──>|`;
-                  } else if (bpm < 60) {
-                    labelText = isRhythmStrip
-                      ? isConsecutive
-                        ? `|<── R-R₂ = ${deltaMs}ms (${boxes} ô lớn) ──>|`
-                        : `|<── R-R₁ = ${deltaMs}ms (${boxes} ô lớn) ──>|`
-                      : `|<── R-R = ${deltaMs}ms • ${bpm} bpm • Chuẩn: <60 ──>|`;
-                  }
-
-                  ctx.font = "bold 8px monospace";
-                  let tw = ctx.measureText(labelText).width;
-                  if (tw + 12 > (x2 - x1)) {
-                    labelText = isRhythmStrip
-                      ? isConsecutive
-                        ? `|<- R-R₂: ${deltaMs}ms ->|`
-                        : `|<- R-R₁: ${deltaMs}ms ->|`
-                      : `|<- R-R: ${deltaMs}ms ->|`;
-                    tw = ctx.measureText(labelText).width;
-                  }
-
-                  itemsToRender.push({
-                    ann,
-                    targetTime: t1,
-                    targetX: (x1 + x2) / 2,
-                    targetY: calY,
-                    pillW: tw + 8,
-                    pillH: 14,
-                    isTop: true,
-                    level: 0,
-                    isInterval: true,
-                    x1,
-                    x2,
-                    y1,
-                    y2,
-                    displayText: labelText,
-                  });
-                  renderedLabels.add(ann.label);
-                }
+                // Toàn bộ thước kẹp R-R trên 12 chuyển đạo và dải nhịp đã được xử lý bởi LINEAR CONSECUTIVE RR CALIPER ENGINE ở trên
+                continue;
               } else if (ann.waveComponent === "PR") {
                 const t1 = tCycleStart + anchors.pOnset;
                 const t2 = tCycleStart + anchors.qrsOnset;
@@ -1753,13 +1857,12 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
           }
         }
 
-        // Đồng bộ độ cao calY cho các thước kẹp RR liên tiếp trên dải nhịp để tạo thanh đo phẳng liền mạch
-        if (isRhythmStrip) {
-          const rrItems = itemsToRender.filter((it) => it.isInterval && it.ann.waveComponent === "RR");
-          if (rrItems.length >= 2) {
-            const unifiedCalY = Math.min(rrItems[0].targetY, rrItems[1].targetY);
-            rrItems[0].targetY = unifiedCalY;
-            rrItems[1].targetY = unifiedCalY;
+        // Đồng bộ độ cao calY cho các thước kẹp RR liên tiếp để tạo thanh đo phẳng liền mạch
+        const rrItems = itemsToRender.filter((it) => it.isInterval && it.ann.waveComponent === "RR");
+        if (rrItems.length >= 2) {
+          const unifiedCalY = Math.min(...rrItems.map((it) => it.targetY));
+          for (const rr of rrItems) {
+            rr.targetY = unifiedCalY;
           }
         }
 
@@ -1794,6 +1897,42 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
               ctx.lineTo(item.x2, calY);
               ctx.stroke();
               ctx.setLineDash([]);
+            }
+
+            // Target Pinpoint Dots directly at wave extremum / onset anchors
+            if (typeof item.y1 === "number" && item.x1 >= traceStart + 4 && item.x1 <= leadEndX - 4) {
+              ctx.strokeStyle = col;
+              ctx.lineWidth = 1.3;
+              ctx.beginPath();
+              ctx.arc(item.x1, item.y1, 4, 0, Math.PI * 2);
+              ctx.stroke();
+
+              ctx.fillStyle = col;
+              ctx.beginPath();
+              ctx.arc(item.x1, item.y1, 2.2, 0, Math.PI * 2);
+              ctx.fill();
+
+              ctx.fillStyle = "#ffffff";
+              ctx.beginPath();
+              ctx.arc(item.x1, item.y1, 0.9, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            if (typeof item.y2 === "number" && item.x2 >= traceStart + 4 && item.x2 <= leadEndX - 4) {
+              ctx.strokeStyle = col;
+              ctx.lineWidth = 1.3;
+              ctx.beginPath();
+              ctx.arc(item.x2, item.y2, 4, 0, Math.PI * 2);
+              ctx.stroke();
+
+              ctx.fillStyle = col;
+              ctx.beginPath();
+              ctx.arc(item.x2, item.y2, 2.2, 0, Math.PI * 2);
+              ctx.fill();
+
+              ctx.fillStyle = "#ffffff";
+              ctx.beginPath();
+              ctx.arc(item.x2, item.y2, 0.9, 0, Math.PI * 2);
+              ctx.fill();
             }
 
             // Horizontal Caliper Bar

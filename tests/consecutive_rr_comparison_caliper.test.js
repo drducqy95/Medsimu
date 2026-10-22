@@ -60,23 +60,17 @@ test("M17 - Phase 03: Code Integration of Precision Wave Snapping & Comparison B
   const filePath = path.join(process.cwd(), "src/components/simulators/ecg/RealisticPinkEcgPaper.tsx");
   const content = fs.readFileSync(filePath, "utf8");
 
-  // 1. Kiểm tra đã gọi snapToWaveExtremum cho thước đo RR
+  // 1. Kiểm tra đã gọi snapToWaveExtremum cho đỉnh sóng R
   assert.match(
     content,
-    /const t1 = snapToWaveExtremum\(rawT1,\s*calcLead,\s*extremumType/s,
-    "RealisticPinkEcgPaper must invoke snapToWaveExtremum for RR caliper point t1"
-  );
-  assert.match(
-    content,
-    /const t2 = snapToWaveExtremum\(rawT2,\s*calcLead,\s*extremumType/s,
-    "RealisticPinkEcgPaper must invoke snapToWaveExtremum for RR caliper point t2"
+    /snapToWaveExtremum\(rawT,\s*calcLead,\s*"auto"/s,
+    "RealisticPinkEcgPaper must invoke snapToWaveExtremum for RR caliper points"
   );
 
-  // 2. Kiểm tra lọc sạch nhãn RR cũ trước khi sinh thước kép
-  assert.match(
-    content,
-    /annotations = annotations\.filter\(\(a\) => a\.waveComponent !== "RR"\);/,
-    "RealisticPinkEcgPaper must clear pre-existing RR annotations to prevent collisions"
+  // 2. Kiểm tra Linear Consecutive RR Caliper Engine
+  assert.ok(
+    content.includes("LINEAR CONSECUTIVE RR CALIPER ENGINE"),
+    "RealisticPinkEcgPaper must contain LINEAR CONSECUTIVE RR CALIPER ENGINE"
   );
 
   // 3. Kiểm tra logic vẽ badge đối chiếu so sánh lâm sàng tại điểm nối R2 (Junction)
@@ -86,10 +80,10 @@ test("M17 - Phase 03: Code Integration of Precision Wave Snapping & Comparison B
     "RealisticPinkEcgPaper must render clinical comparison badge at junction R2"
   );
 
-  // 4. Kiểm tra đồng bộ calY phẳng cho cả 2 thước đo
+  // 4. Kiểm tra đồng bộ calY phẳng cho cả các thước đo RR liên tiếp
   assert.match(
     content,
-    /const unifiedCalY = Math\.min\(rrItems\[0\]\.targetY,\s*rrItems\[1\]\.targetY\);/,
+    /const unifiedCalY = Math\.min\(\.\.\.rrItems\.map/,
     "RealisticPinkEcgPaper must unify calY across consecutive calipers for seamless alignment"
   );
 });

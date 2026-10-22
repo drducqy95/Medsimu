@@ -18,13 +18,13 @@ test("M18 - Phase 01: Wenckebach PR Progression Timing & Post-Drop Shortest PR",
   const pr0_ms = Math.round((0.22 - 0.06) * 1000);
   assert.equal(pr0_ms, 160, "Beat 0 PR must be 160ms");
 
-  // Beat 1: P peak at 0.85 + 0.06 = 0.91s, R peak at 0.85 + 0.30 = 1.15s -> PR = 240ms
+  // Beat 1: P peak at 0.85 + 0.06 = 0.91s, R peak at 0.85 + 0.34 = 1.19s -> PR = 280ms
   const v_p1 = calculateLeadEcgVoltage(0.91, "DII", rhythm, bpm);
-  const v_r1 = calculateLeadEcgVoltage(1.15, "DII", rhythm, bpm);
+  const v_r1 = calculateLeadEcgVoltage(1.19, "DII", rhythm, bpm);
   assert.ok(v_p1 >= 0.10, `Beat 1 P wave must be positive (actual: ${v_p1.toFixed(3)}mV)`);
   assert.ok(v_r1 >= 1.40, `Beat 1 R wave must be prominent >= 1.40mV (actual: ${v_r1.toFixed(3)}mV)`);
-  const pr1_ms = Math.round((1.15 - 0.91) * 1000);
-  assert.equal(pr1_ms, 240, "Beat 1 PR must be 240ms");
+  const pr1_ms = Math.round((1.19 - 0.91) * 1000);
+  assert.equal(pr1_ms, 280, "Beat 1 PR must be 280ms");
 
   // Beat 2: P peak at 1.70 + 0.06 = 1.76s, R peak at 1.70 + 0.38 = 2.08s -> PR = 320ms
   const v_p2 = calculateLeadEcgVoltage(1.76, "DII", rhythm, bpm);
@@ -104,10 +104,10 @@ test("M18 - Phase 04: Component Code Inspection for Specialized Wenckebach Engin
     "RealisticPinkEcgPaper must contain dedicated Wenckebach renderer block"
   );
 
-  // 2. Kiểm tra chuỗi thước đo PR dài dần: PR1 = 160ms -> PR2 = 240ms -> PR3 = 320ms
+  // 2. Kiểm tra chuỗi thước đo PR dài dần: PR1 = 160ms -> PR2 = 280ms -> PR3 = 320ms
   assert.ok(
-    content.includes("PR₁ = 160ms") && content.includes("PR₂ = 240ms") && content.includes("PR₃ = 320ms"),
-    "Dedicated block must render progressive PR calipers (160ms -> 240ms -> 320ms)"
+    content.includes("PR₁ = 160ms") && content.includes("PR₂ = 280ms") && content.includes("PR₃ = 320ms"),
+    "Dedicated block must render progressive PR calipers (160ms -> 280ms -> 320ms)"
   );
 
   // 3. Kiểm tra nhãn sóng P không dẫn duy nhất cho Tiêu chuẩn 2

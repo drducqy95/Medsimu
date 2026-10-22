@@ -1088,8 +1088,11 @@ export function calculateLeadEcgVoltage(
       return pWave;
     }
 
-    // PR intervals: Beat 0 = 160ms, Beat 1 = 240ms, Beat 2 = 320ms
-    const qrsMu = beatIndex === 0 ? 0.22 : beatIndex === 1 ? 0.30 : 0.38;
+    // PR intervals: Beat 0 = 160ms, Beat 1 = 280ms (+120ms), Beat 2 = 320ms (+40ms)
+    // Sinh lý Wenckebach AHA/ESC: Gia số PR giảm dần (ΔPR1 = 120ms > ΔPR2 = 40ms)
+    // dẫn tới khoảng R-R ngắn dần trước nhát rớt:
+    // RR1 = 850 + 120 = 970ms > RR2 = 850 + 40 = 890ms
+    const qrsMu = beatIndex === 0 ? 0.22 : beatIndex === 1 ? 0.34 : 0.38;
     const qDiff = tInBeat - (qrsMu - 0.02);
     const rDiff = tInBeat - qrsMu;
     const sDiff = tInBeat - (qrsMu + 0.03);
