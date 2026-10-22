@@ -8,6 +8,7 @@ import {
   ECG_RHYTHM_DEFINITIONS,
 } from "@/domain/simulators/ecgWaveforms";
 import { computeEcgMetrics } from "@/domain/simulators/ecgMetricsCalculator";
+import { COMPREHENSIVE_FALLBACK_ANNOTATIONS } from "@/domain/simulators/ecgAnnotationsData";
 import { EcgLeadFocusModal } from "./EcgLeadFocusModal";
 import {
   Printer,
@@ -71,177 +72,7 @@ interface EcgDiagnosisData {
   differentialDiagnoses: string[];
 }
 
-const FALLBACK_ANNOTATIONS: Record<
-  string,
-  Array<{
-    leadId: string;
-    waveComponent: string;
-    label: string;
-    targetCyclePhase: number;
-    color: string;
-    badgePlacement: "top" | "bottom" | "interval";
-    intervalEndPhase?: number;
-    criterionIndex?: number;
-  }>
-> = {
-  stemi_inferior: [
-    { leadId: "DII", waveComponent: "ST", label: "▲ ST chênh vòm +3.2mm (≥1mm)", targetCyclePhase: 0.30, color: "#e11d48", badgePlacement: "top", criterionIndex: 0 },
-    { leadId: "DIII", waveComponent: "Q", label: "Q hoại tử ≥0.04s", targetCyclePhase: 0.20, color: "#9333ea", badgePlacement: "bottom", criterionIndex: 2 },
-    { leadId: "DIII", waveComponent: "ST", label: "▲ ST chênh lên +3.8mm", targetCyclePhase: 0.31, color: "#e11d48", badgePlacement: "top", criterionIndex: 0 },
-    { leadId: "aVF", waveComponent: "ST", label: "▲ ST chênh lên +3.4mm", targetCyclePhase: 0.30, color: "#e11d48", badgePlacement: "top", criterionIndex: 0 },
-    { leadId: "aVL", waveComponent: "ST", label: "▼ ST soi gương -1.8mm", targetCyclePhase: 0.32, color: "#2563eb", badgePlacement: "bottom", criterionIndex: 1 },
-    { leadId: "DI", waveComponent: "ST", label: "▼ ST soi gương -1.5mm", targetCyclePhase: 0.32, color: "#2563eb", badgePlacement: "bottom", criterionIndex: 1 },
-    { leadId: "II", waveComponent: "ST", label: "▲ ST chênh vòm +3.2mm (≥1mm)", targetCyclePhase: 0.30, color: "#e11d48", badgePlacement: "top", criterionIndex: 0 },
-  ],
-  stemi_anterior: [
-    { leadId: "V2", waveComponent: "ST", label: "▲ ST Vòm Bia Mộ (Tombstone) +4.8mm", targetCyclePhase: 0.32, color: "#e11d48", badgePlacement: "top", criterionIndex: 0 },
-    { leadId: "V3", waveComponent: "ST", label: "▲ ST Tombstone +4.2mm", targetCyclePhase: 0.32, color: "#e11d48", badgePlacement: "top", criterionIndex: 0 },
-    { leadId: "V1", waveComponent: "Q", label: "Mất sóng r dạng QS", targetCyclePhase: 0.20, color: "#9333ea", badgePlacement: "bottom", criterionIndex: 1 },
-    { leadId: "DIII", waveComponent: "ST", label: "▼ ST soi gương -1.8mm", targetCyclePhase: 0.32, color: "#2563eb", badgePlacement: "bottom", criterionIndex: 2 },
-    { leadId: "aVF", waveComponent: "ST", label: "▼ ST soi gương -1.5mm", targetCyclePhase: 0.32, color: "#2563eb", badgePlacement: "bottom", criterionIndex: 2 },
-  ],
-  av_block_first_degree: [
-    { leadId: "DII", waveComponent: "PR", label: "↔ PR = 260ms (> 200ms / 5 ô nhỏ)", targetCyclePhase: 0.04, intervalEndPhase: 0.30, color: "#d97706", badgePlacement: "interval", criterionIndex: 0 },
-    { leadId: "V1", waveComponent: "PR", label: "↔ PR kéo dài cố định 260ms", targetCyclePhase: 0.04, intervalEndPhase: 0.30, color: "#d97706", badgePlacement: "interval", criterionIndex: 0 },
-    { leadId: "II", waveComponent: "PR", label: "↔ Dải nhịp Lead II: PR = 260ms cố định", targetCyclePhase: 0.04, intervalEndPhase: 0.30, color: "#d97706", badgePlacement: "interval", criterionIndex: 1 },
-  ],
-  av_block_mobitz_1: [
-    { leadId: "DII", waveComponent: "PR", label: "PR dài dần (160ms → 320ms)", targetCyclePhase: 0.06, intervalEndPhase: 0.30, color: "#d97706", badgePlacement: "interval", criterionIndex: 0 },
-    { leadId: "DII", waveComponent: "DROPPED", label: "❌ P không dẫn (Rớt QRS)", targetCyclePhase: 0.06, color: "#e11d48", badgePlacement: "top", criterionIndex: 1 },
-    { leadId: "II", waveComponent: "DROPPED", label: "❌ Chu kỳ Wenckebach: Rớt 1 nhát QRS", targetCyclePhase: 0.06, color: "#e11d48", badgePlacement: "top", criterionIndex: 1 },
-  ],
-  av_block_mobitz_2: [
-    { leadId: "DII", waveComponent: "PR", label: "PR cố định 180ms", targetCyclePhase: 0.08, intervalEndPhase: 0.26, color: "#2563eb", badgePlacement: "interval", criterionIndex: 0 },
-    { leadId: "DII", waveComponent: "DROPPED", label: "❌ Đột ngột rớt QRS sau sóng P", targetCyclePhase: 0.08, color: "#e11d48", badgePlacement: "top", criterionIndex: 1 },
-    { leadId: "II", waveComponent: "DROPPED", label: "❌ Block dưới bó His: Rớt QRS 3:2", targetCyclePhase: 0.08, color: "#e11d48", badgePlacement: "top", criterionIndex: 2 },
-  ],
-  av_block_third_degree: [
-    { leadId: "DII", waveComponent: "P", label: "Sóng P xoang (75 bpm) độc lập", targetCyclePhase: 0.15, color: "#059669", badgePlacement: "top", criterionIndex: 1 },
-    { leadId: "DII", waveComponent: "R", label: "Nhịp thoát thất rộng 135ms (36 bpm)", targetCyclePhase: 0.25, color: "#e11d48", badgePlacement: "bottom", criterionIndex: 2 },
-    { leadId: "II", waveComponent: "RR", label: "⚡ Phân ly nhĩ - thất hoàn toàn (CHB)", targetCyclePhase: 0.20, color: "#e11d48", badgePlacement: "top", criterionIndex: 0 },
-  ],
-  atrial_fibrillation: [
-    { leadId: "DII", waveComponent: "RR", label: "↔ R-R hoàn toàn không đều (Loạn nhịp)", targetCyclePhase: 0.14, intervalEndPhase: 0.65, color: "#d97706", badgePlacement: "interval", criterionIndex: 2 },
-    { leadId: "V1", waveComponent: "P", label: "~ Sóng f lăn tăn 400-600 cpm (Mất P)", targetCyclePhase: 0.10, color: "#7c3aed", badgePlacement: "bottom", criterionIndex: 1 },
-    { leadId: "II", waveComponent: "RR", label: "↔ R-R không theo quy luật chu kỳ", targetCyclePhase: 0.14, intervalEndPhase: 0.65, color: "#d97706", badgePlacement: "interval", criterionIndex: 2 },
-  ],
-  atrial_flutter: [
-    { leadId: "DII", waveComponent: "P", label: "Sóng răng cưa F (300 bpm, 2:1)", targetCyclePhase: 0.05, color: "#d97706", badgePlacement: "bottom", criterionIndex: 1 },
-    { leadId: "DIII", waveComponent: "P", label: "Sóng F âm liên tục không đẳng điện", targetCyclePhase: 0.05, color: "#d97706", badgePlacement: "bottom", criterionIndex: 2 },
-    { leadId: "II", waveComponent: "P", label: "Răng cưa F tần số nhĩ 300 bpm", targetCyclePhase: 0.05, color: "#d97706", badgePlacement: "bottom", criterionIndex: 1 },
-  ],
-  hyperkalemia: [
-    { leadId: "V2", waveComponent: "T", label: "▲ Sóng T lều nhọn hoắt đối xứng (9.8mm)", targetCyclePhase: 0.45, color: "#e11d48", badgePlacement: "top", criterionIndex: 0 },
-    { leadId: "V3", waveComponent: "T", label: "▲ Sóng T nhọn hình lều > 10mm", targetCyclePhase: 0.45, color: "#e11d48", badgePlacement: "top", criterionIndex: 0 },
-    { leadId: "DII", waveComponent: "PR", label: "PR dài 220ms + QRS dãn rộng 130ms", targetCyclePhase: 0.12, intervalEndPhase: 0.29, color: "#d97706", badgePlacement: "interval", criterionIndex: 1 },
-    { leadId: "II", waveComponent: "T", label: "▲ Sóng T cao nhọn đáy hẹp (Dấu hiệu lều)", targetCyclePhase: 0.45, color: "#e11d48", badgePlacement: "top", criterionIndex: 0 },
-  ],
-  normal_sinus: [
-    { leadId: "DII", waveComponent: "P", label: "Sóng P xoang dương trước QRS", targetCyclePhase: 0.12, color: "#059669", badgePlacement: "top", criterionIndex: 0 },
-    { leadId: "aVR", waveComponent: "P", label: "Sóng P âm ở aVR chuẩn", targetCyclePhase: 0.12, color: "#059669", badgePlacement: "bottom", criterionIndex: 1 },
-    { leadId: "DII", waveComponent: "PR", label: "↔ PR bình thường 160ms (3-5 ô nhỏ)", targetCyclePhase: 0.12, intervalEndPhase: 0.28, color: "#059669", badgePlacement: "interval", criterionIndex: 2 },
-    { leadId: "II", waveComponent: "RR", label: "↔ R-R đều (HR = 75 bpm, 4 ô lớn)", targetCyclePhase: 0.20, intervalEndPhase: 0.80, color: "#059669", badgePlacement: "interval", criterionIndex: 3 },
-    { leadId: "V1", waveComponent: "QRS", label: "QRS hẹp 85ms (< 120ms)", targetCyclePhase: 0.24, color: "#059669", badgePlacement: "top", criterionIndex: 4 },
-    { leadId: "II", waveComponent: "ST", label: "ST đẳng điện, T dương bình thường", targetCyclePhase: 0.35, color: "#059669", badgePlacement: "top", criterionIndex: 4 },
-  ],
-  stemi_lateral: [
-    { leadId: "aVL", waveComponent: "ST", label: "▲ ST chênh lên bên cao +2.5mm", targetCyclePhase: 0.31, color: "#e11d48", badgePlacement: "top" },
-    { leadId: "DI", waveComponent: "ST", label: "▲ ST chênh lên +2.0mm", targetCyclePhase: 0.31, color: "#e11d48", badgePlacement: "top" },
-    { leadId: "V6", waveComponent: "ST", label: "▲ ST chênh lên bên thấp +2.0mm", targetCyclePhase: 0.31, color: "#e11d48", badgePlacement: "top" },
-    { leadId: "DIII", waveComponent: "ST", label: "▼ ST soi gương thành dưới -1.8mm", targetCyclePhase: 0.32, color: "#2563eb", badgePlacement: "bottom" },
-  ],
-  stemi_posterior: [
-    { leadId: "V2", waveComponent: "ST", label: "▼ ST chênh xuống đi ngang soi gương -2.5mm", targetCyclePhase: 0.32, color: "#2563eb", badgePlacement: "bottom" },
-    { leadId: "V2", waveComponent: "R", label: "▲ R cao vượt trội R/S > 1 (Gương của Q)", targetCyclePhase: 0.22, color: "#9333ea", badgePlacement: "top" },
-    { leadId: "V2", waveComponent: "T", label: "▲ T dương cao nhọn đối xứng (Gương của T âm)", targetCyclePhase: 0.45, color: "#e11d48", badgePlacement: "top" },
-    { leadId: "V1", waveComponent: "ST", label: "▼ ST chênh xuống -1.5mm", targetCyclePhase: 0.32, color: "#2563eb", badgePlacement: "bottom" },
-  ],
-  nemi_subendocardial: [
-    { leadId: "V5", waveComponent: "ST", label: "▼ ST chênh xuống đi ngang -2.5mm", targetCyclePhase: 0.32, color: "#2563eb", badgePlacement: "bottom" },
-    { leadId: "V5", waveComponent: "T", label: "▼ T âm sâu đối xứng", targetCyclePhase: 0.45, color: "#2563eb", badgePlacement: "bottom" },
-    { leadId: "aVR", waveComponent: "ST", label: "▲ ST chênh lên aVR +1.5mm (Nguy cơ tắc LMCA)", targetCyclePhase: 0.30, color: "#e11d48", badgePlacement: "top" },
-    { leadId: "V4", waveComponent: "ST", label: "▼ ST chênh xuống -2.0mm", targetCyclePhase: 0.32, color: "#2563eb", badgePlacement: "bottom" },
-  ],
-  rbbb: [
-    { leadId: "V1", waveComponent: "R", label: "▲ Dạng tai thỏ rsR' (RBBB) rộng 135ms", targetCyclePhase: 0.22, color: "#9333ea", badgePlacement: "top" },
-    { leadId: "V1", waveComponent: "T", label: "▼ ST chênh xuống & T âm thứ phát", targetCyclePhase: 0.40, color: "#2563eb", badgePlacement: "bottom" },
-    { leadId: "V6", waveComponent: "S", label: "▼ Sóng S rộng sâu > 40ms ở DI, V6", targetCyclePhase: 0.28, color: "#9333ea", badgePlacement: "bottom" },
-    { leadId: "DI", waveComponent: "S", label: "▼ S rộng thành bên", targetCyclePhase: 0.28, color: "#9333ea", badgePlacement: "bottom" },
-  ],
-  lbbb: [
-    { leadId: "V6", waveComponent: "R", label: "▲ R rộng có khía (LBBB) QRS 140ms", targetCyclePhase: 0.22, color: "#9333ea", badgePlacement: "top" },
-    { leadId: "V1", waveComponent: "S", label: "▼ Sóng QS sâu rộng ở V1-V2", targetCyclePhase: 0.26, color: "#9333ea", badgePlacement: "bottom" },
-    { leadId: "V5", waveComponent: "ST", label: "▼ ST chênh xuống thứ phát trái chiều QRS", targetCyclePhase: 0.35, color: "#2563eb", badgePlacement: "bottom" },
-    { leadId: "DI", waveComponent: "R", label: "Mất sóng Q vách ở DI, aVL, V6", targetCyclePhase: 0.18, color: "#9333ea", badgePlacement: "top" },
-  ],
-  lafb: [
-    { leadId: "aVL", waveComponent: "R", label: "Dạng qR ở aVL (Trục lệch trái -60°)", targetCyclePhase: 0.22, color: "#9333ea", badgePlacement: "top" },
-    { leadId: "DIII", waveComponent: "S", label: "▼ Sóng S sâu ở DII, DIII, aVF (dạng rS)", targetCyclePhase: 0.28, color: "#9333ea", badgePlacement: "bottom" },
-    { leadId: "DI", waveComponent: "Q", label: "q nhỏ ở DI, aVL", targetCyclePhase: 0.18, color: "#9333ea", badgePlacement: "bottom" },
-  ],
-  wpw_syndrome: [
-    { leadId: "DII", waveComponent: "PR", label: "↔ PR ngắn < 120ms (Kích thích sớm)", targetCyclePhase: 0.08, intervalEndPhase: 0.18, color: "#d97706", badgePlacement: "interval" },
-    { leadId: "V1", waveComponent: "R", label: "▲ Sóng Delta (Delta wave) sườn dốc thoai thoải", targetCyclePhase: 0.20, color: "#e11d48", badgePlacement: "top" },
-    { leadId: "V1", waveComponent: "QRS", label: "QRS dãn rộng 130ms do hợp nhất xung động", targetCyclePhase: 0.24, color: "#9333ea", badgePlacement: "top" },
-  ],
-  torsades_de_pointes: [
-    { leadId: "DII", waveComponent: "R", label: "⚡ QRS xoay trục quanh đường đẳng điện (TdP)", targetCyclePhase: 0.20, color: "#e11d48", badgePlacement: "top" },
-    { leadId: "DII", waveComponent: "RR", label: "Tần số 220 bpm đa dạng (Polymorphic)", targetCyclePhase: 0.15, intervalEndPhase: 0.50, color: "#e11d48", badgePlacement: "interval" },
-    { leadId: "II", waveComponent: "RR", label: "Chu kỳ khởi phát Short-Long-Short trên nền QT dài", targetCyclePhase: 0.25, intervalEndPhase: 0.65, color: "#9333ea", badgePlacement: "interval" },
-  ],
-  lvh_strain: [
-    { leadId: "V5", waveComponent: "R", label: "▲ R cao vút (Sokolow-Lyon = 47mm > 35mm)", targetCyclePhase: 0.22, color: "#9333ea", badgePlacement: "top" },
-    { leadId: "V5", waveComponent: "ST", label: "▼ ST chênh xuống không đối xứng (Strain pattern)", targetCyclePhase: 0.35, color: "#2563eb", badgePlacement: "bottom" },
-    { leadId: "V1", waveComponent: "S", label: "▼ Sóng S sâu 22mm ở V1", targetCyclePhase: 0.26, color: "#9333ea", badgePlacement: "bottom" },
-  ],
-  brugada_type1: [
-    { leadId: "V1", waveComponent: "ST", label: "▲ ST chênh vòm Coved-type ≥ 2mm (Brugada Type 1)", targetCyclePhase: 0.30, color: "#e11d48", badgePlacement: "top" },
-    { leadId: "V1", waveComponent: "T", label: "▼ Sóng T âm sâu đối xứng tiếp nối vòm ST", targetCyclePhase: 0.45, color: "#2563eb", badgePlacement: "bottom" },
-    { leadId: "V2", waveComponent: "ST", label: "ST vòm Brugada V2", targetCyclePhase: 0.30, color: "#e11d48", badgePlacement: "top" },
-  ],
-  pulmonary_embolism: [
-    { leadId: "DI", waveComponent: "S", label: "▼ S1: Sóng S sâu ở DI", targetCyclePhase: 0.28, color: "#9333ea", badgePlacement: "bottom" },
-    { leadId: "DIII", waveComponent: "Q", label: "▲ Q3: Sóng Q bệnh lý ở DIII", targetCyclePhase: 0.20, color: "#9333ea", badgePlacement: "bottom" },
-    { leadId: "DIII", waveComponent: "T", label: "▼ T3: Sóng T âm ở DIII (Dấu hiệu S1Q3T3)", targetCyclePhase: 0.45, color: "#2563eb", badgePlacement: "bottom" },
-    { leadId: "DII", waveComponent: "RR", label: "Nhịp nhanh xoang 115 bpm (Dấu hiệu thường gặp nhất)", targetCyclePhase: 0.15, intervalEndPhase: 0.50, color: "#d97706", badgePlacement: "interval" },
-    { leadId: "V1", waveComponent: "T", label: "▼ T âm đối xứng do tăng gánh thất phải cấp", targetCyclePhase: 0.40, color: "#2563eb", badgePlacement: "bottom" },
-  ],
-  acute_pericarditis: [
-    { leadId: "DII", waveComponent: "ST", label: "▲ ST chênh lên lõm lòng thuyền lan tỏa", targetCyclePhase: 0.32, color: "#e11d48", badgePlacement: "top" },
-    { leadId: "DII", waveComponent: "PR", label: "▼ Đoạn PR chênh xuống đặc hiệu (PR depression)", targetCyclePhase: 0.10, intervalEndPhase: 0.22, color: "#2563eb", badgePlacement: "interval" },
-    { leadId: "aVR", waveComponent: "PR", label: "▲ PR chênh lên ở aVR", targetCyclePhase: 0.10, intervalEndPhase: 0.22, color: "#059669", badgePlacement: "interval" },
-    { leadId: "V5", waveComponent: "ST", label: "ST lõm lòng thuyền ở V5-V6", targetCyclePhase: 0.32, color: "#e11d48", badgePlacement: "top" },
-  ],
-  hypokalemia: [
-    { leadId: "V2", waveComponent: "T", label: "▲ Sóng U nổi rõ > 1mm (Cao hơn sóng T)", targetCyclePhase: 0.55, color: "#9333ea", badgePlacement: "top" },
-    { leadId: "V2", waveComponent: "ST", label: "▼ ST chênh xuống nhẹ & T dẹt", targetCyclePhase: 0.35, color: "#2563eb", badgePlacement: "bottom" },
-    { leadId: "DII", waveComponent: "RR", label: "Khoảng QU giả kéo dài > 500ms", targetCyclePhase: 0.30, intervalEndPhase: 0.65, color: "#d97706", badgePlacement: "interval" },
-  ],
-  digoxin_toxicity: [
-    { leadId: "V5", waveComponent: "ST", label: "▼ ST lõm hình đáy chén (Salvador Dali moustache)", targetCyclePhase: 0.32, color: "#e11d48", badgePlacement: "bottom" },
-    { leadId: "V5", waveComponent: "T", label: "QT ngắn lại + T dẹt hai pha", targetCyclePhase: 0.42, color: "#2563eb", badgePlacement: "bottom" },
-    { leadId: "DII", waveComponent: "R", label: "Ngoại tâm thu thất nhịp đôi (Bigeminy do ngộ độc)", targetCyclePhase: 0.25, color: "#e11d48", badgePlacement: "top" },
-  ],
-  ventricular_tachycardia: [
-    { leadId: "DII", waveComponent: "R", label: "⚡ QRS dãn rộng dị dạng 160ms (VT) 175 bpm", targetCyclePhase: 0.20, color: "#e11d48", badgePlacement: "top" },
-    { leadId: "DII", waveComponent: "RR", label: "Cơn nhanh thất đơn dạng đều đặn", targetCyclePhase: 0.15, intervalEndPhase: 0.48, color: "#e11d48", badgePlacement: "interval" },
-    { leadId: "V1", waveComponent: "QRS", label: "Dấu hiệu đồng hướng âm toàn bộ V1-V6", targetCyclePhase: 0.22, color: "#9333ea", badgePlacement: "bottom" },
-  ],
-  ventricular_fibrillation: [
-    { leadId: "DII", waveComponent: "R", label: "☠️ RUNG THẤT (VFib): Mất hoàn toàn QRS-T", targetCyclePhase: 0.20, color: "#e11d48", badgePlacement: "top" },
-    { leadId: "DII", waveComponent: "RR", label: "Sóng hỗn loạn vô tổ chức (Tử vong lâm sàng)", targetCyclePhase: 0.15, intervalEndPhase: 0.55, color: "#e11d48", badgePlacement: "interval" },
-    { leadId: "II", waveComponent: "RR", label: "🚨 BÁO ĐỘNG ĐỎ: PHÁ RUNG KHẨN CẤP 200J", targetCyclePhase: 0.25, intervalEndPhase: 0.65, color: "#e11d48", badgePlacement: "top" },
-  ],
-  asystole: [
-    { leadId: "DII", waveComponent: "DROPPED", label: "☠️ VÔ TÂM THU (Asystole): Đường thẳng phẳng lì", targetCyclePhase: 0.20, color: "#e11d48", badgePlacement: "top" },
-    { leadId: "II", waveComponent: "DROPPED", label: "🚨 ÉP TIM CPR + ADRENALINE 1MG (KHÔNG SỐC ĐIỆN)", targetCyclePhase: 0.30, color: "#e11d48", badgePlacement: "top" },
-  ],
-  pvc_frequent: [
-    { leadId: "DII", waveComponent: "R", label: "PVC dãn rộng 140ms đến sớm dị dạng", targetCyclePhase: 0.25, color: "#e11d48", badgePlacement: "top" },
-    { leadId: "DII", waveComponent: "T", label: "ST-T biến đổi trái chiều QRS", targetCyclePhase: 0.45, color: "#2563eb", badgePlacement: "bottom" },
-    { leadId: "II", waveComponent: "RR", label: "Nghỉ bù hoàn toàn (Full compensatory pause)", targetCyclePhase: 0.30, intervalEndPhase: 0.70, color: "#d97706", badgePlacement: "interval" },
-  ],
-};
+const FALLBACK_ANNOTATIONS = COMPREHENSIVE_FALLBACK_ANNOTATIONS;
 
 export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
   rhythm,
@@ -301,6 +132,7 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
     };
   });
   const [activeCriteriaIndices, setActiveCriteriaIndices] = useState<Set<number>>(new Set());
+  const [showCriteriaBlock, setShowCriteriaBlock] = useState<boolean>(false);
   const [displayMode, setDisplayMode] = useState<"portrait" | "a4">("portrait");
   const [focusModalLead, setFocusModalLead] = useState<string | null>(null);
   const [isVirtualLandscape, setIsVirtualLandscape] = useState<boolean>(false);
@@ -686,6 +518,10 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
           isInterval: boolean;
           x1?: number;
           x2?: number;
+          y1?: number;
+          y2?: number;
+          isVerticalDimension?: boolean;
+          displayText: string;
         }
 
         const itemsToRender: RenderItem[] = [];
@@ -718,48 +554,187 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
 
           for (const ann of annotations) {
             if (renderedLabels.has(ann.label)) continue;
+            const calcLead = isRhythmStrip ? "DII" : leadId;
 
-            if (ann.badgePlacement === "interval" && typeof ann.intervalEndPhase === "number") {
-              const t1 = (k + ann.targetCyclePhase) * cycleDuration;
-              const t2 = (k + ann.intervalEndPhase) * cycleDuration;
-              const x1 = traceStart + (t1 - tMin) * pixelsPerSecond;
-              const x2 = traceStart + (t2 - tMin) * pixelsPerSecond;
+            // 1. HORIZONTAL INTERVAL CALIPERS (RR, PR, QT)
+            if (
+              ann.badgePlacement === "interval" ||
+              ann.waveComponent === "RR" ||
+              ann.waveComponent === "PR" ||
+              ann.waveComponent === "QT"
+            ) {
+              if (ann.waveComponent === "RR") {
+                const phase1 = ann.targetCyclePhase ?? 0.20;
+                const t1 = (k + phase1) * cycleDuration;
+                const t2 = (k + 1 + phase1) * cycleDuration;
+                const x1 = traceStart + (t1 - tMin) * pixelsPerSecond;
+                const x2 = traceStart + (t2 - tMin) * pixelsPerSecond;
 
-              if (x2 >= traceStart + 10 && x1 <= leadEndX - 10) {
-                ctx.font = "bold 8.5px monospace";
-                const tw = ctx.measureText(ann.label).width;
-                itemsToRender.push({
-                  ann,
-                  targetTime: t1,
-                  targetX: (x1 + x2) / 2,
-                  targetY: midY + (isRhythmStrip ? 24 : 27),
-                  pillW: tw + 8,
-                  pillH: 13,
-                  isTop: false,
-                  level: 0,
-                  isInterval: true,
-                  x1,
-                  x2,
-                });
-                renderedLabels.add(ann.label);
+                if (x2 >= traceStart + 10 && x1 <= leadEndX - 10) {
+                  const v1 = calculateLeadEcgVoltage(t1, calcLead, rhythm, bpm);
+                  const v2 = calculateLeadEcgVoltage(t2, calcLead, rhythm, bpm);
+                  const y1 = midY - v1 * voltageScale;
+                  const y2 = midY - v2 * voltageScale;
+                  const deltaMs = Math.round(((x2 - x1) / pixelsPerSecond) * 1000);
+                  const boxes = (deltaMs / 200).toFixed(1);
+                  let calY = Math.min(y1, y2) - (isRhythmStrip ? 14 : 16);
+                  if (calY < midY - (isPortraitMode ? 36 : 46)) calY = midY - (isPortraitMode ? 36 : 46);
+
+                  let labelText = `|<── R-R = ${deltaMs}ms (${boxes} ô lớn) • ${bpm} bpm ──>|`;
+                  if (rhythm === "atrial_fibrillation") {
+                    labelText = `|<── R-R = ${deltaMs}ms (${boxes} ô) [Không đều] ──>|`;
+                  }
+
+                  ctx.font = "bold 8px monospace";
+                  const tw = ctx.measureText(labelText).width;
+                  itemsToRender.push({
+                    ann,
+                    targetTime: t1,
+                    targetX: (x1 + x2) / 2,
+                    targetY: calY,
+                    pillW: tw + 8,
+                    pillH: 14,
+                    isTop: true,
+                    level: 0,
+                    isInterval: true,
+                    x1,
+                    x2,
+                    y1,
+                    y2,
+                    displayText: labelText,
+                  });
+                  renderedLabels.add(ann.label);
+                }
+              } else if (ann.waveComponent === "PR") {
+                const t1 = (k + ann.targetCyclePhase) * cycleDuration;
+                const t2 = (k + (ann.intervalEndPhase || 0.24)) * cycleDuration;
+                const x1 = traceStart + (t1 - tMin) * pixelsPerSecond;
+                const x2 = traceStart + (t2 - tMin) * pixelsPerSecond;
+
+                if (x2 >= traceStart + 10 && x1 <= leadEndX - 10) {
+                  const deltaMs = Math.round(((x2 - x1) / pixelsPerSecond) * 1000);
+                  const smallBoxes = (deltaMs / 40).toFixed(1);
+                  let labelText = `|<── PR = ${deltaMs}ms (${smallBoxes} ô nhỏ) ──>|`;
+                  if (deltaMs > 200) labelText = `|<── PR = ${deltaMs}ms [>200ms Kéo dài] ──>|`;
+
+                  ctx.font = "bold 8px monospace";
+                  const tw = ctx.measureText(labelText).width;
+                  const calY = midY + (isRhythmStrip ? 22 : 25);
+                  itemsToRender.push({
+                    ann,
+                    targetTime: t1,
+                    targetX: (x1 + x2) / 2,
+                    targetY: calY,
+                    pillW: tw + 8,
+                    pillH: 14,
+                    isTop: false,
+                    level: 0,
+                    isInterval: true,
+                    x1,
+                    x2,
+                    displayText: labelText,
+                  });
+                  renderedLabels.add(ann.label);
+                }
+              } else if (ann.waveComponent === "QT") {
+                const t1 = (k + ann.targetCyclePhase) * cycleDuration;
+                const t2 = (k + (ann.intervalEndPhase || 0.55)) * cycleDuration;
+                const x1 = traceStart + (t1 - tMin) * pixelsPerSecond;
+                const x2 = traceStart + (t2 - tMin) * pixelsPerSecond;
+
+                if (x2 >= traceStart + 10 && x1 <= leadEndX - 10) {
+                  const deltaMs = Math.round(((x2 - x1) / pixelsPerSecond) * 1000);
+                  let labelText = `|<── QT = ${deltaMs}ms ──>|`;
+                  if (ann.label.includes("QU")) labelText = `|<── QU = ${deltaMs}ms [Kéo dài] ──>|`;
+
+                  ctx.font = "bold 8px monospace";
+                  const tw = ctx.measureText(labelText).width;
+                  const calY = midY + (isRhythmStrip ? 24 : 27);
+                  itemsToRender.push({
+                    ann,
+                    targetTime: t1,
+                    targetX: (x1 + x2) / 2,
+                    targetY: calY,
+                    pillW: tw + 8,
+                    pillH: 14,
+                    isTop: false,
+                    level: 0,
+                    isInterval: true,
+                    x1,
+                    x2,
+                    displayText: labelText,
+                  });
+                  renderedLabels.add(ann.label);
+                }
+              } else if (typeof ann.intervalEndPhase === "number") {
+                const t1 = (k + ann.targetCyclePhase) * cycleDuration;
+                const t2 = (k + ann.intervalEndPhase) * cycleDuration;
+                const x1 = traceStart + (t1 - tMin) * pixelsPerSecond;
+                const x2 = traceStart + (t2 - tMin) * pixelsPerSecond;
+
+                if (x2 >= traceStart + 10 && x1 <= leadEndX - 10) {
+                  ctx.font = "bold 8px monospace";
+                  const tw = ctx.measureText(ann.label).width;
+                  itemsToRender.push({
+                    ann,
+                    targetTime: t1,
+                    targetX: (x1 + x2) / 2,
+                    targetY: midY + (isRhythmStrip ? 24 : 27),
+                    pillW: tw + 8,
+                    pillH: 14,
+                    isTop: false,
+                    level: 0,
+                    isInterval: true,
+                    x1,
+                    x2,
+                    displayText: ann.label,
+                  });
+                  renderedLabels.add(ann.label);
+                }
               }
-            } else {
+            }
+            // 2. VERTICAL AMPLITUDE DIMENSIONS (ST, T, S, R)
+            else if (
+              ann.waveComponent === "ST" ||
+              ann.waveComponent === "T" ||
+              ann.waveComponent === "S" ||
+              ann.waveComponent === "R"
+            ) {
               const targetTime = (k + ann.targetCyclePhase) * cycleDuration;
               const targetX = traceStart + (targetTime - tMin) * pixelsPerSecond;
 
               if (targetX >= traceStart + 16 && targetX <= leadEndX - 16) {
-                const calcLead = isRhythmStrip ? "DII" : leadId;
                 const waveV = calculateLeadEcgVoltage(targetTime, calcLead, rhythm, bpm);
                 const targetY = midY - waveV * voltageScale;
+                const mm = waveV * 10;
+
+                let labelText = ann.label;
+                if (ann.waveComponent === "ST") {
+                  labelText = `${waveV >= 0 ? "▲ ST +" : "▼ ST "}${mm.toFixed(1)}mm (${waveV.toFixed(2)}mV)`;
+                  if (ann.label.includes("soi gương")) labelText += " [Soi gương]";
+                  else if (ann.label.includes("vòm") || ann.label.includes("Vòm")) labelText += " [ST vòm]";
+                  else if (ann.label.includes("lõm") || ann.label.includes("thuyền")) labelText += " [Cong lõm]";
+                  else if (ann.label.includes("đáy chén") || ann.label.includes("Dali")) labelText += " [Đáy chén]";
+                } else if (ann.waveComponent === "T") {
+                  labelText = `↕ T = ${Math.abs(mm).toFixed(1)}mm (${waveV.toFixed(2)}mV)`;
+                  if (ann.label.includes("lều") || ann.label.includes("nhọn")) labelText += " [T lều]";
+                  else if (ann.label.includes("âm") || waveV < 0) labelText += " [T âm]";
+                } else if (ann.waveComponent === "S") {
+                  labelText = `▼ S = ${Math.abs(mm).toFixed(1)}mm (${Math.abs(waveV).toFixed(2)}mV)`;
+                  if (ann.label.includes("Sokolow")) labelText += " [Sokolow]";
+                } else if (ann.waveComponent === "R") {
+                  labelText = `▲ R = ${Math.abs(mm).toFixed(1)}mm (${Math.abs(waveV).toFixed(2)}mV)`;
+                  if (ann.label.includes("Sokolow")) labelText += " [Sokolow]";
+                  else if (ann.label.includes("Delta")) labelText += " [Sóng Delta]";
+                }
 
                 ctx.font = "bold 8.5px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-                const tw = ctx.measureText(ann.label).width;
+                const tw = ctx.measureText(labelText).width;
 
-                // Smart polarity placement: negative waves (Q, S, depressed ST) go bottom, positive go top
                 let isTop = ann.badgePlacement !== "bottom";
-                if (ann.waveComponent === "Q" || waveV < -0.12) {
+                if (ann.waveComponent === "S" || waveV < -0.10) {
                   isTop = false;
-                } else if (ann.waveComponent === "ST" && waveV > 0.12) {
+                } else if (ann.waveComponent === "ST" && waveV > 0.10) {
                   isTop = true;
                 }
 
@@ -773,6 +748,40 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                   isTop,
                   level: 0,
                   isInterval: false,
+                  isVerticalDimension: true,
+                  displayText: labelText,
+                });
+                renderedLabels.add(ann.label);
+              }
+            }
+            // 3. OTHER GENERAL WAVE COMPONENTS (P, Q, QRS, U, DROPPED)
+            else {
+              const targetTime = (k + ann.targetCyclePhase) * cycleDuration;
+              const targetX = traceStart + (targetTime - tMin) * pixelsPerSecond;
+
+              if (targetX >= traceStart + 16 && targetX <= leadEndX - 16) {
+                const waveV = calculateLeadEcgVoltage(targetTime, calcLead, rhythm, bpm);
+                const targetY = midY - waveV * voltageScale;
+
+                ctx.font = "bold 8.5px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+                const tw = ctx.measureText(ann.label).width;
+
+                let isTop = ann.badgePlacement !== "bottom";
+                if (ann.waveComponent === "Q" || waveV < -0.12) {
+                  isTop = false;
+                }
+
+                itemsToRender.push({
+                  ann,
+                  targetTime,
+                  targetX,
+                  targetY,
+                  pillW: tw + 8,
+                  pillH: 14,
+                  isTop,
+                  level: 0,
+                  isInterval: false,
+                  displayText: ann.label,
                 });
                 renderedLabels.add(ann.label);
               }
@@ -823,13 +832,35 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
             const drawX1 = Math.max(item.x1, traceStart + 4);
             const drawX2 = Math.min(item.x2, leadEndX - 4);
 
+            // Vertical guide lines connecting directly to R wave peaks
+            if (typeof item.y1 === "number") {
+              ctx.beginPath();
+              ctx.setLineDash([2, 2]);
+              ctx.strokeStyle = "rgba(217, 119, 6, 0.65)";
+              ctx.moveTo(item.x1, item.y1);
+              ctx.lineTo(item.x1, calY);
+              ctx.stroke();
+              ctx.setLineDash([]);
+            }
+            if (typeof item.y2 === "number") {
+              ctx.beginPath();
+              ctx.setLineDash([2, 2]);
+              ctx.strokeStyle = "rgba(217, 119, 6, 0.65)";
+              ctx.moveTo(item.x2, item.y2);
+              ctx.lineTo(item.x2, calY);
+              ctx.stroke();
+              ctx.setLineDash([]);
+            }
+
+            // Horizontal Caliper Bar
             ctx.beginPath();
-            ctx.setLineDash([3, 2]);
+            ctx.strokeStyle = col;
+            ctx.lineWidth = 1.4;
             ctx.moveTo(drawX1, calY);
             ctx.lineTo(drawX2, calY);
             ctx.stroke();
-            ctx.setLineDash([]);
 
+            // Caliper End Ticks
             if (item.x1 >= traceStart + 4 && item.x1 <= leadEndX - 4) {
               ctx.beginPath();
               ctx.moveTo(item.x1, calY - 5);
@@ -843,6 +874,7 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
               ctx.stroke();
             }
 
+            // Clinical Dimension Pill
             const midX = (drawX1 + drawX2) / 2;
             const pillX = Math.max(traceStart + 2, Math.min(leadEndX - item.pillW - 2, midX - item.pillW / 2));
             const pillY = calY - 7;
@@ -857,9 +889,91 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
             ctx.stroke();
 
             ctx.fillStyle = "#ffffff";
-            ctx.fillText(item.ann.label, pillX + 4, pillY + 10);
+            ctx.font = "bold 8px monospace";
+            ctx.fillText(item.displayText, pillX + 4, pillY + 10);
+            ctx.restore();
+          } else if (item.isVerticalDimension) {
+            ctx.save();
+            const col = item.ann.color || "#e11d48";
+
+            // 1. Isoelectric baseline (0 mV)
+            ctx.beginPath();
+            ctx.setLineDash([3, 2]);
+            ctx.strokeStyle = "rgba(100, 116, 139, 0.75)";
+            ctx.lineWidth = 1;
+            ctx.moveTo(item.targetX - 16, midY);
+            ctx.lineTo(item.targetX + 16, midY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.font = "bold 7px monospace";
+            ctx.fillStyle = "rgba(100, 116, 139, 0.9)";
+            ctx.fillText("0mV", item.targetX + 18, midY + 2.5);
+
+            // 2. Vertical dimension caliper line from baseline to target point
+            ctx.beginPath();
+            ctx.strokeStyle = col;
+            ctx.lineWidth = 1.4;
+            ctx.moveTo(item.targetX, midY);
+            ctx.lineTo(item.targetX, item.targetY);
+            ctx.stroke();
+
+            // End caps
+            ctx.beginPath();
+            ctx.moveTo(item.targetX - 3.5, midY);
+            ctx.lineTo(item.targetX + 3.5, midY);
+            ctx.moveTo(item.targetX - 3.5, item.targetY);
+            ctx.lineTo(item.targetX + 3.5, item.targetY);
+            ctx.stroke();
+
+            // 3. Target Pinpoint Dot
+            ctx.strokeStyle = col;
+            ctx.lineWidth = 1.3;
+            ctx.beginPath();
+            ctx.arc(item.targetX, item.targetY, 4, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.fillStyle = col;
+            ctx.beginPath();
+            ctx.arc(item.targetX, item.targetY, 2.2, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.arc(item.targetX, item.targetY, 0.9, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 4. Staggered Leader Guide Line & Label Pill
+            const leaderLen = 13 + item.level * 14;
+            const leaderEndY = item.isTop
+              ? Math.max(item.targetY - leaderLen, midY - 42)
+              : Math.min(item.targetY + leaderLen, midY + 42);
+
+            ctx.beginPath();
+            ctx.setLineDash([2, 1.5]);
+            ctx.moveTo(item.targetX, item.targetY + (item.isTop ? -4 : 4));
+            ctx.lineTo(item.targetX, leaderEndY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            const pillX = Math.max(traceStart + 2, Math.min(leadEndX - item.pillW - 2, item.targetX - item.pillW / 2));
+            const pillY = item.isTop ? leaderEndY - item.pillH : leaderEndY;
+
+            ctx.fillStyle = "rgba(15, 23, 42, 0.94)";
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(pillX, pillY, item.pillW, item.pillH, 3);
+            else ctx.rect(pillX, pillY, item.pillW, item.pillH);
+            ctx.fill();
+
+            ctx.strokeStyle = col;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 8.5px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+            ctx.fillText(item.displayText, pillX + 4, pillY + 10);
             ctx.restore();
           } else {
+            // Standard pinpoint dot + leader line + badge
             ctx.save();
             const col = item.ann.color || "#e11d48";
 
@@ -908,7 +1022,8 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
             ctx.stroke();
 
             ctx.fillStyle = "#ffffff";
-            ctx.fillText(item.ann.label, pillX + 4, pillY + 10);
+            ctx.font = "bold 8.5px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+            ctx.fillText(item.displayText, pillX + 4, pillY + 10);
             ctx.restore();
           }
         }
@@ -1400,55 +1515,62 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                 </div>
 
                 <div className="flex items-center gap-2 text-[9px] text-slate-600">
-                  <span className="italic hidden sm:inline">
-                    💡 Chạm từng dòng để bật/tắt ánh xạ ({activeCriteriaIndices.size > 0 ? `Đang bật ${activeCriteriaIndices.size} tiêu chuẩn` : "Mặc định không ánh xạ"})
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowCriteriaBlock((prev) => !prev)}
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-rose-200/90 hover:bg-rose-300 text-rose-950 font-bold border border-rose-400 cursor-pointer shadow-2xs transition"
+                    title={showCriteriaBlock ? "Thu gọn tiêu chuẩn để dải giấy in thông thoáng" : "Mở rộng danh mục tiêu chuẩn để click ánh xạ"}
+                  >
+                    <span>{showCriteriaBlock ? "📋 Thu Gọn Tiêu Chuẩn ▲" : `📋 Tiêu Chuẩn Chẩn Đoán AHA/ESC (${diagnosisData.criteria.length}) ▼`}</span>
+                  </button>
                   {activeCriteriaIndices.size > 0 && (
                     <button
                       type="button"
                       onClick={() => setActiveCriteriaIndices(new Set())}
                       className="text-rose-700 hover:text-rose-950 underline font-bold cursor-pointer"
                     >
-                      Tắt hết ánh xạ
+                      Tắt hết ánh xạ ({activeCriteriaIndices.size})
                     </button>
                   )}
                 </div>
               </div>
 
               {/* Individual Clickable Criteria Lines */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 pt-0.5">
-                {diagnosisData.criteria.map((crit, idx) => {
-                  const isActive = activeCriteriaIndices.has(idx);
-                  return (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => toggleCriterion(idx)}
-                      className={`flex items-start gap-1.5 text-left py-1 px-1.5 rounded transition cursor-pointer ${
-                        isActive
-                          ? "bg-rose-200/90 text-rose-950 font-bold border border-rose-400 shadow-xs"
-                          : "text-slate-800 hover:bg-rose-100/70 border border-transparent"
-                      }`}
-                      title={
-                        isActive
-                          ? "Bấm để tắt ánh xạ tiêu chuẩn này trên đường điện tim"
-                          : "Bấm để bật ánh xạ tiêu chuẩn này lên các chuyển đạo tương ứng"
-                      }
-                    >
-                      <span
-                        className={`font-mono font-bold shrink-0 text-[10px] ${
-                          isActive ? "text-rose-700" : "text-slate-400"
+              {showCriteriaBlock && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 pt-1 border-t border-rose-200/70 mt-1">
+                  {diagnosisData.criteria.map((crit, idx) => {
+                    const isActive = activeCriteriaIndices.has(idx);
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => toggleCriterion(idx)}
+                        className={`flex items-start gap-1.5 text-left py-1 px-1.5 rounded transition cursor-pointer ${
+                          isActive
+                            ? "bg-rose-200/90 text-rose-950 font-bold border border-rose-400 shadow-xs"
+                            : "text-slate-800 hover:bg-rose-100/70 border border-transparent"
                         }`}
+                        title={
+                          isActive
+                            ? "Bấm để tắt ánh xạ tiêu chuẩn này trên đường điện tim"
+                            : "Bấm để bật ánh xạ tiêu chuẩn này lên các chuyển đạo tương ứng"
+                        }
                       >
-                        {isActive ? "[✓]" : "[  ]"}
-                      </span>
-                      <span className="text-[9.5px] leading-tight">
-                        <strong>{idx + 1}.</strong> {crit}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+                        <span
+                          className={`font-mono font-bold shrink-0 text-[10px] ${
+                            isActive ? "text-rose-700" : "text-slate-400"
+                          }`}
+                        >
+                          {isActive ? "[✓]" : "[  ]"}
+                        </span>
+                        <span className="text-[9.5px] leading-tight">
+                          <strong>{idx + 1}.</strong> {crit}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>

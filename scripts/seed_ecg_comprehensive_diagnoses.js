@@ -5,6 +5,7 @@
 
 const Database = require("better-sqlite3");
 const path = require("path");
+const { ALL_COMPREHENSIVE_ANNOTATIONS } = require("./comprehensive_annotations_data.js");
 
 const DB_PATH = path.join(__dirname, "..", "data", "medsim.db");
 const db = new Database(DB_PATH);
@@ -2408,7 +2409,7 @@ const insertMany = db.transaction((items) => {
       item.anatomical_region || "",
       JSON.stringify(item.criteria || []),
       JSON.stringify(item.lead_manifestations || {}),
-      JSON.stringify(item.annotations || []),
+      JSON.stringify(ALL_COMPREHENSIVE_ANNOTATIONS[item.id] || item.annotations || []),
       JSON.stringify(item.ecg_metrics || {}),
       item.clinical_action || "",
       JSON.stringify(item.differential_diagnoses || []),

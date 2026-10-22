@@ -1,9 +1,9 @@
 {
   "meta": {
     "project_name": "GameYhoc",
-    "last_updated": "2026-10-22T10:32:00.000000",
+    "last_updated": "2026-10-22T10:55:00.000000",
     "overall_progress_percent": 100,
-    "current_phase": "Milestone M7 Completed: Pathology-Bound BPM Ranges, Embedded Pink Paper Criteria & Dropdown Catalog Verified",
+    "current_phase": "Milestone M8 Completed: Ánh Xạ Đa Yếu Tố 139 Tiêu Chuẩn, Thước Đo R-R & Biên Độ Chuẩn Y Khoa Kèm Nút Bật/Tắt Tiêu Chuẩn",
     "status": "COMPLETED"
   },
   "milestones": [
@@ -252,6 +252,38 @@
         {
           "id": "T7.4",
           "desc": "Phase 04 - Kiểm thử tự động BPM bounds và interactive criteria, TypeScript check & Git push",
+          "status": "DONE"
+        }
+      ]
+    },
+    {
+      "id": "M8",
+      "title": "Milestone M8: Ánh Xạ Toàn Diện 12 Đạo Trình, Thước Đo R-R & Biên Độ Chuẩn Y Khoa Kèm Nút Bật/Tắt Tiêu Chuẩn",
+      "status": "COMPLETED",
+      "tasks": [
+        {
+          "id": "T8.1",
+          "desc": "Phase 01 - Bổ sung nút bật/tắt (toggle) hiển thị khối tiêu chuẩn chẩn đoán trực tiếp trên giấy in",
+          "status": "DONE"
+        },
+        {
+          "id": "T8.2",
+          "desc": "Phase 02 - Thuật toán thước đo khoảng (R-R Caliper nối 2 đỉnh R, khoảng PR, QTc kèm số mili-giây và số ô lớn)",
+          "status": "DONE"
+        },
+        {
+          "id": "T8.3",
+          "desc": "Phase 03 - Thuật toán thước đo biên độ (ST chênh từ đường đẳng điện baseline, độ sâu sóng S và chiều cao sóng R, sóng T lều)",
+          "status": "DONE"
+        },
+        {
+          "id": "T8.4",
+          "desc": "Phase 04 - Rà soát & ánh xạ đa yếu tố cho 139 tiêu chuẩn / 31 bệnh lý (P dương DI, DII, aVF, âm aVR; ST chênh kèm soi gương; S1Q3T3; Sokolow-Lyon; 0 tiêu chuẩn mồ côi)",
+          "status": "DONE"
+        },
+        {
+          "id": "T8.5",
+          "desc": "Phase 05 - Bộ kiểm thử tự động xác thực thước đo R-R/biên độ, 0 tiêu chuẩn mồ côi, 100% tests pass & push GitHub",
           "status": "DONE"
         }
       ]
