@@ -1,9 +1,9 @@
 {
   "meta": {
     "project_name": "GameYhoc",
-    "last_updated": "2026-10-22T15:27:00.000000",
+    "last_updated": "2026-10-22T16:38:00.000000",
     "overall_progress_percent": 100,
-    "current_phase": "Milestone M11 Completed: Multi-Factorial Semantic Criteria Matching Engine (Khớp 100% Tiêu Chuẩn Lên Giấy Hồng 12 Chuyển Đạo)",
+    "current_phase": "Milestone M12 Completed: Dynamic Baseline Synthesizer for 100% Clinical Criteria Coverage (Bao Phủ 100% Tiêu Chuẩn Nền Tảng: Tần Số, Nhịp Điệu, Sóng P, Khoảng PR)",
     "status": "COMPLETED"
   },
   "milestones": [
@@ -365,6 +365,33 @@
         {
           "id": "T11.4",
           "desc": "Phase 04 - Bộ kiểm thử tự động 35/35 tests pass, TypeScript 0 lỗi, Next.js production build 13/13 static routes hoàn hảo",
+          "status": "DONE"
+        }
+      ]
+    },
+    {
+      "id": "M12",
+      "title": "Milestone M12: Dynamic Baseline Synthesizer for 100% Clinical Criteria Coverage (Bao Phủ 100% Tiêu Chuẩn Nền Tảng: Tần Số, Nhịp Điệu, Sóng P, Khoảng PR)",
+      "status": "COMPLETED",
+      "tasks": [
+        {
+          "id": "T12.1",
+          "desc": "Phase 01 - Phân tích nguyên nhân thiếu sóng nền trong ảnh chụp 15:32: CSDL stemi_inferior và 19/31 mặt bệnh lý ban đầu chỉ chứa các sóng bệnh lý, dẫn tới khi tick 1, 2, 3, 4 giấy hồng trơn lùi",
+          "status": "DONE"
+        },
+        {
+          "id": "T12.2",
+          "desc": "Phase 02 - Tích hợp Dynamic Baseline Synthesizer vào drawWaveAnnotations: tự động sinh thước kẹp R-R Caliper (80 bpm trên DII và Lead II), PR Caliper (188ms từ chân P đến chân Q) và nhãn Sóng P xoang dương (+0.15mV ở DI, DII, aVF) / âm (-0.12mV ở aVR)",
+          "status": "DONE"
+        },
+        {
+          "id": "T12.3",
+          "desc": "Phase 03 - Bảo tồn 100% nguyên tắc Clean Canvas: khi chưa tick hoặc bấm Tắt hết ánh xạ (activeCriteriaIndices.size === 0), giấy hồng hoàn toàn sạch sẽ",
+          "status": "DONE"
+        },
+        {
+          "id": "T12.4",
+          "desc": "Phase 04 - Bộ test tự động tests/baseline_waves_coverage.test.js xác thực cả 6 tiêu chuẩn lâm sàng trong ca bệnh stemi_inferior, 37/37 tests pass, TypeScript 0 lỗi, Next.js build 13/13 static routes thành công",
           "status": "DONE"
         }
       ]

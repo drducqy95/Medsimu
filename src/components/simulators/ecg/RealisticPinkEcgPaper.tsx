@@ -654,17 +654,13 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
         midY: number,
         isRhythmStrip: boolean = false
       ) => {
-        // MẶC ĐỊNH KHÔNG ÁNH XẠ: Nếu bác sĩ chưa click chọn tiêu chuẩn nào, trả về ngay (sóng sạch sẽ 100%)
-        if (
-          activeCriteriaIndices.size === 0 ||
-          !diagnosisData?.annotations ||
-          diagnosisData.annotations.length === 0
-        ) {
+        // MẶC ĐỊNH KHÔNG ÁNH XẠ: Nếu bác sĩ chưa click chọn tiêu chuẩn nào hoặc không có dữ liệu, trả về ngay (sóng sạch sẽ 100%)
+        if (activeCriteriaIndices.size === 0 || !diagnosisData) {
           return;
         }
 
         // 1. Filter annotations for this lead
-        let annotations = diagnosisData.annotations.filter((a) => {
+        let annotations = (diagnosisData?.annotations || []).filter((a) => {
           const tid = a.leadId.toUpperCase();
           if (isRhythmStrip) {
             return tid === "DII" || tid === "II" || tid === "RHYTHM" || tid === "RHYTHM_STRIP";
@@ -680,6 +676,105 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
             return Boolean(crit && isAnnotationMatchingCriterion(a, crit, activeIdx, diagnosisData.criteria));
           });
         });
+
+        // 3. DYNAMIC BASELINE SYNTHESIZER:
+        // Đảm bảo khi bác sĩ tick các tiêu chuẩn nền tảng (Tần số, Nhịp điệu, Sóng P, Khoảng PR)
+        // thì các chuyển đạo đích luôn lập tức xuất hiện thước đo / nhãn sóng tương ứng.
+        const normLead = isRhythmStrip ? "II" : leadId.toUpperCase();
+
+        // 3A. Thước kẹp R-R Caliper (Tiêu chuẩn 1 & 2: Tần số & Nhịp điệu)
+        const isRrActive = activeIndicesList.some((idx) => {
+          const c = diagnosisData.criteria[idx]?.toLowerCase() || "";
+          return (
+            c.includes("tần số") ||
+            c.includes("nhịp điệu") ||
+            c.includes("đều") ||
+            c.includes("loạn nhịp") ||
+            c.includes("r-r") ||
+            idx === 0 ||
+            idx === 1
+          );
+        });
+        if (isRrActive && (normLead === "DII" || normLead === "II") && !annotations.some((a) => a.waveComponent === "RR")) {
+          annotations.push({
+            leadId: isRhythmStrip ? "II" : leadId,
+            waveComponent: "RR",
+            label: `|<── R-R • ${metrics.heartRate} bpm ──>|`,
+            targetCyclePhase: 0.22,
+            color: "#d97706",
+            badgePlacement: "interval",
+          });
+        }
+
+        // 3B. Thước kẹp PR Caliper (Tiêu chuẩn 4: Khoảng PR)
+        const isPrActive = activeIndicesList.some((idx) => {
+          const c = diagnosisData.criteria[idx]?.toLowerCase() || "";
+          return (
+            c.includes("khoảng pr") ||
+            c.includes("pr kéo dài") ||
+            c.includes("pr ngắn") ||
+            c.includes("dẫn truyền nhĩ") ||
+            c.includes("block av") ||
+            idx === 3
+          );
+        });
+        if (isPrActive && (normLead === "DII" || normLead === "II" || normLead === "V1") && !annotations.some((a) => a.waveComponent === "PR")) {
+          annotations.push({
+            leadId: isRhythmStrip ? "II" : leadId,
+            waveComponent: "PR",
+            label: `|<── PR = ${metrics.prIntervalMs || 152}ms ──>|`,
+            targetCyclePhase: 0.12,
+            color: "#059669",
+            badgePlacement: "interval",
+          });
+        }
+
+        // 3C. Nhãn Sóng P xoang (Tiêu chuẩn 3: Sóng P)
+        const isPActive = activeIndicesList.some((idx) => {
+          const c = diagnosisData.criteria[idx]?.toLowerCase() || "";
+          return c.includes("sóng p") || c.includes("p xoang") || c.includes("trục sóng p") || idx === 2;
+        });
+        if (isPActive && !annotations.some((a) => a.waveComponent === "P")) {
+          if (normLead === "AVR") {
+            annotations.push({
+              leadId: "aVR",
+              waveComponent: "P",
+              label: "▼ Sóng P âm ở aVR (-0.12 mV)",
+              targetCyclePhase: 0.12,
+              color: "#2563eb",
+              badgePlacement: "bottom",
+            });
+          } else if (normLead === "DII" || normLead === "II") {
+            annotations.push({
+              leadId: isRhythmStrip ? "II" : "DII",
+              waveComponent: "P",
+              label: isRhythmStrip
+                ? "Sóng P xoang đồng dạng, luôn đi trước mỗi phức bộ QRS"
+                : "▲ Sóng P dương ở DII (+0.15 mV)",
+              targetCyclePhase: 0.12,
+              color: "#10b981",
+              badgePlacement: "top",
+            });
+          } else if (normLead === "DI") {
+            annotations.push({
+              leadId: "DI",
+              waveComponent: "P",
+              label: "▲ Sóng P dương ở DI (+0.12 mV)",
+              targetCyclePhase: 0.12,
+              color: "#10b981",
+              badgePlacement: "top",
+            });
+          } else if (normLead === "AVF") {
+            annotations.push({
+              leadId: "aVF",
+              waveComponent: "P",
+              label: "▲ Sóng P dương ở aVF (+0.14 mV)",
+              targetCyclePhase: 0.12,
+              color: "#10b981",
+              badgePlacement: "top",
+            });
+          }
+        }
 
         if (annotations.length === 0) return;
 
