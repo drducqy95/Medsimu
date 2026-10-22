@@ -747,15 +747,50 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
             c.includes("cuồng nhĩ")
           );
         });
-        if (isRrActive && (normLead === "DII" || normLead === "II") && !annotations.some((a) => a.waveComponent === "RR")) {
-          annotations.push({
-            leadId: isRhythmStrip ? "II" : leadId,
-            waveComponent: "RR",
-            label: `|<── R-R • ${metrics.heartRate} bpm ──>|`,
-            targetCyclePhase: 0.22,
-            color: "#d97706",
-            badgePlacement: "interval",
-          });
+        if (isRrActive) {
+          if (isRhythmStrip) {
+            // Trên dải nhịp Lead II kéo dài: Đảm bảo có 2 khoảng R-R kế tiếp nhau (R1-R2 và R2-R3)
+            const currentRrCount = annotations.filter((a) => a.waveComponent === "RR").length;
+            if (currentRrCount === 0) {
+              annotations.push({
+                leadId: "II",
+                waveComponent: "RR",
+                label: `|<── R-R₁ • ${metrics.heartRate} bpm ──>|`,
+                targetCyclePhase: 0.22,
+                color: "#d97706",
+                badgePlacement: "interval",
+              });
+              annotations.push({
+                leadId: "II",
+                waveComponent: "RR",
+                label: `|<── R-R₂ • ${metrics.heartRate} bpm (kế tiếp) ──>|`,
+                targetCyclePhase: 0.22,
+                color: "#d97706",
+                badgePlacement: "interval",
+              });
+            } else if (currentRrCount === 1) {
+              annotations.push({
+                leadId: "II",
+                waveComponent: "RR",
+                label: `|<── R-R (kế tiếp) • ${metrics.heartRate} bpm ──>|`,
+                targetCyclePhase: 0.22,
+                color: "#d97706",
+                badgePlacement: "interval",
+              });
+            }
+          } else {
+            // Trên 12 đạo trình độc lập: Bổ sung R-R Caliper trên TẤT CẢ các đạo trình
+            if (!annotations.some((a) => a.waveComponent === "RR")) {
+              annotations.push({
+                leadId: leadId,
+                waveComponent: "RR",
+                label: `|<── R-R • ${leadId} • ${metrics.heartRate} bpm ──>|`,
+                targetCyclePhase: 0.22,
+                color: "#d97706",
+                badgePlacement: "interval",
+              });
+            }
+          }
         }
 
         // 3B. Thước kẹp PR Caliper (Chỉ kích hoạt khi tiêu chuẩn ĐƯỢC CHỌN thực sự đề cập đến Khoảng PR / Dẫn truyền nhĩ thất)
@@ -970,7 +1005,9 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                   if (calY < midY - (isPortraitMode ? 36 : 46)) calY = midY - (isPortraitMode ? 36 : 46);
 
                   let labelText = isRhythmStrip
-                    ? `|<── R-R = ${deltaMs}ms (${boxes} ô lớn) • ${bpm} bpm • Tiêu chuẩn: Đều 60 - 100 chu kỳ/phút ──>|`
+                    ? (ann.label.includes("kế tiếp") || ann.label.includes("R-R₂"))
+                      ? `|<── R-R₂ = ${deltaMs}ms (${boxes} ô lớn) • Đều ${bpm} bpm ──>|`
+                      : `|<── R-R₁ = ${deltaMs}ms (${boxes} ô lớn) • Tiêu chuẩn: Đều 60 - 100 chu kỳ/phút ──>|`
                     : `|<── R-R = ${deltaMs}ms (${boxes} ô) • ${bpm} bpm • Chuẩn: 60-100 ──>|`;
                   if (rhythm === "atrial_fibrillation") {
                     labelText = isRhythmStrip
@@ -1291,7 +1328,11 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                       displayText = isRhythmStrip
                         ? `Sóng P xoang đồng dạng, luôn đi trước mỗi phức bộ QRS`
                         : `P xoang đồng dạng, trước QRS`;
-                    } else {
+                    } else if (ann.label.includes("dẫn 1:1") || ann.label.includes("1:1")) {
+                      displayText = isRhythmStrip
+                        ? `Mỗi sóng P đều dẫn một phức bộ QRS (tỉ lệ 1:1, không rớt nhát)`
+                        : `Sóng P dẫn 1:1 sau mỗi nhát`;
+                    } else if (ann.label.toLowerCase().includes("xoang") || ann.label.toLowerCase().includes("dương") || ann.label.toLowerCase().includes("sóng p")) {
                       displayText = isRhythmStrip
                         ? `▲ Sóng P dương ở ${ann.leadId} (+${Math.abs(waveV * 10).toFixed(1)}mm) • Tiêu chuẩn: P xoang dương DI, DII, aVF`
                         : `▲ P dương ở ${ann.leadId} • Chuẩn: P dương`;

@@ -1266,14 +1266,64 @@ export function calculateLeadEcgVoltage(
     }
   }
 
-  // 1st Degree AV Block (Fixed PR = 260ms > 200ms)
+  // 1st Degree AV Block (Fixed PR = 260ms > 200ms with Authentic 12-Lead Morphology)
   if (rhythm === "av_block_first_degree") {
+    let pAmp = 0.15;
+    let qAmp = -0.15;
+    let rAmp = 1.60;
+    let sAmp = -0.35;
+    let tAmp = 0.35;
+
+    if (normLead === "aVR") {
+      pAmp = -0.14;
+      qAmp = 0.10;
+      rAmp = -1.30;
+      sAmp = 0.25;
+      tAmp = -0.30;
+    } else if (normLead === "V1") {
+      pAmp = 0.10;
+      qAmp = 0.00;
+      rAmp = 0.35;
+      sAmp = -1.10;
+      tAmp = 0.20;
+    } else if (normLead === "V2") {
+      pAmp = 0.12;
+      qAmp = -0.05;
+      rAmp = 0.75;
+      sAmp = -0.85;
+      tAmp = 0.28;
+    } else if (normLead === "V3") {
+      pAmp = 0.14;
+      qAmp = -0.08;
+      rAmp = 1.15;
+      sAmp = -0.55;
+      tAmp = 0.32;
+    } else if (normLead === "V5" || normLead === "V6") {
+      pAmp = 0.15;
+      qAmp = -0.12;
+      rAmp = 1.85;
+      sAmp = -0.20;
+      tAmp = 0.40;
+    } else if (normLead === "DI" || normLead === "I" || normLead === "aVL") {
+      pAmp = 0.12;
+      qAmp = -0.10;
+      rAmp = 1.35;
+      sAmp = -0.25;
+      tAmp = 0.30;
+    } else if (normLead === "DIII" || normLead === "III") {
+      pAmp = 0.12;
+      qAmp = -0.10;
+      rAmp = 1.25;
+      sAmp = -0.30;
+      tAmp = 0.25;
+    }
+
     return (
-      0.15 * gaussian(tInCycle, 0.04, 0.024) - // Early P
-      0.15 * gaussian(tInCycle, 0.30, 0.010) + // Q (starts at 0.30 -> PR = 260ms / > 6 small boxes!)
-      1.60 * gaussian(tInCycle, 0.32, 0.014) - // R
-      0.35 * gaussian(tInCycle, 0.35, 0.015) + // S
-      0.35 * gaussian(tInCycle, 0.54, 0.050)   // T
+      pAmp * gaussian(tInCycle, 0.055, 0.022) +
+      qAmp * gaussian(tInCycle, 0.290, 0.010) +
+      rAmp * gaussian(tInCycle, 0.320, 0.014) +
+      sAmp * gaussian(tInCycle, 0.350, 0.015) +
+      tAmp * gaussian(tInCycle, 0.540, 0.050)
     );
   }
 

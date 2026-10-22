@@ -1,4 +1,4 @@
-import { EcgRhythmType } from "@/domain/simulators/ecgWaveforms";
+import type { EcgRhythmType } from "./ecgWaveforms";
 
 export interface EcgCalculatedMetrics {
   heartRate: number;
@@ -89,6 +89,97 @@ export function computeEcgMetrics(
         "KẾT LUẬN: NHỒI MÁU CƠ TIM CẤP THÀNH DƯỚI (ACUTE INFERIOR STEMI) - CẦN ĐO THÊM V3R, V4R TÌM NHỒI MÁU THẤT PHẢI!",
       ];
       severity = "critical";
+      break;
+
+    case "av_block_first_degree":
+      hr = customBpm || 65;
+      pr = 260; // Prolonged fixed PR > 200ms
+      qrs = 86;
+      qt = 380;
+      lines = [
+        "Block nhĩ thất độ I (First-Degree Atrioventricular Block)",
+        "Khoảng PR kéo dài thường xuyên và cố định > 0.20s (260ms / 6.5 ô nhỏ)",
+        "Mỗi sóng P đều dẫn một phức bộ QRS (tỉ lệ 1:1), nhịp tim đều đặn",
+      ];
+      severity = "borderline";
+      break;
+
+    case "av_block_mobitz_1":
+      hr = customBpm || 60;
+      pr = 240; // PR dài dần (160ms -> 240ms -> 320ms -> rớt QRS)
+      qrs = 88;
+      qt = 390;
+      lines = [
+        "Block nhĩ thất độ II Mobitz I (Chu kỳ Wenckebach)",
+        "Khoảng PR dài dần qua từng nhát bóp cho đến khi rớt hẳn 1 phức bộ QRS",
+        "Khoảng R-R ngắn dần trước khi rơi nhịp, tổn thương tầng nút AV",
+      ];
+      severity = "abnormal";
+      break;
+
+    case "av_block_mobitz_2":
+      hr = customBpm || 55;
+      pr = 180; // Fixed PR with dropped beats
+      qrs = 110;
+      qt = 410;
+      lines = [
+        "Block nhĩ thất độ II Mobitz II",
+        "Khoảng PR cố định nhưng đột ngột rớt 1 phức bộ QRS (tỉ lệ dẫn 2:1, 3:1)",
+        "Tổn thương dưới nút AV (bó His), NGUY CƠ RẤT CAO TIẾN TRIỂN THÀNH BLOCK ĐỘ III",
+      ];
+      severity = "critical";
+      break;
+
+    case "av_block_third_degree":
+      hr = customBpm || 38; // Nhịp thoát thất chậm 30-40 bpm
+      pr = 0; // Phân ly nhĩ thất hoàn toàn, không có PR
+      qrs = 135; // Thoát thất dãn rộng
+      qt = 480;
+      lines = [
+        "BLOCK NHĨ THẤT ĐỘ III HOÀN TOÀN (COMPLETE AV DISSOCIATION)",
+        "Sóng P xoang tần số ~75 l/p phân ly hoàn toàn với nhịp thoát thất ~38 l/p",
+        "CẤP CỨU TIM MẠCH: CHỈ ĐỊNH ĐẶT MÁY TẠO NHỊP TẠM THỜI KHẨN CẤP",
+      ];
+      severity = "critical";
+      break;
+
+    case "atrial_flutter":
+      hr = customBpm || 150; // Cuồng nhĩ dẫn truyền 2:1 (nhĩ 300, thất 150)
+      pr = 0; // Sóng F răng cưa liên tục
+      qrs = 84;
+      qt = 300;
+      lines = [
+        "Cuồng nhĩ dẫn truyền 2:1 (Atrial Flutter with 2:1 conduction)",
+        "Sóng cuồng nhĩ F dạng răng cưa liên tục tần số ~300 chu kỳ/phút ở DII, DIII, aVF",
+        "Tần số đáp ứng thất đều đặn 150 chu kỳ/phút",
+      ];
+      severity = "abnormal";
+      break;
+
+    case "svt":
+      hr = customBpm || 180;
+      pr = 0; // Sóng P vùi trong QRS / ST
+      qrs = 78; // QRS thanh mảnh < 100ms
+      qt = 280;
+      lines = [
+        "Cơn nhịp nhanh trên thất kịch phát (Paroxysmal SVT / AVNRT)",
+        "Nhịp đều rất nhanh 180 chu kỳ/phút, phức bộ QRS hẹp bình thường",
+        "XỬ TRÍ CẤP CỨU: NGHIỆM PHÁP VALSALVA / TIÊM ADENOSINE NHANH 6MG TM",
+      ];
+      severity = "critical";
+      break;
+
+    case "pvc_frequent":
+      hr = customBpm || 72;
+      pr = 160;
+      qrs = 90; // Nhát xoang bình thường
+      qt = 390;
+      lines = [
+        "Ngoại tâm thu thất dày (Frequent PVCs / Trigeminy)",
+        "Dạng nhịp ba (Trigeminy): 2 nhát xoang đi kèm 1 nhát QRS đến sớm, dãn rộng > 120ms biến dạng",
+        "Có khoảng nghỉ bù hoàn toàn sau nhát ngoại tâm thu",
+      ];
+      severity = "abnormal";
       break;
 
     case "atrial_fibrillation":
@@ -411,11 +502,11 @@ export function getWaveAnchors(
 
   switch (rhythm as string) {
     case "av_block_first_degree":
-      // PR kéo dài (>= 260ms), P xuất hiện sớm ở 0.04s, QRS bắt đầu ở 0.290s, R ở 0.320s
+      // PR kéo dài (>= 260ms), P xuất hiện sớm ở 0.055s, QRS bắt đầu ở 0.290s, R ở 0.320s
       rPeak = 0.320;
       qrsOnset = 0.290;
       pOnset = Math.max(0.010, qrsOnset - prSec);
-      pPeak = 0.040;
+      pPeak = 0.055;
       sPeak = 0.350;
       jPoint = 0.380;
       stMid = 0.420;

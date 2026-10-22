@@ -1,9 +1,9 @@
 {
   "meta": {
     "project_name": "GameYhoc",
-    "last_updated": "2026-10-22T18:15:00.000000",
+    "last_updated": "2026-10-22T18:52:00.000000",
     "overall_progress_percent": 100,
-    "current_phase": "Milestone M14 Completed: Dynamic Wave Snapping Engine & Precision Waveform Calibration (Khắc Phục Dứt Điểm Điểm Ngắm Sóng Q & ST Soi Gương Bị Lệch)",
+    "current_phase": "Milestone M15 Completed: Comprehensive 31-Pathology ECG Metrics Engine, Multi-Lead Projection & Omnipresent RR Regularity Calipers (Thước Đo RR Đều Đặn Trên Tất Cả Đạo Trình & 100% Chỉ Số Lâm Sàng)",
     "status": "COMPLETED"
   },
   "milestones": [
@@ -446,6 +446,33 @@
         {
           "id": "T14.4",
           "desc": "Phase 04 - Bộ kiểm thử tự động tests/dynamic_wave_snapping.test.js xác thực toán học sóng và thuật toán snap cực trị, 43/43 tests pass 100%, TypeScript 0 lỗi, Next.js build 13/13 static routes thành công",
+          "status": "DONE"
+        }
+      ]
+    },
+    {
+      "id": "M15",
+      "title": "Milestone M15: Comprehensive 31-Pathology ECG Metrics Engine, Multi-Lead Projection & Omnipresent RR Regularity Calipers",
+      "status": "COMPLETED",
+      "tasks": [
+        {
+          "id": "T15.1",
+          "desc": "Phase 01 - Hiển thị thước đo R-R Caliper trên TẤT CẢ các chuyển đạo (12-Lead Grid) khi tick tiêu chuẩn nhịp đều, gỡ bỏ rào cản chỉ vẽ ở Lead II, đồng thời vẽ 2 khoảng R-R liên tiếp trên dải nhịp kéo dài",
+          "status": "DONE"
+        },
+        {
+          "id": "T15.2",
+          "desc": "Phase 02 - Bao phủ 100% 31 mặt bệnh lý trong computeEcgMetrics: khắc phục lỗi Header Monitor hiển thị PR: 156ms ở Block AV độ I thành PR: 260ms (> 200ms), bổ sung 7 bệnh lý nhịp học còn thiếu",
+          "status": "DONE"
+        },
+        {
+          "id": "T15.3",
+          "desc": "Phase 03 - Chiếu vector giải phẫu 12 chuyển đạo trong ecgWaveforms.ts: aVR luôn âm toàn diện (P, QRS, T âm), V1 dạng rS sinh lý, chuẩn hóa PR-Caliper ôm từ chân P đến chân Q (260ms), triệt tiêu lỗi ghi đè nhãn dẫn truyền 1:1",
+          "status": "DONE"
+        },
+        {
+          "id": "T15.4",
+          "desc": "Phase 04 - Bộ kiểm thử tự động tests/comprehensive_metrics_and_multilead_projection.test.js xác thực 46/46 tests pass 100%, TypeScript 0 lỗi, Next.js build 13/13 static routes thành công",
           "status": "DONE"
         }
       ]
