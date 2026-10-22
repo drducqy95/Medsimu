@@ -17,6 +17,7 @@ import {
   BookOpen,
   Siren,
   Stethoscope,
+  ChevronDown,
 } from "lucide-react";
 import {
   ECG_RHYTHM_DEFINITIONS,
@@ -30,6 +31,9 @@ import { RealisticPinkEcgPaper } from "@/components/simulators/ecg/RealisticPink
 import { EcgSystemCategoryTabs } from "@/components/simulators/ecg/EcgSystemCategoryTabs";
 import { EcgClinicalDeckModal, PatientCaseData } from "@/components/simulators/ecg/EcgClinicalDeckModal";
 import { EcgSevenStepAssistant } from "@/components/simulators/ecg/EcgSevenStepAssistant";
+import { EcgMobilePathologyDrawer } from "@/components/simulators/ecg/EcgMobilePathologyDrawer";
+import { EcgMobileSettingsSheet } from "@/components/simulators/ecg/EcgMobileSettingsSheet";
+import { EcgMobileQuickBar } from "@/components/simulators/ecg/EcgMobileQuickBar";
 import { useGameSettingsStore } from "@/store/gameSettingsStore";
 
 export default function EcgSimulatorPage() {
@@ -42,6 +46,10 @@ export default function EcgSimulatorPage() {
 
   // System selection for 9 clinical cardiology systems
   const [selectedSystem, setSelectedSystem] = useState<string>("all");
+
+  // Mobile Bottom Sheet states
+  const [pathologyDrawerOpen, setPathologyDrawerOpen] = useState<boolean>(false);
+  const [settingsSheetOpen, setSettingsSheetOpen] = useState<boolean>(false);
 
   // Clinical deck modal state
   const [clinicalDeckOpen, setClinicalDeckOpen] = useState<boolean>(false);
@@ -109,9 +117,62 @@ export default function EcgSimulatorPage() {
   const currentMetrics = computeEcgMetrics(selectedRhythmId, bpm);
 
   return (
-    <div className="mx-auto max-w-7xl px-3 sm:px-6 py-3 sm:py-5 space-y-3">
-      {/* Top Header & Breadcrumb (Compact) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-hospital-800 pb-2.5">
+    <div className="mx-auto max-w-7xl px-2 sm:px-6 py-2 sm:py-5 space-y-2.5 sm:space-y-3">
+      {/* ============================================================== */}
+      {/* 1. MOBILE MICRO HEADER (Shown ONLY on < lg screens)           */}
+      {/* ============================================================== */}
+      <div className="flex lg:hidden items-center justify-between gap-1.5 pb-1 border-b border-hospital-800">
+        <div className="flex items-center gap-2 min-w-0">
+          <Link
+            href="/simulators"
+            className="flex h-8 w-8 items-center justify-center rounded-xl bg-hospital-900 border border-hospital-800 text-slate-300 hover:text-white shrink-0"
+            aria-label="Quay lại"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+          <div className="min-w-0">
+            <h1 className="text-xs font-black text-white truncate flex items-center gap-1.5">
+              <span>ECG Simulator</span>
+              <span className="rounded bg-rose-950 border border-rose-800 px-1 py-0.2 text-[8.5px] font-mono text-rose-300">
+                12 Cần
+              </span>
+            </h1>
+            <p className="text-[10px] text-slate-400 truncate">
+              {currentRhythm.name}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            onClick={toggleAudio}
+            className={`flex h-8 w-8 items-center justify-center rounded-xl border text-xs transition ${
+              audioEnabled
+                ? "bg-emerald-950 border-emerald-800 text-emerald-300"
+                : "bg-hospital-900 border-hospital-800 text-slate-400"
+            }`}
+            title={audioEnabled ? "Tắt âm" : "Bật âm"}
+          >
+            {audioEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setClinicalDeckOpen(true)}
+            className="flex items-center gap-1 h-8 px-2 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 border border-rose-500 text-white font-extrabold text-[10.5px] shadow-sm transition active:scale-95"
+            title="Phác đồ xử trí & Ca bệnh"
+          >
+            <Siren className="h-3.5 w-3.5 animate-pulse" />
+            <span className="hidden xs:inline">Phác đồ</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ============================================================== */}
+      {/* 2. DESKTOP HEADER & BREADCRUMB (Shown ONLY on >= lg screens)  */}
+      {/* ============================================================== */}
+      <div className="hidden lg:flex items-center justify-between gap-2.5 border-b border-hospital-800 pb-2.5">
         <div>
           <Link
             href="/simulators"
@@ -125,10 +186,10 @@ export default function EcgSimulatorPage() {
               <HeartPulse className="h-4 w-4 animate-pulse" />
             </div>
             <div>
-              <h1 className="text-base sm:text-xl font-extrabold text-white">
+              <h1 className="text-xl font-extrabold text-white">
                 Mô Phỏng Điện Tâm Đồ (ECG Simulator)
               </h1>
-              <p className="text-[11px] text-slate-400 hidden sm:block">
+              <p className="text-[11px] text-slate-400">
                 Sóng Gaussian 60 FPS • 9 Phân Hệ Lâm Sàng (31 Bệnh Lý) • Phác Đồ ACLS & Ca Bệnh Module 3
               </p>
             </div>
@@ -136,7 +197,7 @@ export default function EcgSimulatorPage() {
         </div>
 
         {/* View Mode, Audio & Emergency CTA Buttons */}
-        <div className="flex items-center gap-1.5 flex-wrap self-end sm:self-center">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <div className="flex rounded-xl bg-hospital-900 p-0.5 border border-hospital-800 text-[11px]">
             <button
               onClick={() => setViewMode("pink_paper")}
@@ -179,10 +240,9 @@ export default function EcgSimulatorPage() {
             }`}
           >
             {audioEnabled ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
-            <span className="hidden sm:inline">{audioEnabled ? "Âm ON" : "Tắt Âm"}</span>
+            <span>{audioEnabled ? "Âm ON" : "Tắt Âm"}</span>
           </button>
 
-          {/* Direct Emergency Management Deck Trigger */}
           <button
             type="button"
             onClick={() => setClinicalDeckOpen(true)}
@@ -194,8 +254,10 @@ export default function EcgSimulatorPage() {
         </div>
       </div>
 
-      {/* Main Control Deck (Compact) */}
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 rounded-xl border border-hospital-800 bg-hospital-900/90 p-2.5 sm:p-3 text-[11px]">
+      {/* ============================================================== */}
+      {/* 3. DESKTOP CONTROL DECK (Shown ONLY on >= lg screens)         */}
+      {/* ============================================================== */}
+      <div className="hidden lg:grid gap-2 grid-cols-4 rounded-xl border border-hospital-800 bg-hospital-900/90 p-3 text-[11px]">
         {/* BPM Slider */}
         <div className="space-y-1">
           <div className="flex justify-between font-bold text-slate-300">
@@ -275,35 +337,60 @@ export default function EcgSimulatorPage() {
         </div>
       </div>
 
-      {/* Primary Simulator Viewport */}
-      {viewMode === "pink_paper" ? (
-        <RealisticPinkEcgPaper
-          rhythm={selectedRhythmId}
+      {/* ============================================================== */}
+      {/* 4. PRIMARY SIMULATOR VIEWPORT (WAVEFORM-FIRST ON MOBILE!)      */}
+      {/* ============================================================== */}
+      <div className="w-full">
+        {viewMode === "pink_paper" ? (
+          <RealisticPinkEcgPaper
+            rhythm={selectedRhythmId}
+            bpm={bpm}
+            onOpenClinicalDeck={() => setClinicalDeckOpen(true)}
+          />
+        ) : viewMode === "runner" ? (
+          <EcgCanvasRunner
+            rhythm={selectedRhythmId}
+            bpm={bpm}
+            sweepSpeedMmPerSec={sweepSpeed}
+            amplitudeMmPerMv={amplitude}
+            calipersEnabled={calipersEnabled}
+            onToggleCalipers={() => setCalipersEnabled(!calipersEnabled)}
+          />
+        ) : (
+          <TwelveLeadGrid rhythm={selectedRhythmId} bpm={bpm} />
+        )}
+      </div>
+
+      {/* ============================================================== */}
+      {/* 5. MOBILE THUMB QUICK BAR (Placed immediately below waveform) */}
+      {/* ============================================================== */}
+      <div className="block lg:hidden">
+        <EcgMobileQuickBar
+          currentRhythm={currentRhythm}
           bpm={bpm}
-          onOpenClinicalDeck={() => setClinicalDeckOpen(true)}
-        />
-      ) : viewMode === "runner" ? (
-        <EcgCanvasRunner
-          rhythm={selectedRhythmId}
-          bpm={bpm}
-          sweepSpeedMmPerSec={sweepSpeed}
-          amplitudeMmPerMv={amplitude}
+          sweepSpeed={sweepSpeed}
           calipersEnabled={calipersEnabled}
+          onOpenPathologyDrawer={() => setPathologyDrawerOpen(true)}
+          onOpenSettingsSheet={() => setSettingsSheetOpen(true)}
+          onOpenClinicalDeck={() => setClinicalDeckOpen(true)}
           onToggleCalipers={() => setCalipersEnabled(!calipersEnabled)}
         />
-      ) : (
-        <TwelveLeadGrid rhythm={selectedRhythmId} bpm={bpm} />
-      )}
+      </div>
 
-      {/* Systematic 7-Step ECG Assistant */}
+      {/* ============================================================== */}
+      {/* 6. SYSTEMATIC 7-STEP ECG ASSISTANT                            */}
+      {/* ============================================================== */}
       <EcgSevenStepAssistant
         rhythmId={selectedRhythmId}
         metrics={currentMetrics}
         onOpenClinicalDeck={() => setClinicalDeckOpen(true)}
       />
 
-      {/* Rhythm Selection Deck with 9 Clinical Systems Level 1 Tabs (Compact) */}
-      <div className="rounded-2xl border border-hospital-800 bg-hospital-900/90 p-3 sm:p-4 space-y-2.5 shadow-lg">
+      {/* ============================================================== */}
+      {/* 7. DESKTOP ONLY: 9 SYSTEMS TABS & 31 RHYTHM CARDS             */}
+      {/* (Completely eliminated from mobile to prevent 3000px scrolling)*/}
+      {/* ============================================================== */}
+      <div className="hidden lg:block rounded-2xl border border-hospital-800 bg-hospital-900/90 p-4 space-y-2.5 shadow-lg">
         <EcgSystemCategoryTabs
           selectedSystem={selectedSystem}
           onSelectSystem={setSelectedSystem}
@@ -320,8 +407,8 @@ export default function EcgSimulatorPage() {
           </span>
         </div>
 
-        {/* Rhythm Buttons Grid (Compact) */}
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Rhythm Buttons Grid */}
+        <div className="grid gap-2 grid-cols-2 lg:grid-cols-3">
           {filteredRhythms.map((r) => {
             const isSelected = selectedRhythmId === r.id;
             const sys = RHYTHM_TO_SYSTEM_MAP[r.id];
@@ -379,7 +466,40 @@ export default function EcgSimulatorPage() {
         </div>
       </div>
 
-      {/* Clinical Deck Modal */}
+      {/* ============================================================== */}
+      {/* 8. MOBILE BOTTOM SHEET: PATHOLOGY PICKER (Phase 02)           */}
+      {/* ============================================================== */}
+      <EcgMobilePathologyDrawer
+        isOpen={pathologyDrawerOpen}
+        onClose={() => setPathologyDrawerOpen(false)}
+        selectedRhythmId={selectedRhythmId}
+        onSelectRhythm={handleSelectRhythm}
+      />
+
+      {/* ============================================================== */}
+      {/* 9. MOBILE BOTTOM SHEET: SETTINGS (Phase 03)                   */}
+      {/* ============================================================== */}
+      <EcgMobileSettingsSheet
+        isOpen={settingsSheetOpen}
+        onClose={() => setSettingsSheetOpen(false)}
+        bpm={bpm}
+        setBpm={setBpm}
+        defaultBpm={currentRhythm.defaultBpm}
+        sweepSpeed={sweepSpeed}
+        setSweepSpeed={setSweepSpeed}
+        amplitude={amplitude}
+        setAmplitude={setAmplitude}
+        calipersEnabled={calipersEnabled}
+        setCalipersEnabled={setCalipersEnabled}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        audioEnabled={audioEnabled}
+        toggleAudio={toggleAudio}
+      />
+
+      {/* ============================================================== */}
+      {/* 10. CLINICAL DECK MODAL                                       */}
+      {/* ============================================================== */}
       <EcgClinicalDeckModal
         isOpen={clinicalDeckOpen}
         onClose={() => setClinicalDeckOpen(false)}

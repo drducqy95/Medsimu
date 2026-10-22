@@ -1,9 +1,9 @@
 {
   "meta": {
     "project_name": "GameYhoc",
-    "last_updated": "2026-10-22T09:24:00.000000",
+    "last_updated": "2026-10-22T09:58:00.000000",
     "overall_progress_percent": 100,
-    "current_phase": "Milestone M5 Completed: Portrait Screen Optimization, Mobile Bottom Navigation & ECG 6x2 Stacked Grid Engine Verified",
+    "current_phase": "Milestone M6 Completed: Mobile Minimalist Redesign - Waveform-First & Bottom-Sheet Pathology Picker Verified",
     "status": "COMPLETED"
   },
   "milestones": [
@@ -193,6 +193,38 @@
         {
           "id": "T5.6",
           "desc": "Phase 06 - Automated Responsive Testing, TypeScript Check & GitHub Sync",
+          "status": "DONE"
+        }
+      ]
+    },
+    {
+      "id": "M6",
+      "title": "Milestone M6: Tinh Giản Giao Diện Mobile - Waveform-First & Triệt Tiêu Cuộn Trang",
+      "status": "COMPLETED",
+      "tasks": [
+        {
+          "id": "T6.1",
+          "desc": "Phase 01 - Waveform-First Layout: Giấy in ECG lên đỉnh màn hình, loại bỏ header cồng kềnh",
+          "status": "DONE"
+        },
+        {
+          "id": "T6.2",
+          "desc": "Phase 02 - Mobile Bottom Sheet Pathology Picker: Triệt tiêu 31 thẻ bệnh 3000px, thay bằng Drawer chọn nhanh",
+          "status": "DONE"
+        },
+        {
+          "id": "T6.3",
+          "desc": "Phase 03 - Quick Control Deck & Clinical Drawer: Gom BPM, Speed, Amp, Caliper & Phác đồ vào Quick Deck",
+          "status": "DONE"
+        },
+        {
+          "id": "T6.4",
+          "desc": "Phase 04 - Treatment Bay Accordion: Hồ sơ bệnh nhân 1 chạm, ưu tiên Monitor và Y lệnh",
+          "status": "DONE"
+        },
+        {
+          "id": "T6.5",
+          "desc": "Phase 05 - Verification & Push: Giảm 75% chiều dài cuộn trang trên mobile, test tự động 100% pass",
           "status": "DONE"
         }
       ]
