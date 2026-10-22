@@ -989,12 +989,14 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
               ann.waveComponent === "QT"
             ) {
               if (ann.waveComponent === "RR") {
-                const t1 = tCycleStart + anchors.rPeak;
-                const t2 = tCycleStart + cycleDuration + anchors.rPeak;
+                const isConsecutive = isRhythmStrip && (ann.label.includes("R-R₂") || ann.label.includes("kế tiếp"));
+                const cycleToUse = isConsecutive ? k + 1 : k;
+                const t1 = cycleToUse * cycleDuration + anchors.rPeak;
+                const t2 = (cycleToUse + 1) * cycleDuration + anchors.rPeak;
                 const x1 = traceStart + (t1 - tMin) * pixelsPerSecond;
                 const x2 = traceStart + (t2 - tMin) * pixelsPerSecond;
 
-                if (x2 >= traceStart + 10 && x1 <= leadEndX - 10) {
+                if (x1 >= traceStart + 6 && x2 <= leadEndX - 6) {
                   const v1 = calculateLeadEcgVoltage(t1, calcLead, rhythm, bpm);
                   const v2 = calculateLeadEcgVoltage(t2, calcLead, rhythm, bpm);
                   const y1 = midY - v1 * voltageScale;
@@ -1054,7 +1056,7 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                 const x1 = traceStart + (t1 - tMin) * pixelsPerSecond;
                 const x2 = traceStart + (t2 - tMin) * pixelsPerSecond;
 
-                if (x2 >= traceStart + 10 && x1 <= leadEndX - 10) {
+                if (x1 >= traceStart + 6 && x2 <= leadEndX - 6) {
                   const v1 = calculateLeadEcgVoltage(t1, calcLead, rhythm, bpm);
                   const v2 = calculateLeadEcgVoltage(t2, calcLead, rhythm, bpm);
                   const y1 = midY - v1 * voltageScale;
@@ -1103,7 +1105,7 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                 const x1 = traceStart + (t1 - tMin) * pixelsPerSecond;
                 const x2 = traceStart + (t2 - tMin) * pixelsPerSecond;
 
-                if (x2 >= traceStart + 10 && x1 <= leadEndX - 10) {
+                if (x1 >= traceStart + 6 && x2 <= leadEndX - 6) {
                   const v1 = calculateLeadEcgVoltage(t1, calcLead, rhythm, bpm);
                   const v2 = calculateLeadEcgVoltage(t2, calcLead, rhythm, bpm);
                   const y1 = midY - v1 * voltageScale;
@@ -1152,7 +1154,7 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                 const x1 = traceStart + (t1 - tMin) * pixelsPerSecond;
                 const x2 = traceStart + (t2 - tMin) * pixelsPerSecond;
 
-                if (x2 >= traceStart + 10 && x1 <= leadEndX - 10) {
+                if (x1 >= traceStart + 6 && x2 <= leadEndX - 6) {
                   ctx.font = "bold 8px monospace";
                   const tw = ctx.measureText(ann.label).width;
                   itemsToRender.push({

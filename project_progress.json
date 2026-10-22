@@ -1,9 +1,9 @@
 {
   "meta": {
     "project_name": "GameYhoc",
-    "last_updated": "2026-10-22T18:52:00.000000",
+    "last_updated": "2026-10-22T21:48:00.000000",
     "overall_progress_percent": 100,
-    "current_phase": "Milestone M15 Completed: Comprehensive 31-Pathology ECG Metrics Engine, Multi-Lead Projection & Omnipresent RR Regularity Calipers (Thước Đo RR Đều Đặn Trên Tất Cả Đạo Trình & 100% Chỉ Số Lâm Sàng)",
+    "current_phase": "Milestone M16 Completed: RR Caliper Strict Containment & Consecutive Rhythm Strip Precision (Triệt Tiêu Hoàn Toàn Lỗi Bắt Dính Ngoài Lề Trái & Chuẩn Hóa 2 Khoảng R-R Liên Tiếp)",
     "status": "COMPLETED"
   },
   "milestones": [
@@ -473,6 +473,33 @@
         {
           "id": "T15.4",
           "desc": "Phase 04 - Bộ kiểm thử tự động tests/comprehensive_metrics_and_multilead_projection.test.js xác thực 46/46 tests pass 100%, TypeScript 0 lỗi, Next.js build 13/13 static routes thành công",
+          "status": "DONE"
+        }
+      ]
+    },
+    {
+      "id": "M16",
+      "title": "Milestone M16: RR Caliper Strict Containment & Consecutive Rhythm Strip Precision",
+      "status": "COMPLETED",
+      "tasks": [
+        {
+          "id": "T16.1",
+          "desc": "Phase 01 - Triệt tiêu lỗi bắt dính ngoài màn hình (x1 < traceStart) bằng điều kiện bao hàm nghiêm ngặt: x1 >= traceStart + 6 && x2 <= leadEndX - 6 trên toàn bộ hệ thống thước kẹp (RR, PR, QT, Interval)",
+          "status": "DONE"
+        },
+        {
+          "id": "T16.2",
+          "desc": "Phase 02 - Chuẩn hóa hiển thị 2 khoảng R-R liên tiếp trên dải nhịp Lead II kéo dài: Thước 1 (k -> k+1) và Thước 2 (k+1 -> k+2) nối đầu-đuôi tại nhát bóp ở giữa, chứng minh R-R1 = R-R2 = 923ms",
+          "status": "DONE"
+        },
+        {
+          "id": "T16.3",
+          "desc": "Phase 03 - Bộ kiểm thử tự động tests/rr_caliper_containment_precision.test.js xác thực 100% không còn thước đo nào xuất phát từ lề trái ngoài ô chuyển đạo",
+          "status": "DONE"
+        },
+        {
+          "id": "T16.4",
+          "desc": "Phase 04 - Bộ test toàn diện 49/49 tests pass 100%, TypeScript 0 lỗi, Next.js production build 13/13 static routes thành công",
           "status": "DONE"
         }
       ]
