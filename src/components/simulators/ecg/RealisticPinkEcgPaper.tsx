@@ -907,6 +907,36 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
 
         const anchors = getWaveAnchors(rhythm, metrics);
 
+        // Dynamic Wave Snapping Engine: Tự động bắt dính điểm cực trị toán học của sóng thực tế trên từng chuyển đạo
+        const snapToWaveExtremum = (
+          tCenterSec: number,
+          targetLeadId: string,
+          extremumType: "min" | "max",
+          windowSec: number = 0.035,
+          stepSec: number = 0.001
+        ): number => {
+          let bestT = tCenterSec;
+          let bestV = calculateLeadEcgVoltage(tCenterSec, targetLeadId, rhythm, bpm);
+          const tStart = tCenterSec - windowSec;
+          const tEnd = tCenterSec + windowSec;
+
+          for (let t = tStart; t <= tEnd; t += stepSec) {
+            const v = calculateLeadEcgVoltage(t, targetLeadId, rhythm, bpm);
+            if (extremumType === "min") {
+              if (v < bestV) {
+                bestV = v;
+                bestT = t;
+              }
+            } else {
+              if (v > bestV) {
+                bestV = v;
+                bestT = t;
+              }
+            }
+          }
+          return bestT;
+        };
+
         for (const k of candidateCycles) {
           if (renderedLabels.size >= annotations.length) break;
 
@@ -1106,22 +1136,38 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                 }
               }
             }
-            // 2. VERTICAL AMPLITUDE DIMENSIONS (ST, T, S, R)
+            // 2. VERTICAL AMPLITUDE DIMENSIONS (ST, T, S, R, Q)
             else if (
               ann.waveComponent === "ST" ||
               ann.waveComponent === "T" ||
               ann.waveComponent === "S" ||
-              ann.waveComponent === "R"
+              ann.waveComponent === "R" ||
+              ann.waveComponent === "Q"
             ) {
               let targetTime = tCycleStart + ann.targetCyclePhase * cycleDuration;
-              if (ann.waveComponent === "ST") {
-                targetTime = tCycleStart + anchors.stMid;
+              if (ann.waveComponent === "Q") {
+                // Sóng Q: Bắt dính cực tiểu âm của sóng Q trước sóng R
+                const tEst = tCycleStart + (rhythm === "stemi_inferior" ? 0.185 : anchors.qrsOnset + 0.015);
+                targetTime = snapToWaveExtremum(tEst, calcLead, "min", 0.035, 0.001);
+              } else if (ann.waveComponent === "ST") {
+                if (ann.label.includes("soi gương") || ann.label.includes("reciprocal") || ann.label.includes("chênh xuống")) {
+                  // ST soi gương: Bắt dính cực tiểu âm sâu nhất của đoạn ST chênh xuống
+                  const tEst = tCycleStart + 0.330;
+                  targetTime = snapToWaveExtremum(tEst, calcLead, "min", 0.045, 0.001);
+                } else {
+                  // ST chênh vòm/lên: Bắt dính cực đại đỉnh vòm ST cao nhất
+                  targetTime = snapToWaveExtremum(tCycleStart + anchors.stMid, calcLead, "max", 0.040, 0.001);
+                }
               } else if (ann.waveComponent === "T") {
-                targetTime = tCycleStart + anchors.tPeak;
+                if (ann.label.includes("âm") || ann.badgePlacement === "bottom") {
+                  targetTime = snapToWaveExtremum(tCycleStart + anchors.tPeak, calcLead, "min", 0.050, 0.001);
+                } else {
+                  targetTime = snapToWaveExtremum(tCycleStart + anchors.tPeak, calcLead, "max", 0.050, 0.001);
+                }
               } else if (ann.waveComponent === "S") {
-                targetTime = tCycleStart + anchors.sPeak;
+                targetTime = snapToWaveExtremum(tCycleStart + anchors.sPeak, calcLead, "min", 0.030, 0.001);
               } else if (ann.waveComponent === "R") {
-                targetTime = tCycleStart + anchors.rPeak;
+                targetTime = snapToWaveExtremum(tCycleStart + anchors.rPeak, calcLead, "max", 0.025, 0.001);
               }
 
               const targetX = traceStart + (targetTime - tMin) * pixelsPerSecond;
@@ -1132,7 +1178,11 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                 const mm = waveV * 10;
 
                 let labelText = ann.label;
-                if (ann.waveComponent === "ST") {
+                if (ann.waveComponent === "Q") {
+                  labelText = isRhythmStrip
+                    ? `▼ Sóng Q hoại tử = -${Math.abs(mm).toFixed(1)}mm (${waveV.toFixed(2)}mV) • Tiêu chuẩn: Rộng ≥ 0.04s, sâu ≥ 1/4 R`
+                    : `▼ Q = -${Math.abs(mm).toFixed(1)}mm • Rộng ≥ 0.04s (≥ 1/4 R)`;
+                } else if (ann.waveComponent === "ST") {
                   const prefix = waveV >= 0 ? "▲ ST +" : "▼ ST ";
                   if (ann.label.includes("soi gương")) {
                     labelText = isRhythmStrip
@@ -1189,9 +1239,9 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                 }
 
                 let isTop = ann.badgePlacement !== "bottom";
-                if (ann.waveComponent === "S" || waveV < -0.10) {
+                if (ann.waveComponent === "Q" || ann.waveComponent === "S" || waveV < -0.08) {
                   isTop = false;
-                } else if (ann.waveComponent === "ST" && waveV > 0.10) {
+                } else if (ann.waveComponent === "ST" && waveV > 0.08) {
                   isTop = true;
                 }
 
@@ -1211,15 +1261,17 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                 renderedLabels.add(ann.label);
               }
             }
-            // 3. OTHER GENERAL WAVE COMPONENTS (P, Q, QRS, U, DROPPED)
+            // 3. OTHER GENERAL WAVE COMPONENTS (P, QRS, U, DROPPED)
             else {
               let targetTime = tCycleStart + ann.targetCyclePhase * cycleDuration;
               if (ann.waveComponent === "P") {
-                targetTime = tCycleStart + anchors.pPeak;
-              } else if (ann.waveComponent === "Q") {
-                targetTime = tCycleStart + anchors.qrsOnset + 0.015;
+                if (ann.leadId.toUpperCase() === "AVR") {
+                  targetTime = snapToWaveExtremum(tCycleStart + anchors.pPeak, calcLead, "min", 0.030, 0.001);
+                } else {
+                  targetTime = snapToWaveExtremum(tCycleStart + anchors.pPeak, calcLead, "max", 0.030, 0.001);
+                }
               } else if (ann.waveComponent === "QRS") {
-                targetTime = tCycleStart + anchors.rPeak;
+                targetTime = snapToWaveExtremum(tCycleStart + anchors.rPeak, calcLead, "max", 0.025, 0.001);
               }
 
               const targetX = traceStart + (targetTime - tMin) * pixelsPerSecond;

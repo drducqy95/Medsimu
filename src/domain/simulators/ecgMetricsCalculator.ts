@@ -437,15 +437,15 @@ export function getWaveAnchors(
       break;
 
     case "stemi_inferior":
-      // ST elevation vòm ở 0.305s
-      rPeak = 0.220;
-      qrsOnset = 0.185;
+      // ST elevation vòm ở 0.310s; R ở 0.230s; Sóng Q hoại tử đáy ở 0.185s
+      rPeak = 0.230;
+      qrsOnset = 0.165;
       pOnset = Math.max(0.010, qrsOnset - prSec);
       pPeak = 0.120;
       sPeak = 0.250;
       jPoint = 0.260;
-      stMid = 0.305;
-      tPeak = 0.460;
+      stMid = 0.310;
+      tPeak = 0.465;
       tEnd = 0.580;
       break;
 

@@ -1194,39 +1194,39 @@ export function calculateLeadEcgVoltage(
   const cycleDuration = 60 / Math.max(35, bpm);
   const tInCycle = globalTimeSec % cycleDuration;
 
-  // STEMI INFERIOR (Criteria: DII, DIII, aVF ST elevation; DI, aVL reciprocal ST depression)
+  // STEMI INFERIOR (Criteria: DII, DIII, aVF ST elevation; DI, aVL reciprocal ST depression; Pathologic Q in DIII, aVF)
   if (rhythm === "stemi_inferior") {
     if (normLead === "DII" || normLead === "II") {
       return (
         0.15 * gaussian(tInCycle, 0.12, 0.024) - // P
-        0.18 * gaussian(tInCycle, 0.20, 0.012) + // Q
+        0.18 * gaussian(tInCycle, 0.19, 0.012) + // Q
         1.35 * gaussian(tInCycle, 0.22, 0.015) + // R
-        0.32 * gaussian(tInCycle, 0.30, 0.060) + // ST ELEVATION DOME (+3.2mm)
+        0.32 * gaussian(tInCycle, 0.31, 0.060) + // ST ELEVATION DOME (+3.2mm)
         0.58 * gaussian(tInCycle, 0.46, 0.060)   // Giant T
       );
     } else if (normLead === "DIII" || normLead === "III") {
       return (
         0.12 * gaussian(tInCycle, 0.12, 0.024) - // P
-        0.36 * gaussian(tInCycle, 0.20, 0.018) + // Pathologic Q (> 0.04s, > 25% R)
-        1.10 * gaussian(tInCycle, 0.23, 0.015) + // R
-        0.38 * gaussian(tInCycle, 0.31, 0.060) + // ST ELEVATION DOME (+3.8mm)
-        0.62 * gaussian(tInCycle, 0.47, 0.060)   // Giant T
+        0.42 * gaussian(tInCycle, 0.185, 0.018) + // Pathologic Q (> 0.04s, > 25% R: đáy sâu tại 0.185s)
+        1.10 * gaussian(tInCycle, 0.230, 0.015) + // R (đỉnh tại 0.230s)
+        0.38 * gaussian(tInCycle, 0.310, 0.060) + // ST ELEVATION DOME (+3.8mm)
+        0.62 * gaussian(tInCycle, 0.470, 0.060)   // Giant T
       );
     } else if (normLead === "aVF") {
       return (
         0.14 * gaussian(tInCycle, 0.12, 0.024) - // P
-        0.26 * gaussian(tInCycle, 0.20, 0.014) + // Pathologic Q
-        1.25 * gaussian(tInCycle, 0.22, 0.015) + // R
-        0.34 * gaussian(tInCycle, 0.30, 0.060) + // ST ELEVATION DOME (+3.4mm)
-        0.55 * gaussian(tInCycle, 0.46, 0.060)
+        0.35 * gaussian(tInCycle, 0.185, 0.016) + // Pathologic Q (> 0.04s, > 25% R: đáy sâu tại 0.185s)
+        1.25 * gaussian(tInCycle, 0.230, 0.015) + // R (đỉnh tại 0.230s)
+        0.34 * gaussian(tInCycle, 0.310, 0.060) + // ST ELEVATION DOME (+3.4mm)
+        0.55 * gaussian(tInCycle, 0.460, 0.060)
       );
     } else if (normLead === "DI" || normLead === "I" || normLead === "aVL") {
-      // RECIPROCAL ST DEPRESSION (-1.8mm) and inverted T wave
-      const mult = normLead === "aVL" ? 1.1 : 0.85;
+      // RECIPROCAL ST DEPRESSION (-2.0mm to -2.7mm) and inverted T wave
+      const mult = normLead === "aVL" ? 1.15 : 0.90;
       return (
         0.12 * gaussian(tInCycle, 0.12, 0.024) + // P
         1.10 * gaussian(tInCycle, 0.22, 0.015) * mult - // Upright R
-        0.18 * gaussian(tInCycle, 0.32, 0.055) * mult - // RECIPROCAL ST DEPRESSION!
+        0.22 * gaussian(tInCycle, 0.33, 0.060) * mult - // RECIPROCAL ST DEPRESSION!
         0.32 * gaussian(tInCycle, 0.46, 0.055) * mult   // Inverted T
       );
     } else {

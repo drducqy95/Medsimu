@@ -1,9 +1,9 @@
 {
   "meta": {
     "project_name": "GameYhoc",
-    "last_updated": "2026-10-22T17:28:00.000000",
+    "last_updated": "2026-10-22T18:15:00.000000",
     "overall_progress_percent": 100,
-    "current_phase": "Milestone M13 Completed: Zero Index Bias & Exact Semantic Precision (Đồng Bộ 100% Tiêu Chuẩn Y Khoa & Định Vị Chuẩn Xác Không Lệch Sóng)",
+    "current_phase": "Milestone M14 Completed: Dynamic Wave Snapping Engine & Precision Waveform Calibration (Khắc Phục Dứt Điểm Điểm Ngắm Sóng Q & ST Soi Gương Bị Lệch)",
     "status": "COMPLETED"
   },
   "milestones": [
@@ -419,6 +419,33 @@
         {
           "id": "T13.4",
           "desc": "Phase 04 - Bộ kiểm thử tự động tests/zero_index_bias_precision.test.js kiểm tra cô lập nghiêm ngặt, 40/40 tests pass 100%, TypeScript 0 lỗi, Next.js build 13/13 static routes thành công",
+          "status": "DONE"
+        }
+      ]
+    },
+    {
+      "id": "M14",
+      "title": "Milestone M14: Dynamic Wave Snapping Engine & Precision Waveform Calibration (Khắc Phục Dứt Điểm Điểm Ngắm Sóng Q & ST Soi Gương Bị Lệch)",
+      "status": "COMPLETED",
+      "tasks": [
+        {
+          "id": "T14.1",
+          "desc": "Phase 01 - Tách bạch toán học sóng Q hoại tử và sóng R trong ecgWaveforms.ts: Sóng Q ở DIII và aVF đạt đáy âm sâu >= 25% biên độ R (-0.35mV đến -0.42mV tại 0.185s), ST soi gương ở DI và aVL đạt cực tiểu âm sâu -2.1mm đến -2.7mm tại 0.33s",
+          "status": "DONE"
+        },
+        {
+          "id": "T14.2",
+          "desc": "Phase 02 - Tích hợp Dynamic Wave Snapping Engine (snapToWaveExtremum) quét cửa sổ +-35ms bắt dính chính xác điểm cực tiểu (min) cho sóng Q và ST soi gương, cực đại (max) cho ST vòm và sóng R trên từng chuyển đạo thực tế",
+          "status": "DONE"
+        },
+        {
+          "id": "T14.3",
+          "desc": "Phase 03 - Nâng cấp thước đo biên độ thẳng đứng Pathologic Q-Caliper: kẻ vạch đẳng điện 0mV, vạch caliper đo độ sâu từ 0mV xuống đáy sóng Q, hiển thị nhãn chi tiết ▼ Q = -3.5mm • Rộng >= 0.04s (>= 1/4 R)",
+          "status": "DONE"
+        },
+        {
+          "id": "T14.4",
+          "desc": "Phase 04 - Bộ kiểm thử tự động tests/dynamic_wave_snapping.test.js xác thực toán học sóng và thuật toán snap cực trị, 43/43 tests pass 100%, TypeScript 0 lỗi, Next.js build 13/13 static routes thành công",
           "status": "DONE"
         }
       ]
