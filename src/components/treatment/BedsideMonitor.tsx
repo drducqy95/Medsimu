@@ -234,103 +234,101 @@ export const BedsideMonitor: React.FC<BedsideMonitorProps> = ({
       {/* Main Grid: Waveform Canvas (Left 65%) + Vitals Digits (Right 35%) */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-0 items-stretch">
         {/* Canvas Waveforms */}
-        <div className="md:col-span-8 p-4 relative bg-black/80 flex flex-col justify-center">
-          <div className="absolute top-3 left-4 text-[10px] font-mono text-emerald-400 tracking-wider">
+        <div className="md:col-span-8 p-2.5 sm:p-4 relative bg-black/80 flex flex-col justify-center">
+          <div className="absolute top-2.5 left-3 sm:top-3 sm:left-4 text-[9.5px] sm:text-[10px] font-mono text-emerald-400 tracking-wider">
             LEAD II (1.0 mV/cm) | 25 mm/s
           </div>
-          <div className="absolute bottom-3 left-4 text-[10px] font-mono text-cyan-400 tracking-wider">
+          <div className="absolute bottom-2.5 left-3 sm:bottom-3 sm:left-4 text-[9.5px] sm:text-[10px] font-mono text-cyan-400 tracking-wider">
             PLETH (SpO2 PULSE WAVE)
           </div>
 
           <canvas
             ref={canvasRef}
             width={580}
-            height={200}
-            className="w-full h-[200px] block rounded-xl border border-hospital-800/60 bg-black"
+            height={180}
+            className="w-full h-[180px] sm:h-[200px] block rounded-xl border border-hospital-800/60 bg-black"
           />
         </div>
 
-        {/* Digital Readout Columns */}
-        <div className="md:col-span-4 p-4 border-l border-hospital-800 bg-hospital-950/70 grid grid-cols-2 gap-3">
+        {/* Digital Readout Columns (4-col on mobile/tablet, 2-col on desktop sidebar) */}
+        <div className="md:col-span-4 p-2.5 sm:p-4 border-t md:border-t-0 md:border-l border-hospital-800 bg-hospital-950/70 grid grid-cols-2 sm:grid-cols-4 md:grid-cols-2 gap-2 sm:gap-2.5">
           {/* Heart Rate (HR) */}
-          <div className={`p-3 rounded-2xl border ${
+          <div className={`p-2.5 rounded-xl border ${
             isHrDanger
               ? "border-rose-500/60 bg-rose-950/40 text-rose-300"
               : "border-emerald-500/30 bg-emerald-950/20 text-emerald-400"
           }`}>
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-wider">HR (BPM)</span>
-              <Heart className={`h-3.5 w-3.5 ${vitals.hr > 0 ? "animate-pulse" : ""}`} />
+              <span className="text-[9.5px] font-bold uppercase tracking-wider">HR (BPM)</span>
+              <Heart className={`h-3 w-3 ${vitals.hr > 0 ? "animate-pulse" : ""}`} />
             </div>
-            <div className="mt-1 font-mono text-3xl font-black">
+            <div className="mt-0.5 font-mono text-2xl sm:text-3xl font-black">
               {vitals.hr}
             </div>
-            <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+            <div className="text-[9px] text-slate-400 font-mono">
               Chuẩn: 60 - 100
             </div>
           </div>
 
           {/* Blood Pressure (BP) */}
-          <div className={`p-3 rounded-2xl border ${
+          <div className={`p-2.5 rounded-xl border ${
             isBpDanger
               ? "border-rose-500/60 bg-rose-950/40 text-rose-300"
               : "border-rose-500/30 bg-rose-950/20 text-rose-400"
           }`}>
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-wider">NIBP (mmHg)</span>
-              <Activity className="h-3.5 w-3.5" />
+              <span className="text-[9.5px] font-bold uppercase tracking-wider">NIBP (mmHg)</span>
+              <Activity className="h-3 w-3" />
             </div>
-            <div className="mt-1 font-mono text-2xl font-black leading-tight">
+            <div className="mt-0.5 font-mono text-xl sm:text-2xl font-black leading-tight">
               {vitals.bpSys}/{vitals.bpDia}
             </div>
-            <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+            <div className="text-[9px] text-slate-400 font-mono">
               MAP: <span className="font-bold text-white">{mapValue}</span>
             </div>
           </div>
 
           {/* SpO2 */}
-          <div className={`p-3 rounded-2xl border ${
+          <div className={`p-2.5 rounded-xl border ${
             isSpO2Danger
               ? "border-rose-500/60 bg-rose-950/40 text-rose-300"
               : "border-cyan-500/30 bg-cyan-950/20 text-cyan-400"
           }`}>
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-wider">SpO2 (%)</span>
+              <span className="text-[9.5px] font-bold uppercase tracking-wider">SpO2 (%)</span>
               <span className="text-xs font-bold">%</span>
             </div>
-            <div className="mt-1 font-mono text-3xl font-black">
+            <div className="mt-0.5 font-mono text-2xl sm:text-3xl font-black">
               {vitals.spO2}%
             </div>
-            <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+            <div className="text-[9px] text-slate-400 font-mono">
               Mục tiêu: &gt;= 95%
             </div>
           </div>
 
           {/* Respiratory Rate (RR) */}
-          <div className="p-3 rounded-2xl border border-amber-500/30 bg-amber-950/20 text-amber-400">
+          <div className="p-2.5 rounded-xl border border-amber-500/30 bg-amber-950/20 text-amber-400">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-wider">RR (/min)</span>
-              <span className="text-xs">Lồng ngực</span>
+              <span className="text-[9.5px] font-bold uppercase tracking-wider">RR (/min)</span>
+              <span className="text-[10px]">Thở</span>
             </div>
-            <div className="mt-1 font-mono text-3xl font-black">
+            <div className="mt-0.5 font-mono text-2xl sm:text-3xl font-black">
               {vitals.rr}
             </div>
-            <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+            <div className="text-[9px] text-slate-400 font-mono">
               Chuẩn: 12 - 20
             </div>
           </div>
 
           {/* Temperature & Glasgow */}
-          <div className="p-2.5 rounded-2xl border border-hospital-800 bg-hospital-900/60 text-slate-300">
-            <span className="text-[10px] text-slate-400 uppercase font-bold">Thân Nhiệt</span>
-            <div className="font-mono text-lg font-bold text-white">{vitals.temp} °C</div>
+          <div className="p-2 rounded-xl border border-hospital-800 bg-hospital-900/60 text-slate-300 flex items-center justify-between sm:col-span-2 md:col-span-1">
+            <span className="text-[9.5px] text-slate-400 uppercase font-bold">Nhiệt Độ:</span>
+            <span className="font-mono text-sm font-bold text-white">{vitals.temp} °C</span>
           </div>
 
-          <div className="p-2.5 rounded-2xl border border-hospital-800 bg-hospital-900/60 text-slate-300">
-            <span className="text-[10px] text-slate-400 uppercase font-bold">Glasgow (GCS)</span>
-            <div className={`font-mono text-lg font-bold ${vitals.glasgow <= 8 ? "text-rose-400" : "text-emerald-400"}`}>
-              {vitals.glasgow} / 15
-            </div>
+          <div className="p-2 rounded-xl border border-hospital-800 bg-hospital-900/60 text-slate-300 flex items-center justify-between sm:col-span-2 md:col-span-1">
+            <span className="text-[9.5px] text-slate-400 uppercase font-bold">GCS (Tri Giác):</span>
+            <span className="font-mono text-sm font-bold text-teal-300">{vitals.glasgow}/15</span>
           </div>
         </div>
       </div>

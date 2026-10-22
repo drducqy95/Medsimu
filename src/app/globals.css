@@ -53,3 +53,16 @@ body {
 .code-blue-active {
   animation: code-blue-flash 1s infinite ease-in-out;
 }
+
+/* Safe Area Insets for Mobile Portrait Notch and Home Indicator */
+.pb-safe {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+}
+.pt-safe {
+  padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
+}
+
+/* Touch Ergonomics: Disable unwanted double-tap zoom on buttons and cards */
+button, a, input, select, [role="button"] {
+  touch-action: manipulation;
+}

@@ -212,6 +212,28 @@ export const ResuscitationBayClient: React.FC<ResuscitationBayClientProps> = ({
         codeBlueReason={simState.codeBlueReason}
       />
 
+      {/* Sticky Floating Emergency Code Blue Action Bar on Portrait & Desktop */}
+      {simState.isCodeBlue && (
+        <div className="fixed bottom-16 sm:bottom-6 left-3 right-3 max-w-xl mx-auto z-50 p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-rose-700 via-red-600 to-amber-600 text-white shadow-2xl flex items-center justify-between gap-2.5 animate-pulse border-2 border-amber-300">
+          <div className="flex items-center gap-2 truncate">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-rose-600 shadow animate-bounce">
+              <Zap className="h-4 w-4 fill-current" />
+            </div>
+            <div className="truncate text-xs">
+              <div className="font-black text-amber-200 uppercase tracking-tight">NGỪNG TIM! BÁO ĐỘNG ĐỎ</div>
+              <div className="truncate text-[10px] text-rose-100">{simState.codeBlueReason || "Kích hoạt ép tim CPR & Khử rung"}</div>
+            </div>
+          </div>
+          <button
+            onClick={handleEmergencyDefibrillation}
+            className="shrink-0 flex items-center gap-1 px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg transition-transform active:scale-95 cursor-pointer"
+          >
+            <Zap className="h-3.5 w-3.5 fill-current" />
+            <span>Sốc Điện 200J</span>
+          </button>
+        </div>
+      )}
+
       {/* Patient Profile View */}
       <PatientBedsideView
         profile={initialCase.patientProfile}

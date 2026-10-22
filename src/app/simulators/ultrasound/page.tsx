@@ -157,148 +157,129 @@ export default function UltrasoundSimulatorPage() {
       {activeMode === "real_atlas" ? (
         <RealUltrasoundAtlasViewer />
       ) : (
-        /* Main Dual-Panel Workstation */
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: 3D Body & Hand Probe Controls (5 cols) */}
-        <div className="lg:col-span-5 space-y-6">
-          <ThreeBodyViewport
-            currentZone={currentZone}
-            onSelectZone={handleSelectZone}
-            probeType={probeType}
-            onChangeProbeType={setProbeType}
-            rotationDeg={rotationDeg}
-            onChangeRotation={setRotationDeg}
-            tiltDeg={tiltDeg}
-            onChangeTilt={setTiltDeg}
-            compression={compression}
-            onChangeCompression={setCompression}
-          />
+        /* Main Dual-Panel Workstation with Mobile-First Order (Screen Top, Controls Bottom) */
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-6 items-start">
+          {/* Right Column (Screen) rendered First on mobile: order-1 lg:order-2 (7 cols) */}
+          <div className="lg:col-span-7 order-1 lg:order-2 space-y-3 sm:space-y-6">
+            <DynamicUltrasoundScreen
+              zone={currentZone}
+              probeType={probeType}
+              rotationDeg={rotationDeg}
+              tiltDeg={tiltDeg}
+              compression={compression}
+              isPathologyActive={isPathologyActive}
+              onTogglePathology={() => setIsPathologyActive(!isPathologyActive)}
+            />
 
-          {/* Clinical Context & Anatomical Guide */}
-          <div className="rounded-2xl border border-hospital-800 bg-hospital-900/80 p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-hospital-800 pb-3">
-              <div className="flex items-center gap-2 text-white font-bold">
-                <Info className="h-4 w-4 text-teal-400" />
-                <span>Giải Phẫu Cắt Lớp Vùng: {activeZoneDef.name}</span>
+            {/* FAST Protocol Checklist & Clinical Decision Box */}
+            <div className="rounded-2xl border border-hospital-800 bg-hospital-900/80 p-3 sm:p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Stethoscope className="h-4 w-4 text-teal-400" />
+                  <h3 className="font-bold text-white text-xs sm:text-sm">
+                    Giao Thức FAST / eFAST Cấp Cứu
+                  </h3>
+                </div>
+                <button
+                  onClick={handleResetChecklist}
+                  className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-white"
+                >
+                  <RotateCcw className="h-3 w-3" /> Làm Lại
+                </button>
               </div>
-              <button
-                onClick={() => handleMarkZoneReviewed(currentZone)}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                  completedFastZones[currentZone]
-                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                    : "bg-hospital-800 hover:bg-teal-600/30 text-slate-300 border border-hospital-700"
-                }`}
-              >
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                <span>{completedFastZones[currentZone] ? "Đã Khảo Sát" : "Đánh Dấu Xong"}</span>
-              </button>
-            </div>
 
-            <div className="space-y-3 text-xs leading-relaxed text-slate-300">
-              <div>
-                <span className="font-semibold text-slate-200">Cấu trúc quan sát: </span>
-                <span className="text-teal-300">
-                  {activeZoneDef.anatomicalStructures.join(", ")}
-                </span>
-              </div>
-              <div className="rounded-xl border border-hospital-800 bg-hospital-950/60 p-3 text-slate-300">
-                <p className="font-semibold text-slate-100 mb-1">🔍 Hình ảnh sinh lý bình thường:</p>
-                <p>{activeZoneDef.normalDescription}</p>
-              </div>
-              <div className="rounded-xl border border-amber-900/30 bg-amber-950/20 p-3 text-amber-200">
-                <p className="font-semibold text-amber-300 mb-1">⚠️ Dấu hiệu bệnh lý cấp cứu:</p>
-                <p>{activeZoneDef.pathologyDescription}</p>
-              </div>
-              <div className="text-slate-400 italic">
-                💡 <span className="text-slate-300 font-medium">Ý nghĩa lâm sàng:</span> {activeZoneDef.clinicalSignificance}
+              {/* FAST Checklist Items */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                {ULTRASOUND_ZONES.map((zone) => {
+                  const isDone = completedFastZones[zone.id];
+                  const isCurrent = currentZone === zone.id;
+                  return (
+                    <div
+                      key={zone.id}
+                      onClick={() => handleSelectZone(zone.id)}
+                      className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-all ${
+                        isCurrent
+                          ? "border-teal-500 bg-teal-950/40 text-teal-200 ring-1 ring-teal-500/50"
+                          : isDone
+                          ? "border-emerald-800/60 bg-emerald-950/20 text-slate-300"
+                          : "border-hospital-800 bg-hospital-950/40 text-slate-400 hover:border-hospital-700"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 truncate mr-2">
+                        <CheckCircle2
+                          className={`h-4 w-4 shrink-0 ${
+                            isDone ? "text-emerald-400" : "text-slate-600"
+                          }`}
+                        />
+                        <span className="truncate font-medium">{zone.name.split(":")[0]}</span>
+                      </div>
+                      <span className="font-mono text-[10px] text-teal-400 shrink-0">
+                        {zone.id === "lung_anterior" ? "Phổi" : "Bụng"}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Right Column: Ultrasound Dynamic Screen (7 cols) */}
-        <div className="lg:col-span-7 space-y-6">
-          <DynamicUltrasoundScreen
-            zone={currentZone}
-            probeType={probeType}
-            rotationDeg={rotationDeg}
-            tiltDeg={tiltDeg}
-            compression={compression}
-            isPathologyActive={isPathologyActive}
-            onTogglePathology={() => setIsPathologyActive(!isPathologyActive)}
-          />
+          {/* Left Column (Controls & 3D Probe): order-2 lg:order-1 (5 cols) */}
+          <div className="lg:col-span-5 order-2 lg:order-1 space-y-3 sm:space-y-6">
+            <ThreeBodyViewport
+              currentZone={currentZone}
+              onSelectZone={handleSelectZone}
+              probeType={probeType}
+              onChangeProbeType={setProbeType}
+              rotationDeg={rotationDeg}
+              onChangeRotation={setRotationDeg}
+              tiltDeg={tiltDeg}
+              onChangeTilt={setTiltDeg}
+              compression={compression}
+              onChangeCompression={setCompression}
+            />
 
-          {/* FAST Protocol Checklist & Clinical Decision Box */}
-          <div className="rounded-2xl border border-hospital-800 bg-hospital-900/80 p-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Stethoscope className="h-5 w-5 text-teal-400" />
-                <h3 className="font-bold text-white text-sm">
-                  Quy Trình Khám FAST (Focused Assessment with Sonography for Trauma)
-                </h3>
+            {/* Clinical Context & Anatomical Guide */}
+            <div className="rounded-2xl border border-hospital-800 bg-hospital-900/80 p-3 sm:p-5 space-y-2.5">
+              <div className="flex items-center justify-between border-b border-hospital-800 pb-2">
+                <div className="flex items-center gap-2 text-white font-bold text-xs sm:text-sm">
+                  <Info className="h-4 w-4 text-teal-400" />
+                  <span>Giải Phẫu Vùng: {activeZoneDef.name}</span>
+                </div>
+                <button
+                  onClick={() => handleMarkZoneReviewed(currentZone)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                    completedFastZones[currentZone]
+                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                      : "bg-hospital-800 hover:bg-teal-600/30 text-slate-300 border border-hospital-700"
+                  }`}
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span>{completedFastZones[currentZone] ? "Đã Khảo Sát" : "Đánh Dấu"}</span>
+                </button>
               </div>
-              <button
-                onClick={handleResetChecklist}
-                className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200 transition-colors"
-                title="Làm lại từ đầu"
-              >
-                <RotateCcw className="h-3 w-3" />
-                <span>Reset</span>
-              </button>
-            </div>
 
-            <p className="text-xs text-slate-400">
-              Chỉ định khám 5 vị trí chuẩn trong cấp cứu chấn thương ngực-bụng kín để phát hiện tràn dịch màng ngoài tim,
-              tràn máu ổ bụng và tràn khí màng phổi:
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-              {ULTRASOUND_ZONES.map((z) => {
-                const isSelected = currentZone === z.id;
-                const isDone = completedFastZones[z.id];
-                return (
-                  <button
-                    key={z.id}
-                    onClick={() => handleSelectZone(z.id)}
-                    className={`flex items-start gap-2.5 p-2.5 rounded-xl text-left border transition-all ${
-                      isSelected
-                        ? "border-teal-500 bg-teal-950/40 text-teal-200 ring-1 ring-teal-500/50"
-                        : "border-hospital-800 bg-hospital-950/40 text-slate-300 hover:border-hospital-700"
-                    }`}
-                  >
-                    <div
-                      className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
-                        isDone
-                          ? "border-emerald-500 bg-emerald-500 text-hospital-950"
-                          : "border-slate-600 bg-hospital-800"
-                      }`}
-                    >
-                      {isDone && <CheckCircle2 className="h-3 w-3" />}
-                    </div>
-                    <div className="text-xs leading-tight">
-                      <div className="font-semibold text-slate-200">{z.name.split("(")[0]}</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">Đầu dò: {z.recommendedProbe}</div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Diagnostic Alert Box */}
-            <div className="rounded-xl border border-teal-500/30 bg-teal-950/20 p-4">
-              <div className="flex items-start gap-3">
-                <Sparkles className="h-5 w-5 text-teal-400 shrink-0 mt-0.5" />
-                <div className="text-xs text-slate-300 leading-relaxed">
-                  <span className="font-bold text-white">Mẹo Thực Hành Lâm Sàng: </span>
-                  Khi xoay đầu dò 90 độ, mặt cắt siêu âm chuyển từ trục dọc sang trục ngang (Short axis / Transverse).
-                  Nếu ấn đầu dò quá nhẹ, tín hiệu âm phản hồi yếu do tiếp xúc kém với gel âm học. Hãy tăng độ nén (Compression)
-                  lên 30-60% để đạt độ xuyên thấu tối ưu.
+              <div className="space-y-2 text-xs leading-relaxed text-slate-300">
+                <div>
+                  <span className="font-semibold text-slate-200">Cấu trúc quan sát: </span>
+                  <span className="text-teal-300">
+                    {activeZoneDef.anatomicalStructures.join(", ")}
+                  </span>
+                </div>
+                <div className="rounded-xl border border-hospital-800 bg-hospital-950/60 p-2.5 text-slate-300">
+                  <p className="font-semibold text-slate-100 mb-0.5">🔍 Hình ảnh sinh lý:</p>
+                  <p>{activeZoneDef.normalDescription}</p>
+                </div>
+                <div className="rounded-xl border border-amber-900/30 bg-amber-950/20 p-2.5 text-amber-200">
+                  <p className="font-semibold text-amber-300 mb-0.5">⚠️ Dấu hiệu bệnh lý cấp cứu:</p>
+                  <p>{activeZoneDef.pathologyDescription}</p>
+                </div>
+                <div className="text-slate-400 italic text-[11px]">
+                  💡 <span className="text-slate-300 font-medium">Ý nghĩa:</span> {activeZoneDef.clinicalSignificance}
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
       )}
     </div>
   );

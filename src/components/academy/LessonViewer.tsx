@@ -23,6 +23,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({ lessons }) => {
   const [selectedLessonId, setSelectedLessonId] = useState<string>(lessons[0]?.id || "");
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isMobileListOpen, setIsMobileListOpen] = useState<boolean>(false);
 
   const filteredLessons = lessons.filter((l) => {
     const matchSpecialty = selectedSpecialty === "all" || l.specialty === selectedSpecialty;
@@ -44,77 +45,100 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({ lessons }) => {
   ];
 
   return (
-    <div className="grid gap-3 lg:grid-cols-12">
-      {/* Sidebar: Lesson List */}
-      <div className="lg:col-span-4 space-y-2.5">
-        {/* Search & Filter */}
-        <div className="space-y-2 rounded-xl border border-hospital-800 bg-hospital-900/80 p-2.5 sm:p-3">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Tìm bài học..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-lg border border-hospital-700 bg-hospital-950 pl-8 pr-2.5 py-1 text-xs text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
-            />
-          </div>
-
-          <div className="flex flex-wrap gap-1">
-            {specialties.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => setSelectedSpecialty(s.id)}
-                className={`rounded-md px-2 py-0.5 text-[10px] font-semibold transition-all ${
-                  selectedSpecialty === s.id
-                    ? "bg-cyan-500 text-slate-950 shadow-sm font-bold"
-                    : "bg-hospital-800 text-slate-300 hover:bg-hospital-750"
-                }`}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
+    <div className="space-y-3">
+      {/* Mobile Quick Lesson Switcher Bar (Hidden on desktop) */}
+      <div className="lg:hidden flex items-center justify-between p-2.5 rounded-xl border border-hospital-800 bg-hospital-900/90 text-xs shadow-sm">
+        <div className="truncate mr-2">
+          <span className="text-[10px] text-cyan-400 font-bold uppercase block tracking-wider">
+            Đang đọc ({activeLesson?.specialty.toUpperCase()}):
+          </span>
+          <span className="font-bold text-white truncate text-xs sm:text-sm">
+            {activeLesson?.title}
+          </span>
         </div>
-
-        {/* Scrollable Lesson Cards */}
-        <div className="space-y-1.5 max-h-[500px] overflow-y-auto pr-1">
-          {filteredLessons.map((lesson) => {
-            const isSelected = activeLesson?.id === lesson.id;
-            return (
-              <button
-                key={lesson.id}
-                onClick={() => setSelectedLessonId(lesson.id)}
-                className={`w-full text-left rounded-xl p-2.5 border transition-all ${
-                  isSelected
-                    ? "border-cyan-500 bg-cyan-950/40 shadow-md shadow-cyan-950/30"
-                    : "border-hospital-800 bg-hospital-900/60 hover:border-hospital-700 hover:bg-hospital-850"
-                }`}
-              >
-                <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
-                  <span className="font-bold uppercase tracking-wider text-cyan-400">
-                    {lesson.specialty}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {lesson.readTimeMinutes}p
-                  </span>
-                </div>
-                <h3 className="font-bold text-xs text-white line-clamp-1">{lesson.title}</h3>
-                <p className="mt-0.5 text-[11px] text-slate-400 line-clamp-1">{lesson.summary}</p>
-              </button>
-            );
-          })}
-          {filteredLessons.length === 0 && (
-            <div className="p-4 text-center text-xs text-slate-500 border border-dashed border-hospital-800 rounded-xl">
-              Không tìm thấy bài học phù hợp.
-            </div>
-          )}
-        </div>
+        <button
+          onClick={() => setIsMobileListOpen(!isMobileListOpen)}
+          className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs shadow-sm transition-all active:scale-95 cursor-pointer"
+        >
+          <BookOpen className="h-3.5 w-3.5" />
+          <span>{isMobileListOpen ? "Đóng danh sách ▲" : "Đổi bài học ▼"}</span>
+        </button>
       </div>
 
-      {/* Main Content: Selected Lesson Detail */}
-      <div className="lg:col-span-8">
+      <div className="grid gap-3 lg:grid-cols-12">
+        {/* Sidebar: Lesson List (Collapsible on mobile, always visible on desktop) */}
+        <div className={`lg:col-span-4 space-y-2.5 ${isMobileListOpen ? "block" : "hidden lg:block"}`}>
+          {/* Search & Filter */}
+          <div className="space-y-2 rounded-xl border border-hospital-800 bg-hospital-900/80 p-2.5 sm:p-3">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Tìm bài học..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-lg border border-hospital-700 bg-hospital-950 pl-8 pr-2.5 py-1 text-xs text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-1">
+              {specialties.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => setSelectedSpecialty(s.id)}
+                  className={`rounded-md px-2 py-0.5 text-[10px] font-semibold transition-all ${
+                    selectedSpecialty === s.id
+                      ? "bg-cyan-500 text-slate-950 shadow-sm font-bold"
+                      : "bg-hospital-800 text-slate-300 hover:bg-hospital-750"
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Scrollable Lesson Cards */}
+          <div className="space-y-1.5 max-h-[500px] overflow-y-auto pr-1">
+            {filteredLessons.map((lesson) => {
+              const isSelected = activeLesson?.id === lesson.id;
+              return (
+                <button
+                  key={lesson.id}
+                  onClick={() => {
+                    setSelectedLessonId(lesson.id);
+                    setIsMobileListOpen(false);
+                  }}
+                  className={`w-full text-left rounded-xl p-2.5 border transition-all ${
+                    isSelected
+                      ? "border-cyan-500 bg-cyan-950/40 shadow-md shadow-cyan-950/30"
+                      : "border-hospital-800 bg-hospital-900/60 hover:border-hospital-700 hover:bg-hospital-850"
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+                    <span className="font-bold uppercase tracking-wider text-cyan-400">
+                      {lesson.specialty}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {lesson.readTimeMinutes}p
+                    </span>
+                  </div>
+                  <h3 className="font-bold text-xs text-white line-clamp-1">{lesson.title}</h3>
+                  <p className="mt-0.5 text-[11px] text-slate-400 line-clamp-1">{lesson.summary}</p>
+                </button>
+              );
+            })}
+            {filteredLessons.length === 0 && (
+              <div className="p-4 text-center text-xs text-slate-500 border border-dashed border-hospital-800 rounded-xl">
+                Không tìm thấy bài học phù hợp.
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Main Content: Selected Lesson Detail */}
+        <div className="lg:col-span-8">
         {activeLesson ? (
           <div className="rounded-2xl border border-hospital-800 bg-hospital-900/90 p-3.5 sm:p-5 space-y-3 shadow-xl">
             {/* Header */}
@@ -266,5 +290,6 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({ lessons }) => {
         )}
       </div>
     </div>
+  </div>
   );
 };

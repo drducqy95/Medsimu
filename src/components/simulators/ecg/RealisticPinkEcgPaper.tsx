@@ -8,6 +8,7 @@ import {
   ECG_RHYTHM_DEFINITIONS,
 } from "@/domain/simulators/ecgWaveforms";
 import { computeEcgMetrics } from "@/domain/simulators/ecgMetricsCalculator";
+import { EcgLeadFocusModal } from "./EcgLeadFocusModal";
 import {
   Printer,
   Download,
@@ -25,6 +26,10 @@ import {
   Stethoscope,
   Activity,
   Siren,
+  Smartphone,
+  LayoutGrid,
+  ZoomIn,
+  RotateCw,
 } from "lucide-react";
 
 interface RealisticPinkEcgPaperProps {
@@ -299,6 +304,9 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
   const [annotationsEnabled, setAnnotationsEnabled] = useState<boolean>(true);
   const [selectedCriterion, setSelectedCriterion] = useState<number | "all">("all");
   const [disabledAnnotationLabels, setDisabledAnnotationLabels] = useState<Set<string>>(new Set());
+  const [displayMode, setDisplayMode] = useState<"portrait" | "a4">("portrait");
+  const [focusModalLead, setFocusModalLead] = useState<string | null>(null);
+  const [isVirtualLandscape, setIsVirtualLandscape] = useState<boolean>(false);
 
   // Helper function to extract concise criterion title for filter tabs
   const getShortCriterionTitle = (crit: string, idx: number): string => {
@@ -475,8 +483,8 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
   const metrics = computeEcgMetrics(rhythm, bpm);
   const cycleDuration = 60 / Math.max(30, metrics.heartRate || 60);
 
-  // 12-Leads setup: 4 columns x 3 rows
-  const matrixLeads = [
+  // Standard A4 Layout: 4 columns x 3 rows
+  const a4MatrixLeads = [
     // Row 1
     [
       { id: "DI", name: "I" },
@@ -500,9 +508,28 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
     ],
   ];
 
-  // Canvas dimensions: Compact height 460px focused on waveforms
-  const W = 1200;
-  const H = 460;
+  // Mobile Portrait Layout: 2 columns x 6 rows (no horizontal scrolling required)
+  const portraitMatrixLeads = [
+    // Row 1
+    [{ id: "DI", name: "I" }, { id: "V1", name: "V1" }],
+    // Row 2
+    [{ id: "DII", name: "II" }, { id: "V2", name: "V2" }],
+    // Row 3
+    [{ id: "DIII", name: "III" }, { id: "V3", name: "V3" }],
+    // Row 4
+    [{ id: "aVR", name: "aVR" }, { id: "V4", name: "V4" }],
+    // Row 5
+    [{ id: "aVL", name: "aVL" }, { id: "V5", name: "V5" }],
+    // Row 6
+    [{ id: "aVF", name: "aVF" }, { id: "V6", name: "V6" }],
+  ];
+
+  const isPortraitMode = displayMode === "portrait";
+  const matrixLeads = isPortraitMode ? portraitMatrixLeads : a4MatrixLeads;
+
+  // Canvas dimensions: Dynamic based on layout mode
+  const W = isPortraitMode ? 600 : 1200;
+  const H = isPortraitMode ? 680 : 460;
 
   // Pre-render static pink millimeter grid onto Offscreen Canvas
   useEffect(() => {
@@ -563,12 +590,14 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
     canvas.width = W;
     canvas.height = H;
 
-    const rowH = 100;
-    const colW = (W - 36) / 4;
+    const rowH = isPortraitMode ? 85 : 100;
+    const colCount = isPortraitMode ? 2 : 4;
+    const colW = (W - 36) / colCount;
     const marginLeft = 20;
     const pixelsPerMm = 6;
     const pixelsPerSecond = paperSpeed * pixelsPerMm; // 25mm/s -> 150px/s; 50mm/s -> 300px/s
-    const voltageScale = 26; // 1mV = 26px (~4.3mm)
+    const voltageScale = isPortraitMode ? 23 : 26; // Adjusted voltage scale for portrait height
+    const rhythmMidY = isPortraitMode ? 600 : 385;
 
     const renderFrame = (timestamp: number) => {
       if (!lastTimestampRef.current) lastTimestampRef.current = timestamp;
@@ -906,9 +935,9 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
         }
       };
 
-      // 3. Render 12 leads (3 rows x 4 columns) using calculateLeadEcgVoltage
+      // 3. Render 12 leads using calculateLeadEcgVoltage
       matrixLeads.forEach((row, rIdx) => {
-        const midY = 65 + rIdx * rowH;
+        const midY = (isPortraitMode ? 46 : 65) + rIdx * rowH;
 
         row.forEach((lead, cIdx) => {
           const leadStartX = marginLeft + cIdx * colW;
@@ -1009,7 +1038,7 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
       });
 
       // 4. Render Bottom Rhythm Strip (Lead II)
-      const rhythmMidY = 385;
+      const rhythmMidY = isPortraitMode ? 605 : 385;
       const rhythmStartX = marginLeft + 28;
       const rhythmEndX = W - marginLeft;
       const rhythmLen = rhythmEndX - rhythmStartX;
@@ -1561,8 +1590,56 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
         </div>
       )}
 
+      {/* Display Mode Bar for Portrait vs A4 EMR */}
+      <div className="flex flex-wrap items-center justify-between gap-1.5 bg-hospital-900/90 px-3 py-1.5 rounded-xl border border-hospital-800 text-xs shadow-sm print:hidden">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+            <Smartphone className="h-3 w-3 text-cyan-400" />
+            Hiển Thị:
+          </span>
+          <button
+            type="button"
+            onClick={() => setDisplayMode("portrait")}
+            className={`flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition cursor-pointer border ${
+              isPortraitMode
+                ? "bg-cyan-600 border-cyan-400 text-white shadow-sm ring-1 ring-cyan-300"
+                : "bg-hospital-950/80 border-hospital-800 text-slate-300 hover:bg-hospital-800"
+            }`}
+          >
+            <Smartphone className="h-3 w-3" />
+            <span>📱 Dọc Điện Thoại (6x2)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setDisplayMode("a4")}
+            className={`flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition cursor-pointer border ${
+              !isPortraitMode
+                ? "bg-rose-600 border-rose-400 text-white shadow-sm ring-1 ring-rose-300"
+                : "bg-hospital-950/80 border-hospital-800 text-slate-300 hover:bg-hospital-800"
+            }`}
+          >
+            <LayoutGrid className="h-3 w-3" />
+            <span>📄 Khổ Ngang A4 EMR (3x4)</span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setFocusModalLead("DII")}
+            className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-teal-600/20 border border-teal-500/40 text-teal-300 hover:bg-teal-600/30 font-bold text-[10px] transition cursor-pointer"
+            title="Phóng to 1 chuyển đạo duy nhất kèm thước đo caliper"
+          >
+            <ZoomIn className="h-3 w-3" />
+            <span>🔍 Soi 1 Chuyển Đạo</span>
+          </button>
+        </div>
+      </div>
+
       {/* Ultra-Compact Medical ECG Paper Container */}
-      <div className="rounded-2xl border border-rose-400/80 bg-[#fff5f5] p-2.5 sm:p-3 shadow-xl text-slate-900 select-none overflow-x-auto print:p-0 print:border-none print:shadow-none print:rounded-none">
+      <div className={`rounded-2xl border border-rose-400/80 bg-[#fff5f5] p-2.5 sm:p-3 shadow-xl text-slate-900 select-none print:p-0 print:border-none print:shadow-none print:rounded-none ${
+        isPortraitMode ? "max-w-[640px] mx-auto overflow-hidden" : "overflow-x-auto"
+      }`}>
         {/* Condensed Administrative & Metrics Header Strip (Ultra-Dense 2-Row Layout) */}
         <div className="border-b border-rose-300 pb-2 mb-1.5 font-mono text-[10px] space-y-1">
           {/* Row 1: Hospital Name + Patient Info + Machine Setup in a Single Clean Line */}
@@ -1707,24 +1784,38 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
           )}
         </div>
 
-        {/* High-Precision 12-Lead Pink Canvas (Compact Height 460px focused on leads) */}
-        <div className="w-full overflow-x-auto relative">
+        {/* High-Precision 12-Lead Pink Canvas */}
+        <div className={`w-full relative ${isPortraitMode ? "max-w-[620px] mx-auto overflow-hidden" : "overflow-x-auto"}`}>
           <canvas
             ref={canvasRef}
-            className="block w-full min-w-[900px] h-auto shadow-inner rounded-lg"
+            className={`block w-full h-auto shadow-inner rounded-lg ${
+              isPortraitMode ? "max-w-[620px]" : "min-w-[900px]"
+            }`}
           />
         </div>
 
         {/* Minimalist 1-Line Footer */}
         <div className="mt-1 pt-1 border-t border-rose-300/80 flex items-center justify-between font-mono text-[9px] text-slate-600">
           <div>
-            Tiêu chuẩn: 1.0 mV = 10 mm (IEC 60601-2-25) • Lưu hồ sơ EMR • Lưới hồng milimet
+            Tiêu chuẩn: 1.0 mV = 10 mm (IEC 60601-2-25) • {isPortraitMode ? "Chế độ Dọc (6x2)" : "Khổ A4 (3x4)"} • Lưới hồng
           </div>
           <div className="font-semibold text-slate-800">
             BS Ký Duyệt: BS. CKII. NGUYỄN VĂN A
           </div>
         </div>
       </div>
+
+      {/* Lead Focus Inspection Modal */}
+      {focusModalLead && (
+        <EcgLeadFocusModal
+          isOpen={Boolean(focusModalLead)}
+          onClose={() => setFocusModalLead(null)}
+          rhythm={rhythm}
+          bpm={bpm}
+          initialLead={focusModalLead}
+          annotations={diagnosisData?.annotations || []}
+        />
+      )}
     </div>
   );
 };
