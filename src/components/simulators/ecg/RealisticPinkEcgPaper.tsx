@@ -300,13 +300,22 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
       differentialDiagnoses: [],
     };
   });
-  const [showCriteriaPanel, setShowCriteriaPanel] = useState<boolean>(true);
-  const [annotationsEnabled, setAnnotationsEnabled] = useState<boolean>(true);
-  const [selectedCriterion, setSelectedCriterion] = useState<number | "all">("all");
-  const [disabledAnnotationLabels, setDisabledAnnotationLabels] = useState<Set<string>>(new Set());
+  const [activeCriteriaIndices, setActiveCriteriaIndices] = useState<Set<number>>(new Set());
   const [displayMode, setDisplayMode] = useState<"portrait" | "a4">("portrait");
   const [focusModalLead, setFocusModalLead] = useState<string | null>(null);
   const [isVirtualLandscape, setIsVirtualLandscape] = useState<boolean>(false);
+
+  const toggleCriterion = useCallback((idx: number) => {
+    setActiveCriteriaIndices((prev) => {
+      const next = new Set(prev);
+      if (next.has(idx)) {
+        next.delete(idx);
+      } else {
+        next.add(idx);
+      }
+      return next;
+    });
+  }, []);
 
   // Helper function to extract concise criterion title for filter tabs
   const getShortCriterionTitle = (crit: string, idx: number): string => {
@@ -393,18 +402,6 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
     return 0;
   };
 
-  const toggleAnnotationLabel = (label: string) => {
-    setDisabledAnnotationLabels((prev) => {
-      const next = new Set(prev);
-      if (next.has(label)) {
-        next.delete(label);
-      } else {
-        next.add(label);
-      }
-      return next;
-    });
-  };
-
   // Refs for 60 FPS animation loop
   const animFrameIdRef = useRef<number | null>(null);
   const timeOffsetRef = useRef<number>(0);
@@ -428,8 +425,7 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
   // Fetch Authoritative Diagnostic Criteria dynamically from SQLite API
   useEffect(() => {
     let isMounted = true;
-    setSelectedCriterion("all");
-    setDisabledAnnotationLabels(new Set());
+    setActiveCriteriaIndices(new Set()); // Mặc định không ánh xạ nhãn khi tải bệnh mới
     const def = ECG_RHYTHM_DEFINITIONS.find((r) => r.id === rhythm);
     if (def) {
       setDiagnosisData({
@@ -647,7 +643,12 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
         midY: number,
         isRhythmStrip: boolean = false
       ) => {
-        if (!annotationsEnabled || !diagnosisData?.annotations || diagnosisData.annotations.length === 0) {
+        // MẶC ĐỊNH KHÔNG ÁNH XẠ: Nếu bác sĩ chưa click chọn tiêu chuẩn nào, trả về ngay (sóng sạch sẽ 100%)
+        if (
+          activeCriteriaIndices.size === 0 ||
+          !diagnosisData?.annotations ||
+          diagnosisData.annotations.length === 0
+        ) {
           return;
         }
 
@@ -660,33 +661,11 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
           return tid === leadId.toUpperCase() || tid === leadName.toUpperCase();
         });
 
-        // For rhythm strip: if there are specific "II" / "RHYTHM" annotations for the current criterion filter,
-        // prioritize them over generic "DII" annotations to prevent crowding
-        if (isRhythmStrip && selectedCriterion === "all") {
-          const hasSpecificRhythmAnn = annotations.some((a) => {
-            const tid = a.leadId.toUpperCase();
-            return tid === "II" || tid === "RHYTHM" || tid === "RHYTHM_STRIP";
-          });
-          if (hasSpecificRhythmAnn) {
-            annotations = annotations.filter((a) => {
-              const tid = a.leadId.toUpperCase();
-              return tid === "II" || tid === "RHYTHM" || tid === "RHYTHM_STRIP";
-            });
-          }
-        }
-
-        // 2. Filter by isolated criterion (if user selected a specific criterion)
-        if (selectedCriterion !== "all") {
-          annotations = annotations.filter((a) => {
-            const critIdx = getAnnotationCriterionIndex(a, diagnosisData.criteria);
-            return critIdx === selectedCriterion;
-          });
-        }
-
-        // 3. Filter out individually disabled annotation labels
-        if (disabledAnnotationLabels.size > 0) {
-          annotations = annotations.filter((a) => !disabledAnnotationLabels.has(a.label));
-        }
+        // 2. Chỉ lọc lấy các nhãn thuộc những tiêu chuẩn đang được kích hoạt (click bật [✓])
+        annotations = annotations.filter((a) => {
+          const critIdx = getAnnotationCriterionIndex(a, diagnosisData.criteria);
+          return critIdx !== -1 && activeCriteriaIndices.has(critIdx);
+        });
 
         if (annotations.length === 0) return;
 
@@ -1139,9 +1118,7 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
     motionMode,
     paperSpeed,
     audioEnabled,
-    annotationsEnabled,
-    selectedCriterion,
-    disabledAnnotationLabels,
+    activeCriteriaIndices,
     diagnosisData,
     W,
     H,
@@ -1263,42 +1240,11 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
           </div>
         </div>
 
-        {/* Center / Right: Highly Visible Criteria Button & Actions */}
+        {/* Center / Right: Export Actions */}
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Prominent High-Visibility Criteria Toggle Button */}
-          <button
-            onClick={() => setShowCriteriaPanel(!showCriteriaPanel)}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all shadow-md ${
-              showCriteriaPanel
-                ? "bg-cyan-500 text-slate-950 ring-2 ring-cyan-300 shadow-cyan-500/40"
-                : "bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white shadow-cyan-900/40 border border-cyan-400/40"
-            }`}
-          >
-            <BookOpen className="h-4 w-4" />
-            <span>Tiêu Chuẩn Chẩn Đoán (AHA/ESC)</span>
-            <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[9px] font-mono">
-              {showCriteriaPanel ? "Đang Mở ▲" : "Xem Chi Tiết ▼"}
-            </span>
-          </button>
-
-          {/* Direct Wave-Mapped Annotations Live Toggle Button */}
-          <button
-            type="button"
-            onClick={() => setAnnotationsEnabled(!annotationsEnabled)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all shadow-md ${
-              annotationsEnabled
-                ? "bg-rose-600 text-white shadow-rose-900/40 ring-2 ring-rose-400"
-                : "bg-hospital-800 hover:bg-hospital-700 text-slate-300 border border-hospital-700"
-            }`}
-            title="Bật/Tắt ánh xạ vị trí tiêu chuẩn chẩn đoán trực tiếp trên đường điện tim"
-          >
-            <Activity className="h-3.5 w-3.5" />
-            <span>Ánh Xạ Sóng: {annotationsEnabled ? "BẬT" : "TẮT"}</span>
-          </button>
-
           <button
             onClick={handleExportPng}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-hospital-800 hover:bg-hospital-700 text-slate-200 text-[11px] font-semibold border border-hospital-700 transition shadow-sm"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-hospital-800 hover:bg-hospital-700 text-slate-200 text-[11px] font-semibold border border-hospital-700 transition shadow-sm cursor-pointer"
           >
             <Download className="h-3.5 w-3.5 text-teal-400" />
             <span>Tải PNG</span>
@@ -1306,289 +1252,13 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
 
           <button
             onClick={handlePrint}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-bold transition shadow-sm shadow-rose-950/40"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-bold transition shadow-sm shadow-rose-950/40 cursor-pointer"
           >
             <Printer className="h-3.5 w-3.5" />
             <span>In Giấy A4</span>
           </button>
         </div>
       </div>
-
-      {/* Interactive Diagnostic Criteria & Waveform Mapping Panel */}
-      {showCriteriaPanel && diagnosisData && (
-        <div className="rounded-2xl border border-cyan-500/40 bg-hospital-900/95 p-4 shadow-2xl space-y-3.5 text-xs animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hospital-800 pb-2.5">
-            <div className="flex items-center gap-2">
-              <Stethoscope className="h-4 w-4 text-cyan-400" />
-              <div>
-                <span className="font-bold text-white text-sm">
-                  {diagnosisData.name}
-                </span>
-                <span className="text-[11px] text-slate-400 ml-2 font-mono">
-                  ({diagnosisData.nameEn})
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] text-slate-400">Phân loại:</span>
-              <span className="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-cyan-950 text-cyan-300 border border-cyan-800 uppercase">
-                {diagnosisData.category}
-              </span>
-              <span
-                className={`px-2 py-0.5 rounded font-bold text-[10px] uppercase ${
-                  diagnosisData.severity === "critical"
-                    ? "bg-rose-600 text-white animate-pulse"
-                    : diagnosisData.severity === "abnormal"
-                    ? "bg-amber-600 text-white"
-                    : "bg-emerald-600 text-white"
-                }`}
-              >
-                {diagnosisData.severity === "critical" ? "NGUY KỊCH (CODE RED)" : diagnosisData.severity}
-              </span>
-            </div>
-          </div>
-
-          {/* Criteria Checklist with Waveform Validation Badges */}
-          <div className="space-y-1.5">
-            <div className="font-bold text-slate-200 flex items-center gap-1.5 text-[11px]">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-              <span>CÁC TIÊU CHUẨN VÀNG CHẨN ĐOÁN (GOLD STANDARD CRITERIA):</span>
-            </div>
-            <div className="grid gap-1.5 sm:grid-cols-2">
-              {diagnosisData.criteria.map((crit, idx) => {
-                const isSelected = selectedCriterion === idx;
-                return (
-                  <div
-                    key={idx}
-                    className={`rounded-xl border p-2.5 flex items-start justify-between gap-2 transition ${
-                      isSelected
-                        ? "border-cyan-400 bg-cyan-950/40 shadow-lg shadow-cyan-950/50 ring-1 ring-cyan-400"
-                        : "border-hospital-800 bg-hospital-950/70 text-slate-300"
-                    }`}
-                  >
-                    <div className="flex items-start gap-2">
-                      <span
-                        className={`flex-shrink-0 mt-0.5 flex h-4 w-4 items-center justify-center rounded-full font-black text-[10px] border ${
-                          isSelected
-                            ? "bg-cyan-500 text-slate-950 border-cyan-300"
-                            : "bg-emerald-500/20 text-emerald-400 border-emerald-500/40"
-                        }`}
-                      >
-                        {idx + 1}
-                      </span>
-                      <div className="space-y-0.5">
-                        <p className="text-[11px] leading-snug font-medium text-slate-200">{crit}</p>
-                        <span
-                          className={`text-[9.5px] font-mono block ${
-                            isSelected ? "text-cyan-300 font-bold" : "text-emerald-400"
-                          }`}
-                        >
-                          {isSelected
-                            ? "⭐ ĐANG CHIẾU RIÊNG TRÊN SÓNG ĐIỆN TIM"
-                            : "Đang phản ánh chính xác trên các chuyển đạo bên dưới"}
-                        </span>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setSelectedCriterion(isSelected ? "all" : idx)}
-                      className={`flex-shrink-0 text-[10px] px-2 py-1 rounded-md font-bold transition cursor-pointer border ${
-                        isSelected
-                          ? "bg-cyan-500 text-slate-950 border-cyan-400 shadow-sm"
-                          : "bg-hospital-800 hover:bg-hospital-700 text-slate-300 border-hospital-700 hover:text-white"
-                      }`}
-                      title={isSelected ? "Bấm để xem lại tất cả tiêu chuẩn" : "Chỉ chiếu riêng tiêu chuẩn này lên sóng"}
-                    >
-                      {isSelected ? "Bỏ Lọc" : "Chiếu Riêng"}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Lead Specific Manifestations Table */}
-          {diagnosisData.leadManifestations && Object.keys(diagnosisData.leadManifestations).length > 0 && (
-            <div className="space-y-1.5 pt-1 border-t border-hospital-800/80">
-              <div className="font-bold text-slate-200 flex items-center gap-1.5 text-[11px]">
-                <Activity className="h-3.5 w-3.5 text-rose-400" />
-                <span>ĐỐI CHIẾU HÌNH THÁI SÓNG TRÊN TỪNG CHUYỂN ĐẠO BẤT THƯỜNG:</span>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-[11px]">
-                {Object.entries(diagnosisData.leadManifestations).map(([leadKey, manifest]) => (
-                  <div
-                    key={leadKey}
-                    className="rounded-xl border border-rose-900/40 bg-rose-950/20 p-2 font-mono"
-                  >
-                    <span className="font-bold text-rose-300 block text-[10px] uppercase border-b border-rose-900/40 pb-0.5 mb-1">
-                      Chuyển đạo {leadKey}
-                    </span>
-                    <span className="text-slate-300 text-[10.5px] leading-tight block">
-                      {manifest}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Direct Wave-Mapped Clinical Markers List */}
-          {diagnosisData.annotations && diagnosisData.annotations.length > 0 && (
-            <div className="space-y-1.5 pt-1 border-t border-hospital-800/80">
-              <div className="font-bold text-slate-200 flex items-center justify-between text-[11px] flex-wrap gap-1">
-                <div className="flex items-center gap-1.5">
-                  <Activity className="h-3.5 w-3.5 text-rose-400" />
-                  <span>ÁNH XẠ VỊ TRÍ TIÊU CHUẨN TRỰC TIẾP LÊN SÓNG ĐIỆN TIM:</span>
-                  <span className="text-[10px] text-slate-400 font-normal">
-                    (Bấm vào từng nhãn để bật/tắt riêng lẻ)
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setDisabledAnnotationLabels(new Set())}
-                    className="text-[10px] font-mono text-cyan-400 hover:text-cyan-300 underline cursor-pointer"
-                  >
-                    Bật tất cả
-                  </button>
-                  <span>•</span>
-                  <button
-                    type="button"
-                    onClick={() => setAnnotationsEnabled(!annotationsEnabled)}
-                    className="text-[10px] font-mono text-cyan-400 hover:text-cyan-300 underline cursor-pointer"
-                  >
-                    {annotationsEnabled ? "Tắt ghim trên sóng" : "Bật ghim trên sóng"}
-                  </button>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-1.5 text-[10.5px]">
-                {diagnosisData.annotations.map((ann, idx) => {
-                  const isDisabled = disabledAnnotationLabels.has(ann.label);
-                  return (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => toggleAnnotationLabel(ann.label)}
-                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-mono shadow-sm transition cursor-pointer text-left ${
-                        isDisabled
-                          ? "bg-hospital-950/40 border-hospital-800/60 text-slate-500 opacity-50 line-through"
-                          : "bg-hospital-950/80 border-hospital-700 hover:border-cyan-500 text-slate-200 hover:text-white"
-                      }`}
-                      title={isDisabled ? "Bấm để bật lại nhãn này trên sóng" : "Bấm để tắt nhãn này trên sóng"}
-                    >
-                      <span
-                        className="h-2 w-2 rounded-full inline-block flex-shrink-0"
-                        style={{ backgroundColor: isDisabled ? "#64748b" : (ann.color || "#e11d48") }}
-                      />
-                      <strong className="font-bold">[{ann.leadId}]</strong>
-                      <span>{ann.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Immediate Emergency Action */}
-          {diagnosisData.clinicalAction && (
-            <div className="rounded-xl border border-amber-500/30 bg-amber-950/20 p-2.5 flex items-start justify-between gap-2.5 text-amber-200 text-[11px]">
-              <div className="flex items-start gap-2">
-                <AlertOctagon className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-amber-300 font-bold">Hướng xử trí lâm sàng khẩn cấp: </strong>
-                  <span>{diagnosisData.clinicalAction}</span>
-                </div>
-              </div>
-              {onOpenClinicalDeck && (
-                <button
-                  type="button"
-                  onClick={onOpenClinicalDeck}
-                  className="shrink-0 flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white rounded-lg font-bold text-[10px] shadow transition cursor-pointer"
-                >
-                  <Siren className="h-3 w-3 animate-pulse" />
-                  <span>Phác Đồ & Ca Bệnh →</span>
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Quick Criteria Filter & Isolation Bar (Lọc & Chiếu Riêng Từng Tiêu Chuẩn - Tránh Chồng Lấp) */}
-      {annotationsEnabled && diagnosisData && diagnosisData.criteria && diagnosisData.criteria.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-1.5 bg-hospital-900/90 px-3 py-1.5 rounded-xl border border-hospital-800 text-xs shadow-md print:hidden">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-              <Activity className="h-3 w-3 text-cyan-400" />
-              Lọc Tiêu Chuẩn:
-            </span>
-
-            {/* View All Button */}
-            <button
-              type="button"
-              onClick={() => setSelectedCriterion("all")}
-              className={`flex items-center gap-1 px-2.5 py-0.5 rounded-lg font-bold text-[10px] transition cursor-pointer ${
-                selectedCriterion === "all"
-                  ? "bg-rose-600 text-white shadow-sm ring-1 ring-rose-400"
-                  : "bg-hospital-950/80 text-slate-300 hover:bg-hospital-800 hover:text-white border border-hospital-800"
-              }`}
-            >
-              <span>✨ Xem Tất Cả</span>
-              <span className="rounded-full bg-black/30 px-1.5 py-0.2 text-[8.5px] font-mono">
-                {diagnosisData.annotations?.length || 0}
-              </span>
-            </button>
-
-            {/* Individual Criteria Selector Tabs */}
-            {diagnosisData.criteria.map((crit, idx) => {
-              const isSelected = selectedCriterion === idx;
-              const matchingCount = diagnosisData.annotations?.filter(
-                (a) => getAnnotationCriterionIndex(a, diagnosisData.criteria) === idx
-              ).length || 0;
-              const shortTitle = getShortCriterionTitle(crit, idx);
-
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setSelectedCriterion(isSelected ? "all" : idx)}
-                  className={`flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] transition cursor-pointer border ${
-                    isSelected
-                      ? "bg-cyan-600 border-cyan-400 text-white font-bold ring-1 ring-cyan-300 shadow-sm"
-                      : "bg-hospital-950/80 border-hospital-800 text-slate-300 hover:bg-hospital-800 hover:text-white font-medium"
-                  }`}
-                  title={crit}
-                >
-                  <span className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-cyan-400"}`} />
-                  <span>{`TC ${idx + 1}: ${shortTitle}`}</span>
-                  {matchingCount > 0 && (
-                    <span className="rounded-full bg-white/20 px-1 py-0.2 text-[8.5px] font-mono">
-                      {matchingCount}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {selectedCriterion !== "all" && (
-            <div className="flex items-center gap-2 text-[10px]">
-              <span className="text-amber-300 font-mono">
-                Đang chiếu riêng TC {selectedCriterion + 1}
-              </span>
-              <button
-                type="button"
-                onClick={() => setSelectedCriterion("all")}
-                className="text-cyan-400 hover:text-cyan-300 underline font-mono cursor-pointer"
-              >
-                ↩ Xem lại tất cả
-              </button>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Display Mode Bar for Portrait vs A4 EMR */}
       <div className="flex flex-wrap items-center justify-between gap-1.5 bg-hospital-900/90 px-3 py-1.5 rounded-xl border border-hospital-800 text-xs shadow-sm print:hidden">
@@ -1697,88 +1367,87 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
               </span>
             </div>
 
-            {/* Diagnostic Interpretation Pill with Direct Criteria Button */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {metrics.severity === "critical" && (
-                <span className="bg-rose-600 text-white text-[8.5px] px-1.5 py-0.2 rounded font-black tracking-tight animate-pulse">
-                  NGUY KỊCH
-                </span>
-              )}
-              <span className="font-bold text-rose-950 truncate max-w-sm">
-                {diagnosisData?.name || metrics.interpretationLines[0] || "Nhịp xoang đều bình thường"}
-              </span>
+            {/* Direct Emergency Module 3 Button */}
+            {onOpenClinicalDeck && (
               <button
                 type="button"
-                onClick={() => setShowCriteriaPanel(!showCriteriaPanel)}
-                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-[9.5px] shadow-sm transition hover:scale-105 active:scale-95 cursor-pointer ml-1"
-                title="Bấm để xem danh sách tiêu chuẩn vàng và đối chiếu chuyển đạo"
+                onClick={onOpenClinicalDeck}
+                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white font-black text-[9px] shadow-sm transition hover:scale-105 active:scale-95 cursor-pointer ml-1"
+                title="Mở Bệnh Cảnh, Phác Đồ Cấp Cứu và Chuyển Buồng Cấp Cứu Module 3"
               >
-                <BookOpen className="h-3 w-3" />
-                <span>{showCriteriaPanel ? "Ẩn Tiêu Chuẩn ▲" : "Xem Tiêu Chuẩn (AHA/ESC) ▼"}</span>
+                <Siren className="h-3 w-3 animate-pulse" />
+                <span>Bệnh Cảnh & Cấp Cứu</span>
               </button>
-              {onOpenClinicalDeck && (
-                <button
-                  type="button"
-                  onClick={onOpenClinicalDeck}
-                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white font-black text-[9.5px] shadow-sm transition hover:scale-105 active:scale-95 cursor-pointer ml-1"
-                  title="Mở Bệnh Cảnh, Phác Đồ Cấp Cứu và Chuyển Buồng Cấp Cứu Module 3"
-                >
-                  <Siren className="h-3 w-3 animate-pulse" />
-                  <span>Bệnh Cảnh & Cấp Cứu (Module 3)</span>
-                </button>
-              )}
-            </div>
+            )}
           </div>
 
-          {/* Quick Criteria Preview Bar on Paper */}
+          {/* Row 3: Diagnostic Interpretation & Gold Standard Criteria Printed Directly on Paper */}
           {diagnosisData && (
-            <div className="flex items-center justify-between text-[9px] text-rose-950 bg-rose-100/90 px-2.5 py-1 rounded-lg border border-rose-300">
-              <div className="truncate flex items-center gap-2">
-                <span className="font-black text-rose-800">
-                  {selectedCriterion === "all" ? "TIÊU CHUẨN VÀNG:" : `TIÊU CHUẨN ${selectedCriterion + 1} (RIÊNG LẺ):`}
-                </span>
-                <span className="truncate">
-                  {selectedCriterion === "all"
-                    ? diagnosisData.criteria[0]
-                    : diagnosisData.criteria[selectedCriterion]}
-                </span>
-                {diagnosisData.annotations && diagnosisData.annotations.length > 0 && (
-                  <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-rose-200 text-rose-900 font-bold text-[8.5px]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-rose-600 animate-ping" />
-                    {selectedCriterion === "all"
-                      ? `Đã ghim ${diagnosisData.annotations.length} tiêu chuẩn lên sóng`
-                      : `Đang chiếu riêng TC ${selectedCriterion + 1}`}
+            <div className="pt-1.5 pb-0.5 border-t border-rose-300 font-mono text-[9.5px] leading-tight space-y-1">
+              <div className="flex flex-wrap items-center justify-between gap-1 text-slate-900 font-bold">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-rose-950 uppercase font-black tracking-tight">
+                    KẾT LUẬN: {diagnosisData.name.toUpperCase()}
                   </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                {selectedCriterion !== "all" && (
-                  <>
+                  <span className="text-slate-500 font-normal">
+                    ({diagnosisData.nameEn})
+                  </span>
+                  {diagnosisData.severity === "critical" && (
+                    <span className="bg-rose-600 text-white text-[8px] px-1.5 py-0.2 rounded font-black tracking-tight animate-pulse">
+                      NGUY KỊCH
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 text-[9px] text-slate-600">
+                  <span className="italic hidden sm:inline">
+                    💡 Chạm từng dòng để bật/tắt ánh xạ ({activeCriteriaIndices.size > 0 ? `Đang bật ${activeCriteriaIndices.size} tiêu chuẩn` : "Mặc định không ánh xạ"})
+                  </span>
+                  {activeCriteriaIndices.size > 0 && (
                     <button
                       type="button"
-                      onClick={() => setSelectedCriterion("all")}
-                      className="font-bold text-cyan-800 hover:text-cyan-950 underline whitespace-nowrap cursor-pointer text-[9px]"
+                      onClick={() => setActiveCriteriaIndices(new Set())}
+                      className="text-rose-700 hover:text-rose-950 underline font-bold cursor-pointer"
                     >
-                      Xem tất cả
+                      Tắt hết ánh xạ
                     </button>
-                    <span>•</span>
-                  </>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setAnnotationsEnabled(!annotationsEnabled)}
-                  className="font-bold text-rose-800 hover:text-rose-950 underline whitespace-nowrap cursor-pointer text-[9px]"
-                >
-                  {annotationsEnabled ? "Tắt ghim sóng" : "Bật ghim sóng"}
-                </button>
-                <span>•</span>
-                <button
-                  type="button"
-                  onClick={() => setShowCriteriaPanel(!showCriteriaPanel)}
-                  className="font-bold text-rose-700 hover:text-rose-950 underline whitespace-nowrap cursor-pointer"
-                >
-                  {showCriteriaPanel ? "Thu gọn ▲" : "Xem đủ 12 chuyển đạo →"}
-                </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Individual Clickable Criteria Lines */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 pt-0.5">
+                {diagnosisData.criteria.map((crit, idx) => {
+                  const isActive = activeCriteriaIndices.has(idx);
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => toggleCriterion(idx)}
+                      className={`flex items-start gap-1.5 text-left py-1 px-1.5 rounded transition cursor-pointer ${
+                        isActive
+                          ? "bg-rose-200/90 text-rose-950 font-bold border border-rose-400 shadow-xs"
+                          : "text-slate-800 hover:bg-rose-100/70 border border-transparent"
+                      }`}
+                      title={
+                        isActive
+                          ? "Bấm để tắt ánh xạ tiêu chuẩn này trên đường điện tim"
+                          : "Bấm để bật ánh xạ tiêu chuẩn này lên các chuyển đạo tương ứng"
+                      }
+                    >
+                      <span
+                        className={`font-mono font-bold shrink-0 text-[10px] ${
+                          isActive ? "text-rose-700" : "text-slate-400"
+                        }`}
+                      >
+                        {isActive ? "[✓]" : "[  ]"}
+                      </span>
+                      <span className="text-[9.5px] leading-tight">
+                        <strong>{idx + 1}.</strong> {crit}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

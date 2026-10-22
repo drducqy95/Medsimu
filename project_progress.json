@@ -1,9 +1,9 @@
 {
   "meta": {
     "project_name": "GameYhoc",
-    "last_updated": "2026-10-22T09:58:00.000000",
+    "last_updated": "2026-10-22T10:32:00.000000",
     "overall_progress_percent": 100,
-    "current_phase": "Milestone M6 Completed: Mobile Minimalist Redesign - Waveform-First & Bottom-Sheet Pathology Picker Verified",
+    "current_phase": "Milestone M7 Completed: Pathology-Bound BPM Ranges, Embedded Pink Paper Criteria & Dropdown Catalog Verified",
     "status": "COMPLETED"
   },
   "milestones": [
@@ -225,6 +225,33 @@
         {
           "id": "T6.5",
           "desc": "Phase 05 - Verification & Push: Giảm 75% chiều dài cuộn trang trên mobile, test tự động 100% pass",
+          "status": "DONE"
+        }
+      ]
+    },
+    {
+      "id": "M7",
+      "title": "Milestone M7: Khóa Tần Số Tim Theo Mặt Bệnh, In Tiêu Chuẩn Trực Tiếp Trên Giấy Hồng & Dropdown Bệnh Lý Tối Giản",
+      "status": "COMPLETED",
+      "tasks": [
+        {
+          "id": "T7.1",
+          "desc": "Phase 01 - Giới hạn tần số tim chuẩn sinh lý cho 31 bệnh lý, tự động khóa slider theo min/max của bệnh",
+          "status": "DONE"
+        },
+        {
+          "id": "T7.2",
+          "desc": "Phase 02 - In tiêu chuẩn chẩn đoán trực tiếp trên giấy hồng, cỡ chữ tương đương hành chính, click dòng bật/tắt ánh xạ trên sóng",
+          "status": "DONE"
+        },
+        {
+          "id": "T7.3",
+          "desc": "Phase 03 - Chuyển danh mục bệnh lý sang Dropdown List 9 hệ thống, loại bỏ các block thừa gây rối mắt",
+          "status": "DONE"
+        },
+        {
+          "id": "T7.4",
+          "desc": "Phase 04 - Kiểm thử tự động BPM bounds và interactive criteria, TypeScript check & Git push",
           "status": "DONE"
         }
       ]

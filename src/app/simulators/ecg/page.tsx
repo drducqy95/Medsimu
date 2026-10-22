@@ -23,17 +23,18 @@ import {
   ECG_RHYTHM_DEFINITIONS,
   EcgRhythmType,
   RHYTHM_TO_SYSTEM_MAP,
+  getRhythmAllowedBpmRange,
 } from "@/domain/simulators/ecgWaveforms";
 import { computeEcgMetrics } from "@/domain/simulators/ecgMetricsCalculator";
 import { EcgCanvasRunner } from "@/components/simulators/ecg/EcgCanvasRunner";
 import { TwelveLeadGrid } from "@/components/simulators/ecg/TwelveLeadGrid";
 import { RealisticPinkEcgPaper } from "@/components/simulators/ecg/RealisticPinkEcgPaper";
-import { EcgSystemCategoryTabs } from "@/components/simulators/ecg/EcgSystemCategoryTabs";
 import { EcgClinicalDeckModal, PatientCaseData } from "@/components/simulators/ecg/EcgClinicalDeckModal";
 import { EcgSevenStepAssistant } from "@/components/simulators/ecg/EcgSevenStepAssistant";
 import { EcgMobilePathologyDrawer } from "@/components/simulators/ecg/EcgMobilePathologyDrawer";
 import { EcgMobileSettingsSheet } from "@/components/simulators/ecg/EcgMobileSettingsSheet";
 import { EcgMobileQuickBar } from "@/components/simulators/ecg/EcgMobileQuickBar";
+import { EcgPathologySelectDropdown } from "@/components/simulators/ecg/EcgPathologySelectDropdown";
 import { useGameSettingsStore } from "@/store/gameSettingsStore";
 
 export default function EcgSimulatorPage() {
@@ -43,9 +44,6 @@ export default function EcgSimulatorPage() {
   const [amplitude, setAmplitude] = useState<number>(10); // 5, 10, 20 mm/mV
   const [calipersEnabled, setCalipersEnabled] = useState<boolean>(true);
   const [viewMode, setViewMode] = useState<"runner" | "twelve_lead" | "pink_paper">("pink_paper");
-
-  // System selection for 9 clinical cardiology systems
-  const [selectedSystem, setSelectedSystem] = useState<string>("all");
 
   // Mobile Bottom Sheet states
   const [pathologyDrawerOpen, setPathologyDrawerOpen] = useState<boolean>(false);
@@ -63,6 +61,7 @@ export default function EcgSimulatorPage() {
     ECG_RHYTHM_DEFINITIONS[0];
 
   const currentSystemInfo = RHYTHM_TO_SYSTEM_MAP[selectedRhythmId];
+  const allowedBpmRange = getRhythmAllowedBpmRange(selectedRhythmId);
 
   // Fetch patient case and detailed criteria dynamically when rhythm changes
   useEffect(() => {
@@ -86,62 +85,44 @@ export default function EcgSimulatorPage() {
     };
   }, [selectedRhythmId]);
 
+  // Handle switching rhythm: lock and clamp BPM to physiological limits
   const handleSelectRhythm = (newRhythmId: EcgRhythmType) => {
     setSelectedRhythmId(newRhythmId);
     const def = ECG_RHYTHM_DEFINITIONS.find((r) => r.id === newRhythmId);
-    if (def) {
-      setBpm(def.defaultBpm);
-    }
-  };
+    const newRange = getRhythmAllowedBpmRange(newRhythmId);
 
-  // Calculate dynamic pathology counts per system
-  const systemCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: ECG_RHYTHM_DEFINITIONS.length };
-    for (const r of ECG_RHYTHM_DEFINITIONS) {
-      const sId = RHYTHM_TO_SYSTEM_MAP[r.id]?.systemId;
-      if (sId) {
-        counts[sId] = (counts[sId] || 0) + 1;
+    if (def) {
+      if (newRange.min === 0 && newRange.max === 0) {
+        setBpm(0);
+      } else {
+        // Clamp current BPM to new allowed range, or reset to defaultBpm
+        setBpm(def.defaultBpm);
       }
     }
-    return counts;
-  }, []);
-
-  // Filter rhythms by 9 systems
-  const filteredRhythms = useMemo(() => {
-    if (selectedSystem === "all") return ECG_RHYTHM_DEFINITIONS;
-    return ECG_RHYTHM_DEFINITIONS.filter(
-      (r) => RHYTHM_TO_SYSTEM_MAP[r.id]?.systemId === selectedSystem
-    );
-  }, [selectedSystem]);
+  };
 
   const currentMetrics = computeEcgMetrics(selectedRhythmId, bpm);
 
   return (
     <div className="mx-auto max-w-7xl px-2 sm:px-6 py-2 sm:py-5 space-y-2.5 sm:space-y-3">
       {/* ============================================================== */}
-      {/* 1. MOBILE MICRO HEADER (Shown ONLY on < lg screens)           */}
+      {/* 1. MOBILE MICRO TOP STRIP WITH DROPDOWN (< lg screens)         */}
       {/* ============================================================== */}
       <div className="flex lg:hidden items-center justify-between gap-1.5 pb-1 border-b border-hospital-800">
-        <div className="flex items-center gap-2 min-w-0">
-          <Link
-            href="/simulators"
-            className="flex h-8 w-8 items-center justify-center rounded-xl bg-hospital-900 border border-hospital-800 text-slate-300 hover:text-white shrink-0"
-            aria-label="Quay lại"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <div className="min-w-0">
-            <h1 className="text-xs font-black text-white truncate flex items-center gap-1.5">
-              <span>ECG Simulator</span>
-              <span className="rounded bg-rose-950 border border-rose-800 px-1 py-0.2 text-[8.5px] font-mono text-rose-300">
-                12 Cần
-              </span>
-            </h1>
-            <p className="text-[10px] text-slate-400 truncate">
-              {currentRhythm.name}
-            </p>
-          </div>
-        </div>
+        <Link
+          href="/simulators"
+          className="flex h-8 w-8 items-center justify-center rounded-xl bg-hospital-900 border border-hospital-800 text-slate-300 hover:text-white shrink-0"
+          aria-label="Quay lại"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
+
+        {/* Pathology Grouped Dropdown for Mobile */}
+        <EcgPathologySelectDropdown
+          selectedRhythmId={selectedRhythmId}
+          onSelectRhythm={handleSelectRhythm}
+          className="flex-1 min-w-0"
+        />
 
         <div className="flex items-center gap-1 shrink-0">
           <button
@@ -170,31 +151,36 @@ export default function EcgSimulatorPage() {
       </div>
 
       {/* ============================================================== */}
-      {/* 2. DESKTOP HEADER & BREADCRUMB (Shown ONLY on >= lg screens)  */}
+      {/* 2. DESKTOP HEADER & BREADCRUMB (>= lg screens)                */}
       {/* ============================================================== */}
-      <div className="hidden lg:flex items-center justify-between gap-2.5 border-b border-hospital-800 pb-2.5">
-        <div>
+      <div className="hidden lg:flex items-center justify-between gap-3 border-b border-hospital-800 pb-2.5">
+        <div className="flex items-center gap-2.5">
           <Link
             href="/simulators"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white mb-1 transition-colors"
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-hospital-900 border border-hospital-800 text-slate-400 hover:text-white transition-colors"
+            title="Quay lại Phòng Mô Phỏng"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            <span>Quay lại Phòng Mô Phỏng Cận Lâm Sàng</span>
+            <ArrowLeft className="h-4 w-4" />
           </Link>
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-950 text-emerald-400 border border-emerald-800 shadow-sm shrink-0">
-              <HeartPulse className="h-4 w-4 animate-pulse" />
-            </div>
-            <div>
-              <h1 className="text-xl font-extrabold text-white">
-                Mô Phỏng Điện Tâm Đồ (ECG Simulator)
-              </h1>
-              <p className="text-[11px] text-slate-400">
-                Sóng Gaussian 60 FPS • 9 Phân Hệ Lâm Sàng (31 Bệnh Lý) • Phác Đồ ACLS & Ca Bệnh Module 3
-              </p>
-            </div>
+          <div>
+            <h1 className="text-lg font-extrabold text-white flex items-center gap-2">
+              <span>Mô Phỏng Điện Tâm Đồ (ECG Simulator)</span>
+              <span className="rounded-full bg-emerald-950 border border-emerald-800 px-2 py-0.5 text-[10px] font-mono text-emerald-400">
+                12 Cần IEC 60601-2-25
+              </span>
+            </h1>
+            <p className="text-[11px] text-slate-400">
+              Sóng Gaussian 60 FPS • Tiêu Chuẩn In Trực Tiếp Trên Giấy Hồng • Khóa Tần Số Tim Theo Mặt Bệnh
+            </p>
           </div>
         </div>
+
+        {/* Top Dropdown Pathology Selector for Desktop */}
+        <EcgPathologySelectDropdown
+          selectedRhythmId={selectedRhythmId}
+          onSelectRhythm={handleSelectRhythm}
+          className="w-80 xl:w-96"
+        />
 
         {/* View Mode, Audio & Emergency CTA Buttons */}
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -255,23 +241,36 @@ export default function EcgSimulatorPage() {
       </div>
 
       {/* ============================================================== */}
-      {/* 3. DESKTOP CONTROL DECK (Shown ONLY on >= lg screens)         */}
+      {/* 3. DESKTOP CONTROL DECK WITH PHYSIOLOGICAL BPM LOCKING         */}
       {/* ============================================================== */}
       <div className="hidden lg:grid gap-2 grid-cols-4 rounded-xl border border-hospital-800 bg-hospital-900/90 p-3 text-[11px]">
-        {/* BPM Slider */}
+        {/* BPM Slider Bound to Allowed Range */}
         <div className="space-y-1">
           <div className="flex justify-between font-bold text-slate-300">
             <span>Tần số tim (BPM):</span>
-            <span className="text-emerald-400 font-mono text-xs">{bpm} BPM</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] text-slate-400 font-mono">
+                {allowedBpmRange.min === 0 && allowedBpmRange.max === 0
+                  ? "(Vô mạch)"
+                  : `(${allowedBpmRange.min}-${allowedBpmRange.max} bpm)`}
+              </span>
+              <span className="text-emerald-400 font-mono text-xs font-black">{bpm} BPM</span>
+            </div>
           </div>
-          <input
-            type="range"
-            min={30}
-            max={220}
-            value={bpm}
-            onChange={(e) => setBpm(Number(e.target.value))}
-            className="w-full accent-emerald-500 cursor-pointer h-1.5"
-          />
+          {allowedBpmRange.min === 0 && allowedBpmRange.max === 0 ? (
+            <div className="text-[10px] text-rose-400 font-bold bg-rose-950/60 p-1 rounded border border-rose-800 text-center">
+              Ngừng tuần hoàn (Cố định 0 bpm)
+            </div>
+          ) : (
+            <input
+              type="range"
+              min={allowedBpmRange.min}
+              max={allowedBpmRange.max}
+              value={Math.max(allowedBpmRange.min, Math.min(allowedBpmRange.max, bpm))}
+              onChange={(e) => setBpm(Number(e.target.value))}
+              className="w-full accent-emerald-500 cursor-pointer h-1.5"
+            />
+          )}
         </div>
 
         {/* Sweep Speed Toggle */}
@@ -338,7 +337,7 @@ export default function EcgSimulatorPage() {
       </div>
 
       {/* ============================================================== */}
-      {/* 4. PRIMARY SIMULATOR VIEWPORT (WAVEFORM-FIRST ON MOBILE!)      */}
+      {/* 4. PRIMARY SIMULATOR VIEWPORT                                  */}
       {/* ============================================================== */}
       <div className="w-full">
         {viewMode === "pink_paper" ? (
@@ -362,7 +361,7 @@ export default function EcgSimulatorPage() {
       </div>
 
       {/* ============================================================== */}
-      {/* 5. MOBILE THUMB QUICK BAR (Placed immediately below waveform) */}
+      {/* 5. MOBILE THUMB QUICK BAR                                      */}
       {/* ============================================================== */}
       <div className="block lg:hidden">
         <EcgMobileQuickBar
@@ -387,87 +386,7 @@ export default function EcgSimulatorPage() {
       />
 
       {/* ============================================================== */}
-      {/* 7. DESKTOP ONLY: 9 SYSTEMS TABS & 31 RHYTHM CARDS             */}
-      {/* (Completely eliminated from mobile to prevent 3000px scrolling)*/}
-      {/* ============================================================== */}
-      <div className="hidden lg:block rounded-2xl border border-hospital-800 bg-hospital-900/90 p-4 space-y-2.5 shadow-lg">
-        <EcgSystemCategoryTabs
-          selectedSystem={selectedSystem}
-          onSelectSystem={setSelectedSystem}
-          systemCounts={systemCounts}
-        />
-
-        <div className="flex items-center justify-between border-t border-hospital-800/80 pt-2">
-          <div className="text-[11px] text-slate-400">
-            Hiển thị <strong className="text-white">{filteredRhythms.length}</strong> bệnh lý lâm sàng
-            {selectedSystem !== "all" && " trong phân hệ"}
-          </div>
-          <span className="text-[10px] font-mono text-emerald-400">
-            60 FPS Wavelet Engine
-          </span>
-        </div>
-
-        {/* Rhythm Buttons Grid */}
-        <div className="grid gap-2 grid-cols-2 lg:grid-cols-3">
-          {filteredRhythms.map((r) => {
-            const isSelected = selectedRhythmId === r.id;
-            const sys = RHYTHM_TO_SYSTEM_MAP[r.id];
-            const isCritical =
-              r.category === "ventricular" ||
-              (r.id as string).startsWith("stemi") ||
-              r.id === "brugada_type1" ||
-              r.id === "torsades_de_pointes" ||
-              r.id === "asystole" ||
-              r.id === "hyperkalemia";
-
-            return (
-              <button
-                key={r.id}
-                type="button"
-                onClick={() => handleSelectRhythm(r.id)}
-                className={`rounded-xl p-2.5 text-left border transition-all cursor-pointer relative ${
-                  isSelected
-                    ? "border-emerald-500 bg-emerald-950/60 shadow-md shadow-emerald-950/50 ring-1 ring-emerald-500"
-                    : "border-hospital-800 bg-hospital-950/70 hover:border-hospital-700 hover:bg-hospital-850"
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1.5 gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">
-                    {sys?.systemName || r.category}
-                  </span>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {isCritical && (
-                      <span className="rounded bg-rose-950 border border-rose-800 px-1.5 py-0.2 text-[8.5px] font-black text-rose-300 uppercase">
-                        Cấp cứu
-                      </span>
-                    )}
-                    <span className="text-[11px] font-mono font-bold text-emerald-400">
-                      {r.defaultBpm} bpm
-                    </span>
-                  </div>
-                </div>
-
-                <div className="font-bold text-xs sm:text-sm text-white line-clamp-1">
-                  {r.name}
-                </div>
-
-                {sys?.anatomicalRegion && (
-                  <div className="text-[10px] text-cyan-300 font-medium truncate mt-0.5">
-                    📍 {sys.anatomicalRegion}
-                  </div>
-                )}
-
-                <div className="mt-1 text-[11px] text-slate-400 line-clamp-1">
-                  {r.description}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ============================================================== */}
-      {/* 8. MOBILE BOTTOM SHEET: PATHOLOGY PICKER (Phase 02)           */}
+      {/* 7. MOBILE BOTTOM SHEET: PATHOLOGY PICKER                       */}
       {/* ============================================================== */}
       <EcgMobilePathologyDrawer
         isOpen={pathologyDrawerOpen}
@@ -477,7 +396,7 @@ export default function EcgSimulatorPage() {
       />
 
       {/* ============================================================== */}
-      {/* 9. MOBILE BOTTOM SHEET: SETTINGS (Phase 03)                   */}
+      {/* 8. MOBILE BOTTOM SHEET: SETTINGS                              */}
       {/* ============================================================== */}
       <EcgMobileSettingsSheet
         isOpen={settingsSheetOpen}
@@ -485,6 +404,7 @@ export default function EcgSimulatorPage() {
         bpm={bpm}
         setBpm={setBpm}
         defaultBpm={currentRhythm.defaultBpm}
+        allowedBpmRange={allowedBpmRange}
         sweepSpeed={sweepSpeed}
         setSweepSpeed={setSweepSpeed}
         amplitude={amplitude}
@@ -498,7 +418,7 @@ export default function EcgSimulatorPage() {
       />
 
       {/* ============================================================== */}
-      {/* 10. CLINICAL DECK MODAL                                       */}
+      {/* 9. CLINICAL DECK MODAL                                        */}
       {/* ============================================================== */}
       <EcgClinicalDeckModal
         isOpen={clinicalDeckOpen}

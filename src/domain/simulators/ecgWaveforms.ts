@@ -35,6 +35,7 @@ export interface EcgRhythmDefinition {
   id: EcgRhythmType;
   name: string;
   defaultBpm: number;
+  allowedBpmRange?: { min: number; max: number; step?: number };
   category: "sinus" | "atrial" | "ventricular" | "conduction" | "ischemia_metabolic";
   systemId?: string;
   systemName?: string;
@@ -88,6 +89,56 @@ export const RHYTHM_TO_SYSTEM_MAP: Record<
   hypokalemia: { systemId: "metabolic_toxicology", systemName: "Rối Loạn Điện Giải & Nhiễm Độc Thuốc", anatomicalRegion: "Tái cực chậm trễ & tăng tính kích thích do Kali máu thấp" },
   digoxin_toxicity: { systemId: "metabolic_toxicology", systemName: "Rối Loạn Điện Giải & Nhiễm Độc Thuốc", anatomicalRegion: "Ức chế bơm Na+/K+ ATPase cơ tim do ngộ độc Glycoside tim" },
 };
+
+export const RHYTHM_ALLOWED_BPM_RANGE: Record<
+  EcgRhythmType,
+  { min: number; max: number; step?: number }
+> = {
+  normal_sinus: { min: 60, max: 100 },
+  sinus_tachycardia: { min: 101, max: 160 },
+  sinus_bradycardia: { min: 35, max: 59 },
+  atrial_fibrillation: { min: 60, max: 180 },
+  atrial_flutter: { min: 75, max: 150 },
+  svt: { min: 140, max: 240 },
+  pvc_frequent: { min: 55, max: 110 },
+  ventricular_tachycardia: { min: 130, max: 220 },
+  ventricular_fibrillation: { min: 0, max: 0 },
+  asystole: { min: 0, max: 0 },
+  av_block_first_degree: { min: 50, max: 100 },
+  av_block_mobitz_1: { min: 40, max: 90 },
+  av_block_mobitz_2: { min: 35, max: 75 },
+  av_block_third_degree: { min: 25, max: 45 },
+  stemi_inferior: { min: 50, max: 130 },
+  stemi_anterior: { min: 60, max: 140 },
+  hyperkalemia: { min: 40, max: 90 },
+  stemi_lateral: { min: 60, max: 130 },
+  stemi_posterior: { min: 50, max: 120 },
+  nemi_subendocardial: { min: 60, max: 130 },
+  rbbb: { min: 50, max: 110 },
+  lbbb: { min: 50, max: 110 },
+  lafb: { min: 50, max: 100 },
+  wpw_syndrome: { min: 60, max: 200 },
+  torsades_de_pointes: { min: 150, max: 250 },
+  lvh_strain: { min: 50, max: 100 },
+  brugada_type1: { min: 50, max: 100 },
+  pulmonary_embolism: { min: 90, max: 140 },
+  acute_pericarditis: { min: 70, max: 120 },
+  hypokalemia: { min: 60, max: 110 },
+  digoxin_toxicity: { min: 45, max: 85 },
+};
+
+export function getRhythmAllowedBpmRange(rhythmId: EcgRhythmType): {
+  min: number;
+  max: number;
+  step: number;
+} {
+  const range = RHYTHM_ALLOWED_BPM_RANGE[rhythmId] || { min: 40, max: 160 };
+  return {
+    min: range.min,
+    max: range.max,
+    step: range.step || 1,
+  };
+}
 
 export const ECG_RHYTHM_DEFINITIONS: EcgRhythmDefinition[] = [
   {
@@ -618,6 +669,11 @@ export const ECG_RHYTHM_DEFINITIONS: EcgRhythmDefinition[] = [
     treatmentSummary: "Ngưng Digoxin, dùng kháng thể đặc hiệu DigiFab, duy trì K+ 4.0-5.0. CẤM TIÊM CANXI!",
   },
 ];
+
+// Populate physiological allowed BPM range for all rhythms
+for (const def of ECG_RHYTHM_DEFINITIONS) {
+  def.allowedBpmRange = RHYTHM_ALLOWED_BPM_RANGE[def.id];
+}
 
 // ----------------------------------------------------
 // Mathematical ECG Signal Generator using Gaussian Pulses

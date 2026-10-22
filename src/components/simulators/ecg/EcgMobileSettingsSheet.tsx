@@ -18,6 +18,7 @@ interface EcgMobileSettingsSheetProps {
   bpm: number;
   setBpm: (bpm: number) => void;
   defaultBpm: number;
+  allowedBpmRange?: { min: number; max: number };
   sweepSpeed: number;
   setSweepSpeed: (speed: number) => void;
   amplitude: number;
@@ -36,6 +37,7 @@ export function EcgMobileSettingsSheet({
   bpm,
   setBpm,
   defaultBpm,
+  allowedBpmRange = { min: 30, max: 220 },
   sweepSpeed,
   setSweepSpeed,
   amplitude,
@@ -139,10 +141,19 @@ export function EcgMobileSettingsSheet({
           {/* Tần số tim BPM */}
           <div className="rounded-xl border border-hospital-800 bg-hospital-900/60 p-3 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-200">Tần số tim (BPM):</span>
+              <div>
+                <span className="text-xs font-bold text-slate-200 block">Tần số tim (BPM):</span>
+                <span className="text-[10px] text-slate-400 font-mono">
+                  {allowedBpmRange.min === 0 && allowedBpmRange.max === 0
+                    ? "Bệnh lý vô mạch (Cố định 0 bpm)"
+                    : `Khoảng cho phép: ${allowedBpmRange.min} - ${allowedBpmRange.max} BPM`}
+                </span>
+              </div>
               <div className="flex items-center gap-2">
-                <span className="font-mono text-base font-extrabold text-emerald-400">{bpm} BPM</span>
-                {bpm !== defaultBpm && (
+                <span className="font-mono text-base font-extrabold text-emerald-400">
+                  {allowedBpmRange.min === 0 && allowedBpmRange.max === 0 ? "0" : bpm} BPM
+                </span>
+                {bpm !== defaultBpm && allowedBpmRange.max > 0 && (
                   <button
                     type="button"
                     onClick={() => setBpm(defaultBpm)}
@@ -156,31 +167,47 @@ export function EcgMobileSettingsSheet({
               </div>
             </div>
 
-            <input
-              type="range"
-              min={30}
-              max={220}
-              value={bpm}
-              onChange={(e) => setBpm(Number(e.target.value))}
-              className="w-full accent-emerald-500 cursor-pointer h-2"
-            />
+            {allowedBpmRange.min === 0 && allowedBpmRange.max === 0 ? (
+              <div className="p-2 rounded-lg bg-rose-950/60 border border-rose-800 text-rose-300 text-xs text-center font-bold">
+                ⚠️ Bệnh lý vô mạch / Ngừng tuần hoàn — Không thể điều chỉnh tần số tim.
+              </div>
+            ) : (
+              <>
+                <input
+                  type="range"
+                  min={allowedBpmRange.min}
+                  max={allowedBpmRange.max}
+                  value={Math.max(allowedBpmRange.min, Math.min(allowedBpmRange.max, bpm))}
+                  onChange={(e) => setBpm(Number(e.target.value))}
+                  className="w-full accent-emerald-500 cursor-pointer h-2"
+                />
 
-            <div className="flex gap-1.5 pt-1">
-              {[45, 60, 75, 100, 150].map((preset) => (
-                <button
-                  key={preset}
-                  type="button"
-                  onClick={() => setBpm(preset)}
-                  className={`flex-1 py-1 rounded-lg text-[10px] font-mono font-bold border transition ${
-                    bpm === preset
-                      ? "bg-emerald-600 text-white border-emerald-500"
-                      : "bg-hospital-800 text-slate-400 border-hospital-700 hover:text-white"
-                  }`}
-                >
-                  {preset}
-                </button>
-              ))}
-            </div>
+                <div className="flex gap-1.5 pt-1">
+                  {[
+                    allowedBpmRange.min,
+                    Math.round(allowedBpmRange.min + (allowedBpmRange.max - allowedBpmRange.min) * 0.33),
+                    defaultBpm,
+                    Math.round(allowedBpmRange.min + (allowedBpmRange.max - allowedBpmRange.min) * 0.66),
+                    allowedBpmRange.max,
+                  ]
+                    .filter((v, idx, arr) => arr.indexOf(v) === idx)
+                    .map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => setBpm(preset)}
+                        className={`flex-1 py-1 rounded-lg text-[10px] font-mono font-bold border transition ${
+                          bpm === preset
+                            ? "bg-emerald-600 text-white border-emerald-500"
+                            : "bg-hospital-800 text-slate-400 border-hospital-700 hover:text-white"
+                        }`}
+                      >
+                        {preset}
+                      </button>
+                    ))}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Tốc độ quét giấy */}

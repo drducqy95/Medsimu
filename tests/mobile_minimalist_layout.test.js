@@ -14,19 +14,21 @@ test("Phase 01 & 02: Waveform-First Layout & Elimination of 3000px Scroll on Mob
     "Mobile micro header must be conditionally shown on small screens"
   );
 
-  // 2. Waveform Viewport is rendered before the 31-card rhythm grid
+  // 2. Waveform Viewport is rendered before the mobile quick bar
   const viewportPos = content.indexOf("PRIMARY SIMULATOR VIEWPORT");
   const quickBarPos = content.indexOf("MOBILE THUMB QUICK BAR");
-  const desktopGridPos = content.indexOf("DESKTOP ONLY: 9 SYSTEMS TABS & 31 RHYTHM CARDS");
 
   assert.ok(viewportPos > 0, "Primary simulator viewport must exist");
   assert.ok(quickBarPos > viewportPos, "Mobile quick bar must follow immediately after waveform viewport");
-  assert.ok(desktopGridPos > quickBarPos, "Desktop rhythm cards must be placed below and hidden on mobile");
 
-  // 3. Desktop Rhythm Grid is strictly hidden on mobile (< lg)
+  // 3. Pathology catalog is converted to Dropdown List, eliminating bulky 3000px card grid
   assert.ok(
-    content.includes("hidden lg:block rounded-2xl border border-hospital-800 bg-hospital-900/90"),
-    "31-card rhythm grid and category tabs must be hidden on mobile (hidden lg:block) to prevent 3000px scroll"
+    content.includes("EcgPathologySelectDropdown"),
+    "EcgPathologySelectDropdown must be integrated to replace bulky cards"
+  );
+  assert.ok(
+    !content.includes("DESKTOP ONLY: 9 SYSTEMS TABS & 31 RHYTHM CARDS"),
+    "31-card rhythm grid and category tabs must be decluttered and replaced by dropdown"
   );
 });
 
