@@ -1,9 +1,9 @@
 {
   "meta": {
     "project_name": "GameYhoc",
-    "last_updated": "2026-10-22T07:35:00.000000",
+    "last_updated": "2026-10-22T08:22:00.000000",
     "overall_progress_percent": 100,
-    "current_phase": "All 6 Phases Completed & Display Bug Fix Verified (Criteria Filter Titles + Anti-Duplication Rhythm Strip)",
+    "current_phase": "UI Block Compaction & Mobile Viewport Display Optimization Across All Modules",
     "status": "COMPLETED"
   },
   "milestones": [
@@ -119,6 +119,43 @@
         {
           "id": "T3.6",
           "desc": "Phase 06 - Verification, Automated Testing & Documentation: Bộ kiểm thử tự động toàn diện 9 hệ thống, xác minh chuẩn y khoa & hoàn tất tài liệu",
+          "status": "DONE"
+        }
+      ]
+    },
+    {
+      "id": "M4",
+      "title": "Compact All UI Blocks & Optimize Viewport Display (Mobile & Desktop)",
+      "status": "COMPLETED",
+      "tasks": [
+        {
+          "id": "T4.1",
+          "desc": "Compact Simulators Hub (/simulators): Responsive list on mobile (64px cards) & 4-column row on desktop, eliminating scroll",
+          "status": "DONE"
+        },
+        {
+          "id": "T4.2",
+          "desc": "Compact ECG Simulator (/simulators/ecg): Deck padding, rhythm selectors, and default collapsed 7-step assistant",
+          "status": "DONE"
+        },
+        {
+          "id": "T4.3",
+          "desc": "Compact Ultrasound & X-Ray Simulators: Header banners, FAST progress, and case selection tabs",
+          "status": "DONE"
+        },
+        {
+          "id": "T4.4",
+          "desc": "Compact Multi-Slice CT Scanner (/simulators/ct): Header, HU reference table, case switcher and console HUD",
+          "status": "DONE"
+        },
+        {
+          "id": "T4.5",
+          "desc": "Compact Resuscitation Bay & Treatment (/treatment): Triage cards, bedside patient view, code blue banner and 5-step tabs",
+          "status": "DONE"
+        },
+        {
+          "id": "T4.6",
+          "desc": "Compact Medical Academy (/academy): Course catalog, lesson viewer, pharmacology catalog, quiz and flashcard deck",
           "status": "DONE"
         }
       ]
