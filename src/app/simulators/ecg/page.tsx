@@ -109,98 +109,98 @@ export default function EcgSimulatorPage() {
   const currentMetrics = computeEcgMetrics(selectedRhythmId, bpm);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 space-y-6">
-      {/* Top Header & Breadcrumb */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-hospital-800 pb-5">
+    <div className="mx-auto max-w-7xl px-3 sm:px-6 py-3 sm:py-5 space-y-3">
+      {/* Top Header & Breadcrumb (Compact) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-hospital-800 pb-2.5">
         <div>
           <Link
             href="/simulators"
-            className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white mb-2 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white mb-1 transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-3.5 w-3.5" />
             <span>Quay lại Phòng Mô Phỏng Cận Lâm Sàng</span>
           </Link>
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-950 text-emerald-400 border border-emerald-800 shadow-md">
-              <HeartPulse className="h-6 w-6 animate-pulse" />
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-950 text-emerald-400 border border-emerald-800 shadow-sm shrink-0">
+              <HeartPulse className="h-4 w-4 animate-pulse" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
-                Hệ Thống Mô Phỏng Điện Tâm Đồ (ECG Simulator)
+              <h1 className="text-base sm:text-xl font-extrabold text-white">
+                Mô Phỏng Điện Tâm Đồ (ECG Simulator)
               </h1>
-              <p className="text-xs text-slate-400">
-                Mô hình sóng Gaussian 60 FPS • 9 Phân Hệ Lâm Sàng (31 Bệnh Lý) • Phác Đồ ACLS & Ca Bệnh Module 3
+              <p className="text-[11px] text-slate-400 hidden sm:block">
+                Sóng Gaussian 60 FPS • 9 Phân Hệ Lâm Sàng (31 Bệnh Lý) • Phác Đồ ACLS & Ca Bệnh Module 3
               </p>
             </div>
           </div>
         </div>
 
         {/* View Mode, Audio & Emergency CTA Buttons */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex rounded-xl bg-hospital-900 p-1 border border-hospital-800">
+        <div className="flex items-center gap-1.5 flex-wrap self-end sm:self-center">
+          <div className="flex rounded-xl bg-hospital-900 p-0.5 border border-hospital-800 text-[11px]">
             <button
               onClick={() => setViewMode("pink_paper")}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1 rounded-lg px-2.5 py-1 font-bold transition-all cursor-pointer ${
                 viewMode === "pink_paper"
-                  ? "bg-rose-600 text-white shadow-md shadow-rose-950/50"
+                  ? "bg-rose-600 text-white shadow-sm"
                   : "text-slate-400 hover:text-white"
               }`}
             >
-              <span>Giấy In Hồng 12 Cần</span>
+              <span>Giấy Hồng 12 Cần</span>
             </button>
             <button
               onClick={() => setViewMode("runner")}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1 rounded-lg px-2.5 py-1 font-bold transition-all cursor-pointer ${
                 viewMode === "runner"
-                  ? "bg-emerald-600 text-white shadow-md"
+                  ? "bg-emerald-600 text-white shadow-sm"
                   : "text-slate-400 hover:text-white"
               }`}
             >
-              <span>Dải Nhịp Lead II</span>
+              <span>Dải Lead II</span>
             </button>
             <button
               onClick={() => setViewMode("twelve_lead")}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1 rounded-lg px-2.5 py-1 font-bold transition-all cursor-pointer ${
                 viewMode === "twelve_lead"
-                  ? "bg-cyan-600 text-white shadow-md"
+                  ? "bg-cyan-600 text-white shadow-sm"
                   : "text-slate-400 hover:text-white"
               }`}
             >
-              <span>Lưới 12 Cần Monitor</span>
+              <span>Lưới 12 Cần</span>
             </button>
           </div>
 
           <button
             onClick={toggleAudio}
-            className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold border transition-all cursor-pointer ${
+            className={`flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-[11px] font-bold border transition-all cursor-pointer ${
               audioEnabled
                 ? "bg-emerald-950 border-emerald-800 text-emerald-300"
                 : "bg-hospital-900 border-hospital-800 text-slate-400"
             }`}
           >
-            {audioEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-            <span>{audioEnabled ? "Âm Thanh ON" : "Tắt Âm"}</span>
+            {audioEnabled ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+            <span className="hidden sm:inline">{audioEnabled ? "Âm ON" : "Tắt Âm"}</span>
           </button>
 
           {/* Direct Emergency Management Deck Trigger */}
           <button
             type="button"
             onClick={() => setClinicalDeckOpen(true)}
-            className="flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white shadow-md shadow-rose-950/60 transition hover:scale-105 active:scale-95 cursor-pointer"
+            className="flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-[11px] font-bold bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white shadow-sm transition hover:scale-105 active:scale-95 cursor-pointer"
           >
-            <Siren className="h-4 w-4 animate-pulse" />
-            <span>Phác Đồ & Ca Bệnh (Module 3)</span>
+            <Siren className="h-3.5 w-3.5 animate-pulse" />
+            <span>Phác Đồ & Ca Bệnh</span>
           </button>
         </div>
       </div>
 
-      {/* Main Control Deck */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 rounded-2xl border border-hospital-800 bg-hospital-900/90 p-4 text-xs">
+      {/* Main Control Deck (Compact) */}
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 rounded-xl border border-hospital-800 bg-hospital-900/90 p-2.5 sm:p-3 text-[11px]">
         {/* BPM Slider */}
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <div className="flex justify-between font-bold text-slate-300">
             <span>Tần số tim (BPM):</span>
-            <span className="text-emerald-400 font-mono text-sm">{bpm} BPM</span>
+            <span className="text-emerald-400 font-mono text-xs">{bpm} BPM</span>
           </div>
           <input
             type="range"
@@ -208,17 +208,17 @@ export default function EcgSimulatorPage() {
             max={220}
             value={bpm}
             onChange={(e) => setBpm(Number(e.target.value))}
-            className="w-full accent-emerald-500 cursor-pointer"
+            className="w-full accent-emerald-500 cursor-pointer h-1.5"
           />
         </div>
 
         {/* Sweep Speed Toggle */}
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <span className="font-bold text-slate-300 block">Tốc độ quét giấy:</span>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5">
             <button
               onClick={() => setSweepSpeed(25)}
-              className={`flex-1 rounded-xl py-1.5 font-bold border transition-all cursor-pointer ${
+              className={`flex-1 rounded-lg py-1 font-bold border transition-all cursor-pointer ${
                 sweepSpeed === 25
                   ? "bg-emerald-600 text-white border-emerald-500 shadow-sm"
                   : "bg-hospital-800 text-slate-300 border-hospital-700 hover:bg-hospital-750"
@@ -228,7 +228,7 @@ export default function EcgSimulatorPage() {
             </button>
             <button
               onClick={() => setSweepSpeed(50)}
-              className={`flex-1 rounded-xl py-1.5 font-bold border transition-all cursor-pointer ${
+              className={`flex-1 rounded-lg py-1 font-bold border transition-all cursor-pointer ${
                 sweepSpeed === 50
                   ? "bg-emerald-600 text-white border-emerald-500 shadow-sm"
                   : "bg-hospital-800 text-slate-300 border-hospital-700 hover:bg-hospital-750"
@@ -240,14 +240,14 @@ export default function EcgSimulatorPage() {
         </div>
 
         {/* Amplitude Scale Toggle */}
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <span className="font-bold text-slate-300 block">Độ khuếch đại điện thế:</span>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5">
             {[5, 10, 20].map((amp) => (
               <button
                 key={amp}
                 onClick={() => setAmplitude(amp)}
-                className={`flex-1 rounded-xl py-1.5 font-bold border transition-all cursor-pointer ${
+                className={`flex-1 rounded-lg py-1 font-bold border transition-all cursor-pointer ${
                   amplitude === amp
                     ? "bg-cyan-600 text-white border-cyan-500 shadow-sm"
                     : "bg-hospital-800 text-slate-300 border-hospital-700 hover:bg-hospital-750"
@@ -260,17 +260,17 @@ export default function EcgSimulatorPage() {
         </div>
 
         {/* Calipers Tool Toggle */}
-        <div className="space-y-1.5 flex flex-col justify-end">
+        <div className="space-y-1 flex flex-col justify-end">
           <button
             onClick={() => setCalipersEnabled(!calipersEnabled)}
-            className={`w-full rounded-xl py-2 font-bold border transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            className={`w-full rounded-lg py-1 font-bold border transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               calipersEnabled
-                ? "bg-cyan-950 border-cyan-700 text-cyan-300 shadow-md"
+                ? "bg-cyan-950 border-cyan-700 text-cyan-300 shadow-sm"
                 : "bg-hospital-800 border-hospital-700 text-slate-400 hover:bg-hospital-750"
             }`}
           >
-            <Sliders className="h-4 w-4" />
-            <span>Thước Đo Calipers: {calipersEnabled ? "BẬT" : "TẮT"}</span>
+            <Sliders className="h-3.5 w-3.5" />
+            <span>Thước Calipers: {calipersEnabled ? "BẬT" : "TẮT"}</span>
           </button>
         </div>
       </div>
@@ -302,26 +302,26 @@ export default function EcgSimulatorPage() {
         onOpenClinicalDeck={() => setClinicalDeckOpen(true)}
       />
 
-      {/* Rhythm Selection Deck with 9 Clinical Systems Level 1 Tabs */}
-      <div className="rounded-3xl border border-hospital-800 bg-hospital-900/90 p-5 space-y-4 shadow-xl">
+      {/* Rhythm Selection Deck with 9 Clinical Systems Level 1 Tabs (Compact) */}
+      <div className="rounded-2xl border border-hospital-800 bg-hospital-900/90 p-3 sm:p-4 space-y-2.5 shadow-lg">
         <EcgSystemCategoryTabs
           selectedSystem={selectedSystem}
           onSelectSystem={setSelectedSystem}
           systemCounts={systemCounts}
         />
 
-        <div className="flex items-center justify-between border-t border-hospital-800/80 pt-3">
-          <div className="text-xs text-slate-400">
+        <div className="flex items-center justify-between border-t border-hospital-800/80 pt-2">
+          <div className="text-[11px] text-slate-400">
             Hiển thị <strong className="text-white">{filteredRhythms.length}</strong> bệnh lý lâm sàng
-            {selectedSystem !== "all" && " trong phân hệ đã chọn"}
+            {selectedSystem !== "all" && " trong phân hệ"}
           </div>
-          <span className="text-[11px] font-mono text-emerald-400">
-            60 FPS Gaussian Wavelet Engine
+          <span className="text-[10px] font-mono text-emerald-400">
+            60 FPS Wavelet Engine
           </span>
         </div>
 
-        {/* Rhythm Buttons Grid */}
-        <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Rhythm Buttons Grid (Compact) */}
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {filteredRhythms.map((r) => {
             const isSelected = selectedRhythmId === r.id;
             const sys = RHYTHM_TO_SYSTEM_MAP[r.id];
@@ -338,9 +338,9 @@ export default function EcgSimulatorPage() {
                 key={r.id}
                 type="button"
                 onClick={() => handleSelectRhythm(r.id)}
-                className={`rounded-2xl p-3.5 text-left border transition-all cursor-pointer relative ${
+                className={`rounded-xl p-2.5 text-left border transition-all cursor-pointer relative ${
                   isSelected
-                    ? "border-emerald-500 bg-emerald-950/60 shadow-lg shadow-emerald-950/50 ring-1 ring-emerald-500"
+                    ? "border-emerald-500 bg-emerald-950/60 shadow-md shadow-emerald-950/50 ring-1 ring-emerald-500"
                     : "border-hospital-800 bg-hospital-950/70 hover:border-hospital-700 hover:bg-hospital-850"
                 }`}
               >

@@ -66,56 +66,56 @@ export default function UltrasoundSimulatorPage() {
   const fastCompletedCount = Object.values(completedFastZones).filter(Boolean).length;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      {/* Top Navigation & Breadcrumbs */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+    <div className="mx-auto max-w-7xl px-3 sm:px-6 py-3 sm:py-5 space-y-3">
+      {/* Top Navigation & Breadcrumbs (Compact) */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hospital-800 pb-2">
         <Link
           href="/simulators"
-          className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-3.5 w-3.5" />
           <span>Quay lại Trung Tâm Cận Lâm Sàng</span>
         </Link>
 
-        <div className="flex items-center gap-2">
-          <span className="rounded-full border border-teal-500/30 bg-teal-500/10 px-3 py-1 text-xs font-semibold text-teal-400">
+        <div className="flex items-center gap-1.5 text-[11px]">
+          <span className="rounded-full border border-teal-500/30 bg-teal-500/10 px-2.5 py-0.5 font-semibold text-teal-400">
             FAST Protocol & POCUS
           </span>
-          <span className="rounded-full border border-hospital-700 bg-hospital-800/80 px-3 py-1 text-xs text-slate-300">
-            Đầu Dò 3D Động 6 DoF
+          <span className="rounded-full border border-hospital-700 bg-hospital-800/80 px-2.5 py-0.5 text-slate-300">
+            Đầu Dò 3D 6 DoF
           </span>
         </div>
       </div>
 
-      {/* Header Banner */}
-      <div className="mb-8 rounded-3xl border border-hospital-800 bg-gradient-to-r from-hospital-900/90 via-hospital-950/90 to-teal-950/40 p-6 md:p-8 backdrop-blur">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-start gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-teal-500/20 text-teal-400 border border-teal-500/30 shadow-lg shadow-teal-950/50">
-              <Activity className="h-7 w-7" />
+      {/* Header Banner (Compact) */}
+      <div className="rounded-2xl border border-hospital-800 bg-gradient-to-r from-hospital-900/90 via-hospital-950/90 to-teal-950/40 p-3 sm:p-4 backdrop-blur shadow-md">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-teal-500/20 text-teal-400 border border-teal-500/30 shadow-sm">
+              <Activity className="h-5 w-5" />
             </div>
             <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl md:text-3xl font-extrabold text-white">
+              <div className="flex items-center gap-2">
+                <h1 className="text-base sm:text-xl font-extrabold text-white">
                   Mô Phỏng Siêu Âm Đầu Dò 3D Động (Ultrasound POCUS)
                 </h1>
               </div>
-              <p className="mt-1 text-sm text-slate-300 max-w-3xl">
-                Thao tác tay điều khiển đầu dò ảo 3D (xoay, nghiêng, ấn mô), quan sát hình ảnh phản hồi
-                siêu âm cắt lớp động thời gian thực (co bóp tim, trượt màng phổi, B-Mode, M-Mode, Color Doppler).
+              <p className="mt-0.5 text-[11px] text-slate-300 max-w-3xl line-clamp-1 hidden sm:block">
+                Điều khiển đầu dò 3D (xoay, nghiêng, ấn mô), quan sát hình ảnh phản hồi
+                siêu âm cắt lớp động thời gian thực (co bóp tim, trượt màng phổi, kho 1200+ ảnh thật CD).
               </p>
             </div>
           </div>
 
           {/* Quick FAST status indicator */}
-          <div className="flex items-center gap-3 rounded-2xl border border-hospital-700 bg-hospital-900/80 px-4 py-3">
+          <div className="flex items-center gap-2.5 rounded-xl border border-hospital-700 bg-hospital-900/80 px-3 py-1.5 shrink-0 self-end md:self-center">
             <div className="text-right">
-              <div className="text-xs text-slate-400">Tiến độ FAST Exam</div>
-              <div className="text-lg font-bold text-teal-400">
+              <div className="text-[10px] text-slate-400">Tiến độ FAST</div>
+              <div className="text-sm font-bold text-teal-400">
                 {fastCompletedCount}/5 Cửa sổ
               </div>
             </div>
-            <div className="h-10 w-10 rounded-full border-2 border-teal-500/40 bg-teal-950/60 flex items-center justify-center text-xs font-bold text-teal-300">
+            <div className="h-7 w-7 rounded-full border border-teal-500/40 bg-teal-950/60 flex items-center justify-center text-[10px] font-bold text-teal-300">
               {Math.round((fastCompletedCount / 5) * 100)}%
             </div>
           </div>

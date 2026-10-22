@@ -20,26 +20,26 @@ export default function XraySimulatorPage() {
   const currentCase = XRAY_CASES.find((c) => c.id === selectedCaseId) || XRAY_CASES[0];
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 space-y-6">
-      {/* Top Header & Breadcrumb */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-hospital-800 pb-5">
+    <div className="mx-auto max-w-7xl px-3 sm:px-6 py-3 sm:py-5 space-y-3">
+      {/* Top Header & Breadcrumb (Compact) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-hospital-800 pb-2.5">
         <div>
           <Link
             href="/simulators"
-            className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white mb-2 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white mb-1 transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-3.5 w-3.5" />
             <span>Quay lại Phòng Mô Phỏng Cận Lâm Sàng</span>
           </Link>
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-950 text-blue-400 border border-blue-800 shadow-md">
-              <Eye className="h-6 w-6" />
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-950 text-blue-400 border border-blue-800 shadow-sm shrink-0">
+              <Eye className="h-4 w-4" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
+              <h1 className="text-base sm:text-xl font-extrabold text-white">
                 Phòng Soi Phim X-Quang Tương Tác (X-Ray Suite)
               </h1>
-              <p className="text-xs text-slate-400">
+              <p className="text-[11px] text-slate-400 hidden sm:block">
                 Viewer chuẩn DICOM • Chỉnh sáng/tương phản (Window/Level) • Thước đo CTR • Chỉ điểm bệnh lý
               </p>
             </div>
@@ -47,17 +47,17 @@ export default function XraySimulatorPage() {
         </div>
       </div>
 
-      {/* Case Selector Tabs */}
-      <div className="flex flex-wrap items-center gap-2.5">
+      {/* Case Selector Tabs (Compact) */}
+      <div className="flex flex-wrap items-center gap-1.5">
         {XRAY_CASES.map((c) => {
           const isSelected = selectedCaseId === c.id;
           return (
             <button
               key={c.id}
               onClick={() => setSelectedCaseId(c.id)}
-              className={`rounded-2xl border px-4 py-2.5 text-xs font-bold transition-all ${
+              className={`rounded-xl border px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
                 isSelected
-                  ? "bg-blue-950/80 border-blue-600 text-blue-300 shadow-lg shadow-blue-950/30"
+                  ? "bg-blue-950/80 border-blue-600 text-blue-300 shadow-md"
                   : "border-hospital-800 bg-hospital-900/60 text-slate-400 hover:text-white hover:bg-hospital-850"
               }`}
             >

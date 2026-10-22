@@ -59,9 +59,9 @@ export const AcademyClientTabs: React.FC<AcademyClientTabsProps> = ({
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-3 sm:space-y-4">
       {/* Tab Switcher Bar */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-hospital-800 pb-3">
+      <div className="flex flex-wrap items-center gap-1.5 border-b border-hospital-800 pb-2">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -69,15 +69,15 @@ export const AcademyClientTabs: React.FC<AcademyClientTabsProps> = ({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2.5 rounded-2xl border px-4 py-2.5 text-xs sm:text-sm font-bold transition-all ${
+              className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-all ${
                 isActive
-                  ? `${tab.activeBg} shadow-lg shadow-cyan-950/20`
+                  ? `${tab.activeBg} shadow-md shadow-cyan-950/20`
                   : "border-hospital-800 bg-hospital-900/40 text-slate-400 hover:text-white hover:bg-hospital-850"
               }`}
             >
-              <Icon className={`h-4 w-4 ${tab.color}`} />
+              <Icon className={`h-3.5 w-3.5 ${tab.color}`} />
               <span>{tab.label}</span>
-              <span className="rounded-full bg-hospital-800 px-2 py-0.5 text-[10px] text-slate-300">
+              <span className="rounded-full bg-hospital-800 px-1.5 py-0.2 text-[10px] text-slate-300">
                 {tab.count}
               </span>
             </button>

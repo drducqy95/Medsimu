@@ -54,24 +54,24 @@ export const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ cards }) => {
   };
 
   return (
-    <div className="max-w-xl mx-auto space-y-6">
+    <div className="max-w-xl mx-auto space-y-3">
       {/* Header and Progress */}
       <div className="flex items-center justify-between text-xs text-slate-400">
         <span className="font-bold text-cyan-400">
           Thẻ {currentIndex + 1} / {cards.length}
         </span>
         <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
-          <Brain className="h-4 w-4" /> Đã nhớ: {masteredIds.length}/{cards.length}
+          <Brain className="h-3.5 w-3.5" /> Đã nhớ: {masteredIds.length}/{cards.length}
         </span>
       </div>
 
       {/* 3D Flip Card */}
       <div
         onClick={() => setIsFlipped(!isFlipped)}
-        className="group relative h-72 w-full cursor-pointer perspective-1000 select-none"
+        className="group relative h-56 sm:h-60 w-full cursor-pointer perspective-1000 select-none"
       >
         <div
-          className={`relative h-full w-full rounded-3xl border transition-all duration-500 shadow-2xl p-7 flex flex-col justify-between ${
+          className={`relative h-full w-full rounded-2xl border transition-all duration-500 shadow-xl p-4 sm:p-5 flex flex-col justify-between ${
             isFlipped
               ? "border-teal-500 bg-gradient-to-br from-hospital-900 via-hospital-950 to-teal-950/40"
               : "border-hospital-800 bg-gradient-to-br from-hospital-900 to-hospital-950 hover:border-cyan-500/50"
@@ -79,35 +79,35 @@ export const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ cards }) => {
         >
           {/* Card Top Indicator */}
           <div className="flex items-center justify-between text-xs">
-            <span className="rounded-full bg-hospital-800 px-3 py-0.5 font-bold text-cyan-400 border border-hospital-700">
+            <span className="rounded-full bg-hospital-800 px-2.5 py-0.5 font-bold text-cyan-400 border border-hospital-700 text-[11px]">
               {currentCard.category}
             </span>
-            <span className="text-[11px] text-slate-400 flex items-center gap-1">
-              <RotateCw className="h-3 w-3" /> Chạm để lật thẻ
+            <span className="text-[10px] text-slate-400 flex items-center gap-1">
+              <RotateCw className="h-3 w-3" /> Chạm để lật
             </span>
           </div>
 
           {/* Card Center Content */}
           <div className="my-auto text-center">
             {!isFlipped ? (
-              <div className="space-y-2">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                   CÂU HỎI NHANH
                 </span>
-                <p className="text-base sm:text-lg font-bold text-white leading-relaxed">
+                <p className="text-sm sm:text-base font-bold text-white leading-relaxed">
                   {currentCard.front}
                 </p>
               </div>
             ) : (
-              <div className="space-y-3">
-                <span className="text-[11px] font-bold text-teal-400 uppercase tracking-widest">
+              <div className="space-y-2">
+                <span className="text-[10px] font-bold text-teal-400 uppercase tracking-widest">
                   CÂU TRẢ LỜI & CƠ CHẾ
                 </span>
-                <p className="text-sm sm:text-base font-semibold text-slate-100 whitespace-pre-line leading-relaxed">
+                <p className="text-xs sm:text-sm font-semibold text-slate-100 whitespace-pre-line leading-relaxed">
                   {currentCard.back}
                 </p>
                 {currentCard.mnemonic && (
-                  <div className="inline-block mt-2 rounded-xl bg-teal-950/60 border border-teal-800/60 px-3 py-1 text-xs font-semibold text-teal-300">
+                  <div className="inline-block mt-1 rounded-lg bg-teal-950/60 border border-teal-800/60 px-2 py-0.5 text-[11px] font-semibold text-teal-300">
                     💡 Mẹo nhớ: {currentCard.mnemonic}
                   </div>
                 )}
@@ -126,28 +126,28 @@ export const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ cards }) => {
       <div className="flex items-center justify-between">
         <button
           onClick={handlePrev}
-          className="flex h-11 w-11 items-center justify-center rounded-2xl border border-hospital-800 bg-hospital-900 text-slate-300 hover:text-white hover:bg-hospital-800"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-hospital-800 bg-hospital-900 text-slate-300 hover:text-white hover:bg-hospital-800"
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="h-4 w-4" />
         </button>
 
         <button
           onClick={toggleMastered}
-          className={`flex items-center gap-2 rounded-2xl px-5 py-2.5 text-xs font-bold transition-all ${
+          className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
             isMastered
-              ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30"
+              ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
               : "border border-hospital-700 bg-hospital-850 text-slate-300 hover:text-white"
           }`}
         >
-          <Check className="h-4 w-4" />
+          <Check className="h-3.5 w-3.5" />
           <span>{isMastered ? "Đã Nắm Vững (+20 XP)" : "Đánh Dấu Đã Nhớ"}</span>
         </button>
 
         <button
           onClick={handleNext}
-          className="flex h-11 w-11 items-center justify-center rounded-2xl border border-hospital-800 bg-hospital-900 text-slate-300 hover:text-white hover:bg-hospital-800"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-hospital-800 bg-hospital-900 text-slate-300 hover:text-white hover:bg-hospital-800"
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight className="h-4 w-4" />
         </button>
       </div>
     </div>

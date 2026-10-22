@@ -371,27 +371,27 @@ export const CtSliceViewer: React.FC<CtSliceViewerProps> = ({ ctCase }) => {
     currentSlice <= ctCase.keyFindingSliceRange[1];
 
   return (
-    <div className="rounded-3xl border border-hospital-800 bg-hospital-900/90 p-6 backdrop-blur shadow-2xl">
+    <div className="rounded-2xl border border-hospital-800 bg-hospital-900/90 p-3 sm:p-4 backdrop-blur shadow-xl">
       {/* Top Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-hospital-800 pb-4 mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hospital-800 pb-2.5 mb-3">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-white">{ctCase.title}</h2>
+            <h2 className="text-sm sm:text-base font-bold text-white">{ctCase.title}</h2>
             {isKeySlice && (
-              <span className="animate-pulse rounded-full border border-rose-500/30 bg-rose-500/20 px-2.5 py-0.5 text-[11px] font-bold text-rose-300">
-                Lát Cắt Bệnh Lý
+              <span className="animate-pulse rounded-full border border-rose-500/30 bg-rose-500/20 px-2 py-0.5 text-[10px] font-bold text-rose-300">
+                Lát Bệnh Lý
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            Độ dày lát: {ctCase.sliceThickness} | Tổng số lát: {ctCase.totalSlices} | Kỹ thuật: Cắt lớp vi tính đa dãy (MDCT)
+          <p className="text-[11px] text-slate-400 mt-0.5">
+            Độ dày: {ctCase.sliceThickness} | Tổng số lát: {ctCase.totalSlices} | Kỹ thuật: MDCT
           </p>
         </div>
 
         {/* Window Presets Buttons */}
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="text-xs text-slate-400 mr-1 flex items-center gap-1">
-            <Sliders className="h-3.5 w-3.5" /> Preset:
+            <Sliders className="h-3 w-3" /> Preset:
           </span>
           {ctCase.windowPresets.map((preset) => {
             const isActive =
@@ -400,7 +400,7 @@ export const CtSliceViewer: React.FC<CtSliceViewerProps> = ({ ctCase }) => {
               <button
                 key={preset.name}
                 onClick={() => handleApplyPreset(preset)}
-                className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
+                className={`px-2 py-0.5 text-xs rounded-lg font-medium transition-all ${
                   isActive
                     ? "bg-purple-600 text-white shadow-md shadow-purple-900/40"
                     : "bg-hospital-800 text-slate-300 hover:bg-hospital-700"
@@ -415,18 +415,18 @@ export const CtSliceViewer: React.FC<CtSliceViewerProps> = ({ ctCase }) => {
       </div>
 
       {/* Main Workspace Grid: Screen (Left) + Console / HUD (Right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 items-start">
         {/* CT Display Canvas (7 cols) */}
         <div className="lg:col-span-7 flex flex-col items-center">
-          <div className="relative rounded-2xl border-2 border-hospital-800 bg-black p-2 shadow-inner overflow-hidden select-none">
+          <div className="relative rounded-xl border border-hospital-800 bg-black p-1.5 shadow-inner overflow-hidden select-none">
             {/* DICOM Corner Overlay HUD */}
-            <div className="absolute top-4 left-4 z-10 font-mono text-[11px] text-teal-400/90 pointer-events-none space-y-0.5">
+            <div className="absolute top-3 left-3 z-10 font-mono text-[10px] text-teal-400/90 pointer-events-none space-y-0.5">
               <div>SLICE: {currentSlice} / {ctCase.totalSlices}</div>
               <div>THICK: {ctCase.sliceThickness}</div>
               <div>MATRIX: 512 x 512</div>
             </div>
 
-            <div className="absolute top-4 right-4 z-10 font-mono text-[11px] text-teal-400/90 text-right pointer-events-none space-y-0.5">
+            <div className="absolute top-3 right-3 z-10 font-mono text-[10px] text-teal-400/90 text-right pointer-events-none space-y-0.5">
               <div>WW: {windowWidth}</div>
               <div>WL: {windowLevel}</div>
               <div>FOV: 250 mm</div>
@@ -434,9 +434,9 @@ export const CtSliceViewer: React.FC<CtSliceViewerProps> = ({ ctCase }) => {
 
             {/* Live Hounsfield Unit (HU) Probe HUD at bottom left */}
             {mouseHU && (
-              <div className="absolute bottom-4 left-4 z-10 rounded-lg border border-teal-500/40 bg-hospital-950/90 px-3 py-1.5 font-mono text-xs text-teal-300 pointer-events-none shadow-lg">
-                <div className="flex items-center gap-2">
-                  <Crosshair className="h-3.5 w-3.5 text-teal-400 animate-spin" />
+              <div className="absolute bottom-3 left-3 z-10 rounded-lg border border-teal-500/40 bg-hospital-950/90 px-2.5 py-1 font-mono text-[11px] text-teal-300 pointer-events-none shadow-lg">
+                <div className="flex items-center gap-1.5">
+                  <Crosshair className="h-3 w-3 text-teal-400 animate-spin" />
                   <span className="font-bold text-white">
                     {mouseHU.hu >= 0 ? `+${mouseHU.hu}` : mouseHU.hu} HU
                   </span>
@@ -448,8 +448,8 @@ export const CtSliceViewer: React.FC<CtSliceViewerProps> = ({ ctCase }) => {
 
             {/* Key Slice Warning indicator */}
             {isKeySlice && (
-              <div className="absolute bottom-4 right-4 z-10 rounded-lg border border-rose-500/50 bg-rose-950/80 px-2.5 py-1 text-[11px] font-bold text-rose-300 pointer-events-none">
-                Vùng tổn thương chính
+              <div className="absolute bottom-3 right-3 z-10 rounded-lg border border-rose-500/50 bg-rose-950/80 px-2 py-0.5 text-[10px] font-bold text-rose-300 pointer-events-none">
+                Tổn thương chính
               </div>
             )}
 
@@ -459,32 +459,32 @@ export const CtSliceViewer: React.FC<CtSliceViewerProps> = ({ ctCase }) => {
               onWheel={handleWheel}
               onMouseMove={handleMouseMove}
               onClick={handleCanvasClick}
-              className={`rounded-xl block w-full max-w-[480px] aspect-square ${
+              className={`rounded-lg block w-full max-w-[460px] aspect-square ${
                 isMeasuring ? "cursor-crosshair" : "cursor-default"
               }`}
             />
           </div>
 
           {/* Interactive Slice Slider Bar */}
-          <div className="w-full mt-4 flex items-center gap-3 px-2">
+          <div className="w-full mt-3 flex items-center gap-2 px-1">
             <button
               onClick={() => setCurrentSlice((p) => Math.max(1, p - 1))}
-              className="p-1.5 rounded-lg bg-hospital-800 text-slate-300 hover:bg-hospital-700"
+              className="p-1 rounded-lg bg-hospital-800 text-slate-300 hover:bg-hospital-700"
               title="Lát cắt trước (Scroll up)"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
 
-            <div className="flex-1 flex flex-col gap-1">
+            <div className="flex-1 flex flex-col gap-0.5">
               <input
                 type="range"
                 min={1}
                 max={ctCase.totalSlices}
                 value={currentSlice}
                 onChange={(e) => setCurrentSlice(Number(e.target.value))}
-                className="w-full h-2 bg-hospital-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                className="w-full h-1.5 bg-hospital-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
               />
-              <div className="flex justify-between text-[11px] text-slate-400 font-mono">
+              <div className="flex justify-between text-[10px] text-slate-400 font-mono">
                 <span>Đỉnh (Cranial)</span>
                 <span className="font-bold text-white">Lát {currentSlice}</span>
                 <span>Đáy (Caudal)</span>
@@ -493,7 +493,7 @@ export const CtSliceViewer: React.FC<CtSliceViewerProps> = ({ ctCase }) => {
 
             <button
               onClick={() => setCurrentSlice((p) => Math.min(ctCase.totalSlices, p + 1))}
-              className="p-1.5 rounded-lg bg-hospital-800 text-slate-300 hover:bg-hospital-700"
+              className="p-1 rounded-lg bg-hospital-800 text-slate-300 hover:bg-hospital-700"
               title="Lát cắt tiếp (Scroll down)"
             >
               <ChevronRight className="h-4 w-4" />
@@ -502,12 +502,12 @@ export const CtSliceViewer: React.FC<CtSliceViewerProps> = ({ ctCase }) => {
         </div>
 
         {/* Right Column: Console Controls, Annotations & Findings (5 cols) */}
-        <div className="lg:col-span-5 space-y-4">
+        <div className="lg:col-span-5 space-y-2.5">
           {/* Workstation Controls Panel */}
-          <div className="rounded-2xl border border-hospital-800 bg-hospital-950/60 p-4 space-y-3">
-            <div className="flex items-center justify-between border-b border-hospital-800 pb-2">
-              <span className="text-xs font-bold text-white uppercase tracking-wider">
-                Công cụ đo lường & hiển thị
+          <div className="rounded-xl border border-hospital-800 bg-hospital-950/60 p-2.5 sm:p-3 space-y-2">
+            <div className="flex items-center justify-between border-b border-hospital-800 pb-1.5">
+              <span className="text-[11px] font-bold text-white uppercase tracking-wider">
+                Công cụ đo lường
               </span>
               <button
                 onClick={() => {
@@ -517,24 +517,24 @@ export const CtSliceViewer: React.FC<CtSliceViewerProps> = ({ ctCase }) => {
                   setZoom(1);
                   setPan({ x: 0, y: 0 });
                 }}
-                className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-white"
+                className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-white"
               >
-                <RotateCcw className="h-3 w-3" /> Reset
+                <RotateCcw className="h-2.5 w-2.5" /> Reset
               </button>
             </div>
 
             {/* Quick Action Toggles */}
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-1.5">
               <button
                 onClick={() => setShowAnnotations(!showAnnotations)}
-                className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold border transition-all ${
+                className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold border transition-all ${
                   showAnnotations
                     ? "bg-rose-500/20 text-rose-300 border-rose-500/30"
                     : "bg-hospital-800 text-slate-400 border-hospital-700 hover:text-white"
                 }`}
               >
-                {showAnnotations ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-                <span>{showAnnotations ? "Ẩn Chú Thích" : "Hiện Chú Thích"}</span>
+                {showAnnotations ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                <span>{showAnnotations ? "Ẩn Điểm Chỉ" : "Hiện Điểm"}</span>
               </button>
 
               <button
@@ -542,21 +542,21 @@ export const CtSliceViewer: React.FC<CtSliceViewerProps> = ({ ctCase }) => {
                   setIsMeasuring(!isMeasuring);
                   if (isMeasuring) setMeasurePoints([]);
                 }}
-                className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold border transition-all ${
+                className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold border transition-all ${
                   isMeasuring
                     ? "bg-sky-500/20 text-sky-300 border-sky-500/30"
                     : "bg-hospital-800 text-slate-400 border-hospital-700 hover:text-white"
                 }`}
               >
-                <Ruler className="h-3.5 w-3.5" />
-                <span>{isMeasuring ? "Đang Đo Thước" : "Thước Đo Caliper"}</span>
+                <Ruler className="h-3 w-3" />
+                <span>{isMeasuring ? "Đang Đo" : "Thước Đo Caliper"}</span>
               </button>
             </div>
 
             {/* Manual Window Width / Level Fine Tuning */}
-            <div className="space-y-2 pt-2 border-t border-hospital-800/60">
-              <div className="flex justify-between text-xs text-slate-300">
-                <span>Window Width (WW):</span>
+            <div className="space-y-1.5 pt-1.5 border-t border-hospital-800/60 text-xs">
+              <div className="flex justify-between text-slate-300">
+                <span>WW (Độ rộng):</span>
                 <span className="font-mono text-teal-400">{windowWidth} HU</span>
               </div>
               <input
@@ -565,11 +565,11 @@ export const CtSliceViewer: React.FC<CtSliceViewerProps> = ({ ctCase }) => {
                 max={3000}
                 value={windowWidth}
                 onChange={(e) => setWindowWidth(Number(e.target.value))}
-                className="w-full h-1.5 bg-hospital-700 rounded-lg appearance-none cursor-pointer accent-teal-400"
+                className="w-full h-1 bg-hospital-700 rounded-lg appearance-none cursor-pointer accent-teal-400"
               />
 
-              <div className="flex justify-between text-xs text-slate-300">
-                <span>Window Level (WL):</span>
+              <div className="flex justify-between text-slate-300">
+                <span>WL (Mức trung tâm):</span>
                 <span className="font-mono text-teal-400">{windowLevel} HU</span>
               </div>
               <input
@@ -578,18 +578,18 @@ export const CtSliceViewer: React.FC<CtSliceViewerProps> = ({ ctCase }) => {
                 max={1000}
                 value={windowLevel}
                 onChange={(e) => setWindowLevel(Number(e.target.value))}
-                className="w-full h-1.5 bg-hospital-700 rounded-lg appearance-none cursor-pointer accent-teal-400"
+                className="w-full h-1 bg-hospital-700 rounded-lg appearance-none cursor-pointer accent-teal-400"
               />
             </div>
           </div>
 
           {/* Jump to Key Findings on Slices */}
-          <div className="rounded-2xl border border-hospital-800 bg-hospital-950/60 p-4 space-y-2.5">
-            <div className="flex items-center gap-2 text-xs font-bold text-white">
-              <Crosshair className="h-4 w-4 text-rose-400" />
-              <span>Các Điểm Tổn Thương Cần Khảo Sát:</span>
+          <div className="rounded-xl border border-hospital-800 bg-hospital-950/60 p-2.5 sm:p-3 space-y-1.5">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-white">
+              <Crosshair className="h-3.5 w-3.5 text-rose-400" />
+              <span>Điểm Tổn Thương Cần Khảo Sát:</span>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               {ctCase.annotations.map((ann) => {
                 const isCurrent = currentSlice === ann.sliceIndex;
                 return (
@@ -599,14 +599,14 @@ export const CtSliceViewer: React.FC<CtSliceViewerProps> = ({ ctCase }) => {
                       setCurrentSlice(ann.sliceIndex);
                       setActiveAnnotation(ann);
                     }}
-                    className={`w-full flex items-center justify-between p-2 rounded-xl text-left text-xs border transition-all ${
+                    className={`w-full flex items-center justify-between p-1.5 px-2 rounded-lg text-left text-xs border transition-all ${
                       isCurrent
                         ? "bg-rose-950/40 border-rose-500/50 text-rose-200"
                         : "bg-hospital-900/60 border-hospital-800 text-slate-300 hover:border-hospital-700"
                     }`}
                   >
-                    <span className="font-medium">{ann.label}</span>
-                    <span className="font-mono text-[11px] text-slate-400">
+                    <span className="font-medium truncate mr-2">{ann.label}</span>
+                    <span className="font-mono text-[10px] text-slate-400 shrink-0">
                       Lát {ann.sliceIndex} ({ann.expectedHU >= 0 ? `+${ann.expectedHU}` : ann.expectedHU} HU)
                     </span>
                   </button>
@@ -616,16 +616,16 @@ export const CtSliceViewer: React.FC<CtSliceViewerProps> = ({ ctCase }) => {
           </div>
 
           {/* Pathology Interpretation & Management */}
-          <div className="rounded-2xl border border-purple-900/30 bg-purple-950/20 p-4 space-y-3">
-            <div className="flex items-center gap-2 text-xs font-bold text-purple-300">
-              <Info className="h-4 w-4" />
-              <span>Kết Luận Hình Ảnh & Xử Trí Khẩn Cấp</span>
+          <div className="rounded-xl border border-purple-900/30 bg-purple-950/20 p-2.5 sm:p-3 space-y-2">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-purple-300">
+              <Info className="h-3.5 w-3.5" />
+              <span>Kết Luận & Xử Trí Khẩn Cấp</span>
             </div>
             <p className="text-xs text-slate-200 leading-relaxed">
               {ctCase.pathologySummary}
             </p>
-            <div className="rounded-xl border border-hospital-800 bg-hospital-950/80 p-3 text-xs leading-relaxed text-amber-200">
-              <span className="font-bold text-amber-400">⚡ Hành động lâm sàng: </span>
+            <div className="rounded-lg border border-hospital-800 bg-hospital-950/80 p-2 text-xs leading-relaxed text-amber-200">
+              <span className="font-bold text-amber-400">⚡ Hành động: </span>
               {ctCase.clinicalAction}
             </div>
           </div>

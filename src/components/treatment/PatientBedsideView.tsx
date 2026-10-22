@@ -79,23 +79,23 @@ export const PatientBedsideView: React.FC<PatientBedsideViewProps> = ({
   const appInfo = getAppearanceBadge(profile.appearance);
 
   return (
-    <div className="rounded-3xl border border-hospital-800 bg-hospital-900/90 p-5 backdrop-blur shadow-xl space-y-4">
+    <div className="rounded-2xl border border-hospital-800 bg-hospital-900/90 p-3 sm:p-4 backdrop-blur shadow-lg space-y-2.5">
       {/* Patient Header & Golden Hour Countdown */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-hospital-800 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-hospital-800 text-hospital-300 border border-hospital-700">
-            <User className="h-6 w-6" />
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-hospital-800 pb-2.5">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-hospital-800 text-hospital-300 border border-hospital-700">
+            <User className="h-4 w-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-lg font-bold text-white">{profile.name}</h3>
+              <h3 className="text-sm sm:text-base font-bold text-white">{profile.name}</h3>
               <span className="text-xs text-slate-400">
-                ({profile.age} tuổi • {profile.gender === "male" ? "Nam" : "Nữ"} • {profile.weightKg} kg)
+                ({profile.age}t • {profile.gender === "male" ? "Nam" : "Nữ"} • {profile.weightKg}kg)
               </span>
             </div>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-2 mt-0.5">
               <span
-                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${getAcuityColor(
+                className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${getAcuityColor(
                   profile.triageAcuity
                 )}`}
               >
@@ -107,18 +107,18 @@ export const PatientBedsideView: React.FC<PatientBedsideViewProps> = ({
 
         {/* Golden Hour Countdown Timer */}
         <div
-          className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl border ${
+          className={`flex items-center gap-2.5 px-3 py-1.5 rounded-xl border ${
             isTimeCritical
               ? "border-rose-500 bg-rose-950/60 text-rose-300 animate-pulse"
               : "border-hospital-700 bg-hospital-950/80 text-slate-200"
           }`}
         >
-          <Clock className={`h-5 w-5 ${isTimeCritical ? "text-rose-400" : "text-teal-400"}`} />
+          <Clock className={`h-4 w-4 ${isTimeCritical ? "text-rose-400" : "text-teal-400"}`} />
           <div>
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
-              Thời Gian Vàng Cấp Cứu
+            <div className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold">
+              Thời Gian Vàng
             </div>
-            <div className="font-mono text-xl font-black">
+            <div className="font-mono text-base sm:text-lg font-black leading-none">
               {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
             </div>
           </div>
@@ -126,45 +126,45 @@ export const PatientBedsideView: React.FC<PatientBedsideViewProps> = ({
       </div>
 
       {/* Chief Complaint Quote Box */}
-      <div className="rounded-2xl border border-hospital-800 bg-hospital-950/60 p-4">
-        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-          Lý do vào viện (Chief Complaint):
-        </div>
-        <p className="text-sm font-medium text-amber-200 italic">
+      <div className="rounded-xl border border-hospital-800 bg-hospital-950/60 p-2.5 text-xs">
+        <span className="font-semibold text-slate-400 uppercase tracking-wider text-[11px] mr-1.5">
+          Lý do vào viện:
+        </span>
+        <span className="font-medium text-amber-200 italic">
           "{profile.chiefComplaint}"
-        </p>
+        </span>
       </div>
 
       {/* Patient Physical Presentation & Warning Details */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
         {/* Appearance Banner */}
-        <div className={`p-3 rounded-xl border flex items-center gap-2.5 ${appInfo.bg}`}>
+        <div className={`p-2 rounded-xl border flex items-center gap-2 ${appInfo.bg}`}>
           {appInfo.icon}
-          <div>
-            <span className="font-bold text-white block">Tri giác & Dáng vẻ:</span>
-            <span>{appInfo.label}</span>
+          <div className="min-w-0">
+            <span className="font-bold text-white text-[11px]">Tri giác & Dáng vẻ: </span>
+            <span className="text-[11px]">{appInfo.label}</span>
           </div>
         </div>
 
         {/* Allergy Alert */}
-        <div className="p-3 rounded-xl border border-rose-900/40 bg-rose-950/20 text-rose-300 flex items-start gap-2.5">
-          <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-rose-400" />
-          <div>
-            <span className="font-bold text-white block">Tiền sử Dị ứng:</span>
-            <span className="font-medium text-rose-200">
-              {profile.allergies.length > 0 ? profile.allergies.join(", ") : "Chưa ghi nhận dị ứng"}
+        <div className="p-2 rounded-xl border border-rose-900/40 bg-rose-950/20 text-rose-300 flex items-center gap-2">
+          <ShieldAlert className="h-4 w-4 shrink-0 text-rose-400" />
+          <div className="min-w-0">
+            <span className="font-bold text-white text-[11px]">Dị ứng: </span>
+            <span className="font-medium text-rose-200 text-[11px]">
+              {profile.allergies.length > 0 ? profile.allergies.join(", ") : "Chưa ghi nhận"}
             </span>
           </div>
         </div>
       </div>
 
       {/* Past Medical History Badges */}
-      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400 pt-1">
-        <span className="font-semibold text-slate-300">Tiền căn bệnh lý:</span>
+      <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-400">
+        <span className="font-semibold text-slate-300 text-[11px]">Tiền căn:</span>
         {profile.pastMedicalHistory.map((item, idx) => (
           <span
             key={idx}
-            className="rounded-lg border border-hospital-800 bg-hospital-800/60 px-2.5 py-1 text-slate-300"
+            className="rounded-md border border-hospital-800 bg-hospital-800/60 px-2 py-0.5 text-[11px] text-slate-300"
           >
             {item}
           </span>
