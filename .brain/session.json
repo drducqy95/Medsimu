@@ -1,0 +1,24 @@
+{
+  "session_info": {
+    "started_at": "2026-10-21T18:39:15.836125",
+    "last_active": "2026-10-22T07:35:00.000000"
+  },
+  "working_on": {
+    "feature": "Bug Fix: Mismatch tiêu đề tab tiêu chuẩn & Triệt tiêu lặp badge trên dải nhịp chuẩn Lead II",
+    "current_plan_path": "plans/261022-0640-ecg-clinical-expansion/",
+    "current_phase": "bug-fix-verification",
+    "status": "completed"
+  },
+  "pending_tasks": [],
+  "recent_changes": [
+    "Fixed Criteria Filter Tab Titles Mismatch: Thay thế greedy keyword matcher bằng bộ trích xuất tiêu đề thông minh từ format chuỗi thực tế, loại bỏ việc gán nhãn sai từ bệnh lý khác sang Nhịp Xoang Bình Thường",
+    "Fixed Badge Duplication on Rhythm Strip: Hoist itemsToRender ra ngoài vòng lặp candidateCycles và tích hợp cơ chế deduplication Set<string>(renderedLabels), đảm bảo mỗi nhãn tiêu chuẩn chỉ xuất hiện đúng 1 lần tại nhịp tim trung tâm",
+    "Refined NSR Clinical Criteria & Wave Mapping: Cập nhật chuẩn y khoa 5 tiêu chuẩn vàng cho Nhịp Xoang Bình Thường với ánh xạ 1-1 chính xác vào các sóng P (DII, aVR), PR, R-R, QRS (V1) và ST/T (II)",
+    "Verified: 14/14 automated tests passing (npm test), 0 TypeScript compilation errors (npx tsc --noEmit), Next.js production build succeeded and dev server running smoothly"
+  ],
+  "context_notes": [
+    "9 Clinical Systems: 1. Sinus Node, 2. Acute Coronary (Anatomic regions), 3. Conduction Blocks, 4. Supraventricular & WPW, 5. Ventricular & Arrest, 6. Chamber Hypertrophy, 7. Channelopathies, 8. Cardiopulmonary & Pericardial, 9. Metabolic & Toxicology",
+    "Every pathology has gold standard criteria, waveform annotations, 7-step reading assistance, emergency protocol with drug doses, and red flags",
+    "Safety Guard Red Flags catch critical contraindications: Nitrates in RV infarction, AV blockers in AFib+WPW, Calcium in Digoxin toxicity, Defibrillation in Asystole, Amiodarone in Torsades de Pointes"
+  ]
+}

@@ -1,0 +1,127 @@
+import { QuizQuestion, MedicalFlashcard } from "@/domain/academy/types";
+
+export const CLINICAL_QUIZZES: QuizQuestion[] = [
+  {
+    id: "quiz_stemi_01",
+    topicId: "stemi",
+    specialty: "cardiology",
+    difficulty: "intermediate",
+    vignette: "Bệnh nhân nam 58 tuổi vào viện vì đau thắt ngực sau xương ức 45 phút, lan lên hàm dưới và cánh tay trái, vã mồ hôi. Điện tâm đồ ghi nhận ST chênh lên 3mm ở DII, DIII, aVF và ST chênh xuống ở DI, aVL. Huyết áp đo được 85/50 mmHg, nhịp tim 52 lần/phút.",
+    question: "Xử trí nào dưới đây là CHỐNG CHỈ ĐỊNH TUYỆT ĐỐI cho bệnh nhân này?",
+    options: [
+      "Cho nhai 300mg Aspirin ngay lập tức",
+      "Ngậm dưới lưỡi 1 viên Nitroglycerin 0.5mg để giảm đau ngực",
+      "Tiêm tĩnh mạch chậm 1000ml Natri Clorid 0.9%",
+      "Mắc thêm các chuyển đạo V3R - V6R để khảo sát thất phải",
+    ],
+    correctOptionIndex: 1,
+    explanation: {
+      whyCorrect: "Bệnh nhân có STEMI thành dưới (ST chênh lên DII, DIII, aVF) kèm tụt huyết áp và nhịp chậm, rất điển hình của nhồi máu cơ tim thất phải kèm theo. Thất phải bị suy giảm sức co bóp phụ thuộc hoàn toàn vào áp lực đổ đầy (tiền tải). Dùng Nitroglycerin gây giãn tĩnh mạch làm tụt tiền tải ồ ạt, dẫn đến sốc tim trụy mạch tử vong!",
+      whyOthersIncorrect: "Nhai Aspirin 300mg là bắt buộc. Mắc thêm V3R-V6R (đặc biệt V4R) là tiêu chuẩn vàng chẩn đoán nhồi máu thất phải. Bù dịch NaCl 0.9% là chỉ định điều trị đúng đắn để nâng tiền tải cho thất phải.",
+      clinicalPearl: "Trong STEMI thành dưới (DII, DIII, aVF), luôn luôn đo chuyển đạo V4R và kiểm tra huyết áp trước khi nghĩ đến việc cho bất kỳ liều Nitrate nào!",
+    },
+  },
+  {
+    id: "quiz_anaphylaxis_01",
+    topicId: "anaphylaxis",
+    specialty: "emergency",
+    difficulty: "beginner",
+    vignette: "Bệnh nhân nữ 26 tuổi đang được tiêm kháng sinh Ceftriaxon điều trị viêm bể thận. Sau khi tiêm 3 phút, bệnh nhân kêu nghẹn họng khó thở, khàn tiếng, da nổi mày đay đỏ rực toàn thân, huyết áp tụt còn 75/40 mmHg, mạch 130 lần/phút.",
+    question: "Hành động cấp cứu đầu tiên quan trọng nhất cần thực hiện ngay lập tức là gì?",
+    options: [
+      "Tiêm tĩnh mạch 1 ống Methylprednisolon 40mg",
+      "Tiêm bắp 0.5mg Adrenalin (1/2 ống 1mg) ở mặt trước ngoài đùi",
+      "Tiêm tĩnh mạch chậm 1 ống Diphenhydramin 10mg",
+      "Đặt nội khí quản ngay lập tức",
+    ],
+    correctOptionIndex: 1,
+    explanation: {
+      whyCorrect: "Theo phác đồ Bộ Y Tế và quốc tế, Adrenalin tiêm bắp là thuốc đầu tay DUY NHẤT có tác dụng co mạch nâng huyết áp và giãn cơ trơn phế quản dập tắt phù nề thanh quản trong vòng 3-5 phút. Mỗi giây chần chừ đều làm tăng nguy cơ phù thanh môn bít tắc đường thở tử vong.",
+      whyOthersIncorrect: "Methylprednisolon và Diphenhydramin chỉ là thuốc hỗ trợ ở giai đoạn sau (cần 2-4 tiếng mới có tác dụng tế bào), tuyệt đối không thể thay thế Adrenalin. Đặt nội khí quản chỉ thực hiện nếu sau tiêm Adrenalin bệnh nhân vẫn suy hô hấp đe dọa ngừng thở.",
+      clinicalPearl: "Trong sốc phản vệ: Adrenalin tiêm bắp trước - Mọi thứ khác tính sau!",
+    },
+  },
+  {
+    id: "quiz_asthma_01",
+    topicId: "acute_asthma",
+    specialty: "pulmonology",
+    difficulty: "advanced",
+    vignette: "Bệnh nhân nam 22 tuổi tiền sử hen phế quản vào cấp cứu vì khó thở dữ dội. Bệnh nhân ngồi chồm ra trước, vã mồ hôi, thở 34 lần/phút. Nghe phổi thấy hoàn toàn im lặng, không còn nghe thấy tiếng ran hay tiếng thở phế nang (phổi câm / Silent Chest). SpO2 84%.",
+    question: "Dấu hiệu 'Phổi im lặng' (Silent Chest) ở bệnh nhân này thể hiện điều gì?",
+    options: [
+      "Bệnh nhân đã đáp ứng tốt với thuốc và đường thở đã thông thoáng trở lại",
+      "Tình trạng tắc nghẽn đường thở cực kỳ nghiêm trọng, lưu lượng khí lưu thông gần bằng 0, nguy cơ ngừng tuần hoàn hô hấp sắp xảy ra",
+      "Bệnh nhân bị tràn dịch màng phổi lượng nhiều chèn ép",
+      "Phản xạ co thắt phế quản đã tự hết",
+    ],
+    correctOptionIndex: 1,
+    explanation: {
+      whyCorrect: "Để phát ra tiếng ran rít, ran ngáy thì không khí bắt buộc phải di chuyển qua các phế quản bị hẹp. Khi đường thở bị co thắt tắc nghẽn đến mức cực hạn hoặc cơ hô hấp kiệt sức hoàn toàn, không khí không còn di chuyển được nữa -> Nghe phổi im lặng hoàn toàn. Đây là dấu hiệu báo trước ngừng thở tử vong trong vài phút!",
+      whyOthersIncorrect: "Đây không phải là dấu hiệu cải thiện mà là dấu hiệu nguy kịch tối khẩn cấp cần can thiệp đặt nội khí quản và hồi sức tích cực.",
+      clinicalPearl: "Trong cơn hen phế quản, ran rít to chưa chắc đã đáng sợ bằng một lồng ngực hoàn toàn im lặng!",
+    },
+  },
+  {
+    id: "quiz_dka_01",
+    topicId: "dka",
+    specialty: "endocrinology",
+    difficulty: "intermediate",
+    vignette: "Bệnh nhân nữ 19 tuổi đái tháo đường Type 1 nhập viện vì lơ mơ, thở nhanh sâu kiểu Kussmaul, mùi hơi thở táo thối (mùi ceton). Xét nghiệm: Đường huyết 420 mg/dL, pH máu 7.15, HCO3- 9 mEq/L, Kali máu 3.1 mmol/L.",
+    question: "Bước xử trí ĐÚNG ĐẮN NHẤT tại thời điểm này là gì?",
+    options: [
+      "Tiêm tĩnh mạch bolus ngay 10 đơn vị Insulin Regular rồi truyền liên tục",
+      "Bù dịch NaCl 0.9% và BÙ KALI MÁU trước, TRÌ HOÃN truyền Insulin cho đến khi Kali >= 3.3 mmol/L",
+      "Tiêm Natri Bicarbonat 1.4% để nâng pH máu lên ngay",
+      "Cho bệnh nhân uống nước đường để tránh hạ đường huyết",
+    ],
+    correctOptionIndex: 1,
+    explanation: {
+      whyCorrect: "Insulin kích hoạt bơm Na+/K+ ATPase đẩy Kali từ máu vào trong tế bào. Nếu truyền Insulin khi Kali máu đang thấp (< 3.3 mmol/L), nồng độ Kali ngoại bào sẽ tụt dốc thảm hại, gây rung thất, ngừng tim và yếu liệt cơ hô hấp. Phác đồ chuẩn yêu cầu bù Kali qua dịch truyền trước cho đến khi Kali >= 3.3 mmol/L mới bắt đầu truyền Insulin.",
+      whyOthersIncorrect: "Truyền Insulin ngay lập tức khi K+ = 3.1 mmol/L là sai lầm chết người. Bicarbonat chỉ cân nhắc khi pH < 6.9.",
+      clinicalPearl: "Nguyên tắc vàng DKA: Nước là số 1, Kali là số 2, Insulin chỉ là số 3!",
+    },
+  },
+];
+
+export const MEDICAL_FLASHCARDS: MedicalFlashcard[] = [
+  {
+    id: "fc_01",
+    specialty: "cardiology",
+    category: "STEMI",
+    front: "Tiêu chuẩn chẩn đoán điện tâm đồ của Nhồi máu cơ tim ST chênh lên (STEMI) thành dưới là gì?",
+    back: "ST chênh lên dạng vòm >= 1mm ở ít nhất 2 trong 3 chuyển đạo DII, DIII, aVF. Thường đi kèm hình ảnh soi gương ST chênh xuống ở DI và aVL.",
+    mnemonic: "DII, DIII, aVF = 'Bottom of the heart' (Động mạch vành phải RCA cấp máu)",
+  },
+  {
+    id: "fc_02",
+    specialty: "emergency",
+    category: "Anaphylaxis",
+    front: "Vị trí tiêm và liều lượng khởi đầu chuẩn của Adrenalin trong cấp cứu sốc phản vệ người lớn là gì?",
+    back: "0.5mg (1/2 ống 1mg/1ml) TIÊM BẮP ở mặt trước ngoài đùi (cơ tứ đầu đùi). Nhắc lại mỗi 3-5 phút nếu huyết áp chưa cải thiện.",
+    mnemonic: "Luôn tiêm BẮP ĐÙI - Tuyệt đối không tiêm mạch máu liều bolus khi còn mạch!",
+  },
+  {
+    id: "fc_03",
+    specialty: "radiology",
+    category: "Ultrasound",
+    front: "Quy tắc BART trong siêu âm Doppler màu là gì?",
+    back: "BART = Blue Away, Red Towards. Dòng máu chảy hướng về phía đầu dò siêu âm có màu ĐỎ; dòng máu chảy rời xa đầu dò có màu XANH.",
+    mnemonic: "Blue Away, Red Towards",
+  },
+  {
+    id: "fc_04",
+    specialty: "radiology",
+    category: "CT-Scan",
+    front: "Thang đậm độ Hounsfield (HU) của Nước, Khí, Xương và Máu tụ cấp tính trên phim CT là bao nhiêu?",
+    back: "• Nước tinh khiết: 0 HU\n• Không khí: -1000 HU\n• Mỡ: -100 HU\n• Máu tụ cấp tính: +60 đến +80 HU\n• Xương đặc: > +400 đến +1000 HU",
+    mnemonic: "Khí đen (-1000) -> Mỡ (-100) -> Nước (0) -> Máu (+70) -> Xương trắng (+1000)",
+  },
+  {
+    id: "fc_05",
+    specialty: "pulmonology",
+    category: "POCUS Lung",
+    front: "Dấu hiệu 'Mã vạch' (Barcode / Stratosphere Sign) trên siêu âm M-Mode màng phổi biểu hiện bệnh lý gì?",
+    back: "Tràn khí màng phổi (Pneumothorax). Không khí ngăn cách lá tạng và lá thành làm mất chuyển động trượt màng phổi (Lung Sliding), toàn bộ màn hình M-Mode chỉ còn các đường sọc ngang bất động.",
+    mnemonic: "Bình thường = Dấu bờ biển (Seashore). Tràn khí = Dấu mã vạch (Barcode).",
+  },
+];

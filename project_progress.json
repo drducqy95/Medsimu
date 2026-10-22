@@ -1,0 +1,127 @@
+{
+  "meta": {
+    "project_name": "GameYhoc",
+    "last_updated": "2026-10-22T07:35:00.000000",
+    "overall_progress_percent": 100,
+    "current_phase": "All 6 Phases Completed & Display Bug Fix Verified (Criteria Filter Titles + Anti-Duplication Rhythm Strip)",
+    "status": "COMPLETED"
+  },
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "MedSim: 3-Module Architecture & Paraclinical Simulators Priority",
+      "status": "COMPLETED",
+      "tasks": [
+        {
+          "id": "T1.1",
+          "desc": "Phase 01 - Setup & 3-Module Core Infrastructure",
+          "status": "DONE"
+        },
+        {
+          "id": "T1.2",
+          "desc": "Phase 02 - Module 1: Học Tập Kiến Thức (Medical Academy)",
+          "status": "DONE"
+        },
+        {
+          "id": "T1.3",
+          "desc": "Phase 03 - Module 2A: Mô Phỏng Điện Tâm Đồ (ECG) & X-Quang",
+          "status": "DONE"
+        },
+        {
+          "id": "T1.4",
+          "desc": "Phase 04 - Module 2B: Mô Phỏng Siêu Âm Đầu Dò 3D Động & Lát Cắt CT",
+          "status": "DONE"
+        },
+        {
+          "id": "T1.5",
+          "desc": "Phase 05 - Module 3: Mô Phỏng Điều Trị Lâm Sàng (Treatment & ER)",
+          "status": "DONE"
+        },
+        {
+          "id": "T1.6",
+          "desc": "Phase 06 - Gamification, Debriefing, Career Progression & Verification",
+          "status": "DONE"
+        }
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Real Clinical Ultrasound CD Integration & Realistic 12-Lead Pink Paper ECG",
+      "status": "COMPLETED",
+      "tasks": [
+        {
+          "id": "T2.1",
+          "desc": "Phase 01 - Ingestion & Storage: Tích Hợp Kho Ảnh Thật Viable Ultrasound Vào SQLite",
+          "status": "DONE"
+        },
+        {
+          "id": "T2.2",
+          "desc": "Phase 02 - Realistic Pink ECG Paper: Giấy Kẻ Điện Tim Màu Hồng 12 Đạo Trình Chuẩn",
+          "status": "DONE"
+        },
+        {
+          "id": "T2.3",
+          "desc": "Phase 03 - Real Ultrasound Workstation: Bộ Mô Phỏng Siêu Âm Đầu Dò 3D Gắn Ảnh Thật",
+          "status": "DONE"
+        },
+        {
+          "id": "T2.4",
+          "desc": "Phase 04 - Bedside & Clinical Case Integration: Tích Hợp Vào Buồng Cấp Cứu Module 3",
+          "status": "DONE"
+        },
+        {
+          "id": "T2.5",
+          "desc": "Phase 05 - Verification, Export/Print & Testing",
+          "status": "DONE"
+        },
+        {
+          "id": "T2.6",
+          "desc": "Phase 06 - Authoritative Diagnostic Criteria & Physical Waveform-Mapped Dynamic Annotations (Ánh xạ trực tiếp tiêu chuẩn lên đúng vị trí sóng điện tim)",
+          "status": "DONE"
+        },
+        {
+          "id": "T2.7",
+          "desc": "Phase 07 - Individual Criteria Isolation & Anti-Collision De-Overlapping Layout (Lọc chiếu riêng từng tiêu chuẩn & thuật toán triệt tiêu chồng lấp sóng)",
+          "status": "DONE"
+        }
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "M3: Hoàn Thiện Toàn Diện ECG Lâm Sàng - 9 Hệ Thống Bệnh Học, Tiêu Chuẩn Vàng, Lưu Đồ Tiếp Cận, Xử Trí Cấp Cứu & Ca Bệnh Module 3",
+      "status": "COMPLETED",
+      "tasks": [
+        {
+          "id": "T3.1",
+          "desc": "Phase 01 - Database Schema & 9-System Pathology Expansion: Mở rộng CSDL & nạp đầy đủ 31 bệnh lý ECG theo 9 hệ thống chuẩn AHA/ESC",
+          "status": "DONE"
+        },
+        {
+          "id": "T3.2",
+          "desc": "Phase 02 - Waveform Mathematical Generators & Dynamic Annotations: Sinh sóng toán học Gaussian cho các bệnh lý mới trong từng hệ thống & ánh xạ tiêu chuẩn lên 12 chuyển đạo",
+          "status": "DONE"
+        },
+        {
+          "id": "T3.3",
+          "desc": "Phase 03 - Clinical Approach & Emergency Management Engine: Lõi nghiệp vụ xử trí cấp cứu, danh mục thuốc, cạm bẫy lâm sàng & quy trình tiếp cận 7 bước theo hệ thống",
+          "status": "DONE"
+        },
+        {
+          "id": "T3.4",
+          "desc": "Phase 04 - Two-Level System Navigation & Interactive Clinical UI: Điều hướng phân nhóm 9 hệ thống, bảng cảnh báo đỏ và trợ lý 7 bước trên bản in giấy hồng",
+          "status": "DONE"
+        },
+        {
+          "id": "T3.5",
+          "desc": "Phase 05 - Clinical Patient Cases & Module 3 ER Ward Sync: Kết nối hồ sơ ca bệnh mẫu có sinh hiệu, men tim & chuyển vào Buồng Cấp Cứu Module 3",
+          "status": "DONE"
+        },
+        {
+          "id": "T3.6",
+          "desc": "Phase 06 - Verification, Automated Testing & Documentation: Bộ kiểm thử tự động toàn diện 9 hệ thống, xác minh chuẩn y khoa & hoàn tất tài liệu",
+          "status": "DONE"
+        }
+      ]
+    }
+  ]
+}
