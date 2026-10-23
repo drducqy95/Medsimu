@@ -936,6 +936,7 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
           y1?: number;
           y2?: number;
           isVerticalDimension?: boolean;
+          isComparisonBadge?: boolean;
           displayText: string;
         }
 
@@ -1425,7 +1426,7 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
                 ? `✓ R-R ngắn dần trước nhát rớt: ${deltaMs1}ms → ${deltaMs2}ms (QRS hẹp ${metrics.qrsDurationMs || 88}ms)`
                 : `✓ R-R: ${deltaMs1}ms → ${deltaMs2}ms`;
             } else {
-              const isRegular = diffMs <= 160 && rhythm !== "atrial_fibrillation";
+              const isRegular = diffMs <= 160 && rhythm !== "atrial_fibrillation" && rhythm !== "av_block_mobitz_1";
               compText = isRegular
                 ? isRhythmStrip
                   ? `✓ Đều đặn: R-R₁ = R-R₂ = ${deltaMs1}ms (${bpm} bpm)`
@@ -1449,6 +1450,7 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
               isTop: true,
               level: 0,
               isInterval: false,
+              isComparisonBadge: true,
               displayText: compText,
             });
 
@@ -1896,6 +1898,37 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
 
         // Render each resolved item
         for (const item of itemsToRender) {
+          if (item.isComparisonBadge) {
+            ctx.save();
+            ctx.font = "bold 8px monospace";
+            const pillW = item.pillW;
+            const pillH = item.pillH || 14;
+            const pillX = Math.max(traceStart + 4, Math.min(leadEndX - pillW - 4, item.targetX - pillW / 2));
+            const pillY = item.targetY;
+
+            const isMobitz = rhythm === "av_block_mobitz_1";
+            const isRegular = item.displayText.includes("✓");
+            ctx.fillStyle = isMobitz
+              ? "rgba(15, 23, 42, 0.94)"
+              : isRegular
+              ? "rgba(6, 78, 59, 0.94)"
+              : "rgba(136, 19, 55, 0.94)";
+
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(pillX, pillY, pillW, pillH, 3);
+            else ctx.rect(pillX, pillY, pillW, pillH);
+            ctx.fill();
+
+            ctx.strokeStyle = isMobitz ? "#d97706" : isRegular ? "#10b981" : "#f43f5e";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText(item.displayText, pillX + 4, pillY + 10);
+            ctx.restore();
+            continue;
+          }
+
           if (item.isInterval && item.x1 !== undefined && item.x2 !== undefined) {
             ctx.save();
             const col = item.ann.color || "#d97706";
@@ -2135,47 +2168,6 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
             ctx.fillStyle = "#ffffff";
             ctx.font = "bold 8.5px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
             ctx.fillText(item.displayText, pillX + 4, pillY + 10);
-            ctx.restore();
-          }
-        }
-
-        // Nếu là dải nhịp Lead II kéo dài và có đủ 2 đoạn liên tiếp R-R1 và R-R2:
-        // Vẽ badge đối chiếu so sánh lâm sàng tại điểm nối R2 (Junction) (ngoại trừ Mobitz 1 đã có badge chuyên sâu)
-        if (isRhythmStrip && rhythm !== "av_block_mobitz_1") {
-          const rrItems = itemsToRender.filter((it) => it.isInterval && it.ann.waveComponent === "RR");
-          if (rrItems.length >= 2) {
-            const it1 = rrItems[0];
-            const it2 = rrItems[1];
-            const junctionX = it1.x2 ?? it2.x1 ?? (it1.targetX + it2.targetX) / 2;
-            const deltaMs1 = Math.round((((it1.x2 || 0) - (it1.x1 || 0)) / pixelsPerSecond) * 1000);
-            const deltaMs2 = Math.round((((it2.x2 || 0) - (it2.x1 || 0)) / pixelsPerSecond) * 1000);
-            const diffMs = Math.abs(deltaMs1 - deltaMs2);
-            const isRegular = diffMs <= 160;
-
-            const compText = isRegular
-              ? `✓ Đều đặn: R-R₁ = R-R₂ = ${deltaMs1}ms (${bpm} bpm)`
-              : `✕ Loạn nhịp: ΔRR = ${diffMs}ms`;
-
-            ctx.save();
-            ctx.font = "bold 8px monospace";
-            const ctw = ctx.measureText(compText).width;
-            const cPillW = ctw + 12;
-            const cPillH = 14;
-            const cPillX = Math.max(traceStart + 4, Math.min(leadEndX - cPillW - 4, junctionX - cPillW / 2));
-            const cPillY = it1.targetY - 18;
-
-            ctx.fillStyle = isRegular ? "rgba(6, 78, 59, 0.94)" : "rgba(136, 19, 55, 0.94)";
-            ctx.beginPath();
-            if (ctx.roundRect) ctx.roundRect(cPillX, cPillY, cPillW, cPillH, 3);
-            else ctx.rect(cPillX, cPillY, cPillW, cPillH);
-            ctx.fill();
-
-            ctx.strokeStyle = isRegular ? "#10b981" : "#f43f5e";
-            ctx.lineWidth = 1;
-            ctx.stroke();
-
-            ctx.fillStyle = "#ffffff";
-            ctx.fillText(compText, cPillX + 6, cPillY + 10);
             ctx.restore();
           }
         }

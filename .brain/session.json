@@ -1,7 +1,7 @@
 {
   "session_info": {
     "started_at": "2026-10-21T18:39:15.836125",
-    "last_active": "2026-10-22T16:45:50.601443"
+    "last_active": "2026-10-23T07:44:09.558834"
   },
   "working_on": {
     "feature": "Bug Fix: Mismatch tiêu đề tab tiêu chuẩn & Triệt tiêu lặp badge trên dải nhịp chuẩn Lead II",
@@ -22,6 +22,15 @@
         ".next"
       ],
       "error_id": "ERR_0003"
+    },
+    {
+      "type": "bugfix",
+      "description": "RealisticPinkEcgPaper / Canvas RR Caliper Engine: Ghost mid-air pinpoint dot, leader line, and duplicate comparison badge on rhythm strip",
+      "files": [
+        "src/components/simulators/ecg/RealisticPinkEcgPaper.tsx",
+        "tests/physical_wave_peak_caliper.test.js"
+      ],
+      "error_id": "ERR_0004"
     }
   ],
   "context_notes": [

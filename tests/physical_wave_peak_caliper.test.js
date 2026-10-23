@@ -95,3 +95,28 @@ test("M20 - Phase 03: Badge Centering & Vertical Clearance Anti-Collision", () =
     "Caliper engine must label dropped beat pause when deltaMs > 1300ms in Mobitz I"
   );
 });
+
+test("M20 - Phase 04: Elimination of Duplicate Comparison Badge & Floating Pinpoint Dots", () => {
+  const filePath = path.join(process.cwd(), "src/components/simulators/ecg/RealisticPinkEcgPaper.tsx");
+  const content = fs.readFileSync(filePath, "utf-8");
+
+  // 1. Kiểm tra cờ isComparisonBadge trong RenderItem
+  assert.ok(
+    content.includes("isComparisonBadge?: boolean;"),
+    "RenderItem must define isComparisonBadge flag"
+  );
+
+  // 2. Kiểm tra nhánh vẽ chuyên dụng không sinh pinpoint dot hay leader line giữa không trung
+  assert.ok(
+    content.includes("if (item.isComparisonBadge) {") &&
+    content.includes("item.displayText") &&
+    content.includes("continue;"),
+    "Dedicated comparison badge renderer must render header pill directly and skip leader lines"
+  );
+
+  // 3. Kiểm tra triệt tiêu hoàn toàn khối vẽ đè cũ ở cuối lead
+  assert.ok(
+    !content.includes("junctionX - cPillW / 2") && !content.includes("cPillY = it1.targetY - 18"),
+    "Legacy duplicate badge rendering block must be completely removed to eliminate double-text artifact"
+  );
+});
