@@ -1,9 +1,9 @@
 {
   "meta": {
     "project_name": "GameYhoc",
-    "last_updated": "2026-10-23T06:55:00.000000",
+    "last_updated": "2026-10-23T07:25:00.000000",
     "overall_progress_percent": 100,
-    "current_phase": "Milestone M19 Completed: Comprehensive Wave Extremum Pinpoint & Consecutive RR Caliper Synchronization Across All 12 Leads (Dò Cực Trị Sóng R Chính Xác Mọi Tần Số Tim, Chấm Định Vị Target Pinpoint Dot Tâm Trắng, Thước Kép Liên Tiếp R1->R2->R3 Nối Liền Trên 12 Chuyển Đạo & Chuẩn Hóa Toán Học Wenckebach)",
+    "current_phase": "Milestone M20 Completed: Physical Wave Peak Detection Engine & 12-Lead Wenckebach Precision Caliper Mapping (Loại Bỏ Lưới Lý Thuyết 1000ms, Lấy Mẫu Đỉnh Sóng Trực Tiếp 500Hz, Ghim Chuẩn 970ms/890ms & Triệt Tiêu Đè Lấn Badge)",
     "status": "COMPLETED"
   },
   "milestones": [
@@ -581,6 +581,33 @@
         {
           "id": "T19.4",
           "desc": "Phase 04 - Automated Multi-Lead Verification & Testing: Viết suite test tests/consecutive_rr_multilead_precision.test.js, kiểm thử 60/60 tests pass 100% và build Next.js",
+          "status": "DONE"
+        }
+      ]
+    },
+    {
+      "id": "M20",
+      "title": "Milestone M20: Physical Wave Peak Detection Engine & 12-Lead Wenckebach Precision Caliper Mapping",
+      "status": "COMPLETED",
+      "tasks": [
+        {
+          "id": "T20.1",
+          "desc": "Phase 01 - Physical Wave Peak Sampler Engine: Lấy mẫu tín hiệu trực tiếp từ hàm sóng calculateLeadEcgVoltage ở tần số 500Hz, tự động nhận diện đỉnh dương/đáy âm giải phẫu, loại bỏ lưới giả định 1000ms",
+          "status": "DONE"
+        },
+        {
+          "id": "T20.2",
+          "desc": "Phase 02 - Multi-Lead Wenckebach Dynamic Caliper Synchronization: Áp dụng đỉnh thực tế lên toàn bộ 12 chuyển đạo, dựng thước đôi 970ms & 890ms ở Cột 0 (I, II, III), thước đơn 970ms ở Cột 1 (aVR, aVL, aVF), thước dừng 1540ms ở Cột 2",
+          "status": "DONE"
+        },
+        {
+          "id": "T20.3",
+          "desc": "Phase 03 - Spatial Layout & Badge Collision Elimination: Căn giữa badge kết luận theo tâm trung bình chuỗi thước, nâng cao độ an toàn (calY - 24), triệt tiêu 100% hiện tượng đè chữ lên thước kẹp",
+          "status": "DONE"
+        },
+        {
+          "id": "T20.4",
+          "desc": "Phase 04 - Automated Multi-Lead Verification & Testing: Viết test suite tests/physical_wave_peak_caliper.test.js, chạy toàn bộ 63 test suite, kiểm tra TypeScript và build Next.js",
           "status": "DONE"
         }
       ]

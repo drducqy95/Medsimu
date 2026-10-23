@@ -1009,11 +1009,92 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
           return bestT;
         };
 
+        // Lập lịch vị trí các đỉnh R sinh lý thực tế theo từng bệnh lý (Wenckebach, AFib, Mobitz 2, PVC, v.v.)
+        const getPhysiologicalRPeakSchedule = (
+          tMinSec: number,
+          tMaxSec: number
+        ): number[] => {
+          const peaks: number[] = [];
+          const buffer = 0.6;
+          const startT = Math.max(0, tMinSec - buffer);
+          const endT = tMaxSec + buffer;
+
+          if (rhythm === "av_block_mobitz_1") {
+            const cycleT = 0.85;
+            const totalCycle = cycleT * 4; // 3.4s
+            const kStart = Math.floor(startT / totalCycle);
+            const kEnd = Math.ceil(endT / totalCycle);
+            for (let k = kStart; k <= kEnd; k++) {
+              const baseT = k * totalCycle;
+              peaks.push(baseT + 0.220); // Beat 0: PR = 160ms
+              peaks.push(baseT + 0.85 + 0.340); // Beat 1: PR = 280ms (1.190s)
+              peaks.push(baseT + 1.70 + 0.380); // Beat 2: PR = 320ms (2.080s)
+              // Beat 3 (baseT + 2.55s) drops QRS!
+            }
+          } else if (rhythm === "av_block_mobitz_2") {
+            const cycleT = 0.90;
+            const totalCycle = cycleT * 3; // 2.7s
+            const kStart = Math.floor(startT / totalCycle);
+            const kEnd = Math.ceil(endT / totalCycle);
+            for (let k = kStart; k <= kEnd; k++) {
+              const baseT = k * totalCycle;
+              peaks.push(baseT + 0.260); // Beat 0
+              peaks.push(baseT + 0.90 + 0.260); // Beat 1 (1.160s)
+              // Beat 2 drops QRS!
+            }
+          } else if (rhythm === "pvc_frequent") {
+            const totalCycle = 2.34; // 3-beat trigeminy
+            const kStart = Math.floor(startT / totalCycle);
+            const kEnd = Math.ceil(endT / totalCycle);
+            for (let k = kStart; k <= kEnd; k++) {
+              const baseT = k * totalCycle;
+              peaks.push(baseT + 0.220); // Beat 0
+              peaks.push(baseT + 0.78 + 0.220); // Beat 1 (1.000s)
+              peaks.push(baseT + 1.620); // Beat 2 (PVC)
+            }
+          } else if (rhythm === "av_block_third_degree") {
+            const vCycle = 1.67; // 36 bpm ventricular escape
+            const kStart = Math.floor(startT / vCycle);
+            const kEnd = Math.ceil(endT / vCycle);
+            for (let k = kStart; k <= kEnd; k++) {
+              peaks.push(k * vCycle + 0.250);
+            }
+          } else if (rhythm === "atrial_fibrillation") {
+            const rrIntervals = [0.42, 0.65, 0.48, 0.76, 0.52, 0.60, 0.72, 0.55];
+            const totalCycle = 4.70;
+            const kStart = Math.floor(startT / totalCycle);
+            const kEnd = Math.ceil(endT / totalCycle);
+            for (let k = kStart; k <= kEnd; k++) {
+              const baseT = k * totalCycle;
+              let acc = 0;
+              for (const interval of rrIntervals) {
+                peaks.push(baseT + acc + 0.140);
+                acc += interval;
+              }
+            }
+          } else {
+            // Tất cả các nhịp đều thông thường (Normal Sinus, Tachy, Brady, STEMI, Blocks, WPW, v.v.)
+            const kStart = Math.floor(startT / cycleDuration);
+            const kEnd = Math.ceil(endT / cycleDuration);
+            for (let k = kStart; k <= kEnd; k++) {
+              peaks.push(k * cycleDuration + anchors.rPeak);
+            }
+          }
+
+          return peaks
+            .filter((t) => t >= tMinSec - 0.08 && t <= tMaxSec + 0.08)
+            .sort((a, b) => a - b);
+        };
+
         // =========================================================================
         // SPECIALIZED RENDERER: BLOCK NHĨ THẤT ĐỘ II MOBITZ I (CHU KỲ WENCKEBACH)
         // =========================================================================
         let handledWenckebach = false;
-        if (rhythm === "av_block_mobitz_1" && (isRhythmStrip || normLead === "DII" || normLead === "II")) {
+        if (
+          rhythm === "av_block_mobitz_1" &&
+          (isRhythmStrip || normLead === "DII" || normLead === "II") &&
+          (activeCriteriaIndices.has(0) || activeCriteriaIndices.has(1) || activeCriteriaIndices.has(2))
+        ) {
           handledWenckebach = true;
           const cycleT = 0.85;
           const totalCycle = cycleT * 4; // 3.4s cho chu kỳ 4 nhát
@@ -1223,122 +1304,32 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
               }
             }
           }
-
-          // TIÊU CHUẨN 4 (Index 3): Khoảng R-R ngắn dần trước nhát rớt; phức bộ QRS thường hẹp (< 0.12s)
-          if (activeCriteriaIndices.has(3)) {
-            for (let k = startCycleK; k <= endCycleK; k++) {
-              const baseT = k * totalCycle;
-              // R0, R1, R2 trước nhát rớt (PR0 = 160ms, PR1 = 280ms, PR2 = 320ms)
-              const rawR0 = baseT + 0.22;
-              const rawR1 = baseT + 0.85 + 0.34;
-              const rawR2 = baseT + 1.70 + 0.38;
-
-              const tR0 = snapToWaveExtremum(rawR0, calcLead, "max", 0.080, 0.0005);
-              const tR1 = snapToWaveExtremum(rawR1, calcLead, "max", 0.080, 0.0005);
-              const tR2 = snapToWaveExtremum(rawR2, calcLead, "max", 0.080, 0.0005);
-
-              const xR0 = traceStart + (tR0 - tMin) * pixelsPerSecond;
-              const xR1 = traceStart + (tR1 - tMin) * pixelsPerSecond;
-              const xR2 = traceStart + (tR2 - tMin) * pixelsPerSecond;
-
-              if (xR0 >= traceStart + 6 && xR2 <= leadEndX - 6) {
-                const v0 = calculateLeadEcgVoltage(tR0, calcLead, rhythm, bpm);
-                const v1 = calculateLeadEcgVoltage(tR1, calcLead, rhythm, bpm);
-                const v2 = calculateLeadEcgVoltage(tR2, calcLead, rhythm, bpm);
-                const y0 = midY - v0 * voltageScale;
-                const y1 = midY - v1 * voltageScale;
-                const y2 = midY - v2 * voltageScale;
-
-                let calY = Math.min(y0, y1, y2) - (isRhythmStrip ? 14 : 16);
-                if (calY < midY - (isPortraitMode ? 36 : 46)) calY = midY - (isPortraitMode ? 36 : 46);
-
-                const deltaMs1 = Math.round(((xR1 - xR0) / pixelsPerSecond) * 1000);
-                const deltaMs2 = Math.round(((xR2 - xR1) / pixelsPerSecond) * 1000);
-
-                // Thước 1 (R0 -> R1): 970ms
-                itemsToRender.push({
-                  ann: { leadId: "II", waveComponent: "RR", label: "RR1_MOBITZ", color: "#10b981", targetCyclePhase: 0.1 },
-                  targetTime: tR0,
-                  targetX: (xR0 + xR1) / 2,
-                  targetY: calY,
-                  pillW: 94,
-                  pillH: 14,
-                  isTop: true,
-                  level: 0,
-                  isInterval: true,
-                  x1: xR0,
-                  x2: xR1,
-                  y1: y0,
-                  y2: y1,
-                  displayText: `|<- R-R₁: ${deltaMs1}ms ->|`,
-                });
-
-                // Thước 2 (R1 -> R2): 890ms (nối liền tại R1)
-                itemsToRender.push({
-                  ann: { leadId: "II", waveComponent: "RR", label: "RR2_MOBITZ", color: "#10b981", targetCyclePhase: 0.1 },
-                  targetTime: tR1,
-                  targetX: (xR1 + xR2) / 2,
-                  targetY: calY,
-                  pillW: 94,
-                  pillH: 14,
-                  isTop: true,
-                  level: 0,
-                  isInterval: true,
-                  x1: xR1,
-                  x2: xR2,
-                  y1: y1,
-                  y2: y2,
-                  displayText: `|<- R-R₂: ${deltaMs2}ms ->|`,
-                });
-
-                // Badge tại điểm nối R1: [✓ R-R ngắn dần trước nhát rớt: 970ms → 890ms (QRS hẹp 88ms)]
-                const compText = `✓ R-R ngắn dần trước nhát rớt: ${deltaMs1}ms → ${deltaMs2}ms (QRS hẹp ${metrics.qrsDurationMs || 88}ms)`;
-                ctx.font = "bold 8px monospace";
-                const twComp = ctx.measureText(compText).width;
-
-                itemsToRender.push({
-                  ann: { leadId: "II", waveComponent: "RR", label: "RR_COMP_MOBITZ", color: "#10b981", targetCyclePhase: 0.1 },
-                  targetTime: tR1,
-                  targetX: xR1,
-                  targetY: calY - 16,
-                  pillW: twComp + 8,
-                  pillH: 14,
-                  isTop: true,
-                  level: 0,
-                  isInterval: false,
-                  displayText: compText,
-                });
-                break;
-              }
-            }
-          }
         }
 
         // =========================================================================
         // LINEAR CONSECUTIVE RR CALIPER ENGINE (FOR 12 LEADS & RHYTHM STRIP)
         // =========================================================================
         const rrAnnotation = annotations.find((a) => a.waveComponent === "RR");
-        if (rrAnnotation && !handledWenckebach && !renderedLabels.has("RR_DONE")) {
+        if (rrAnnotation && !renderedLabels.has("RR_DONE")) {
           const calcLead = isRhythmStrip ? "DII" : leadId;
-          const kStart = Math.floor((tMin - dynamicRPeakOffset - 0.2) / cycleDuration);
-          const kEnd = Math.ceil((tMin + leadDuration - dynamicRPeakOffset + 0.2) / cycleDuration);
+          const leadDurationSec = leadLen / pixelsPerSecond;
+          const scheduledTimes = getPhysiologicalRPeakSchedule(tMin, tMin + leadDurationSec);
 
           const detectedRPeaks: Array<{
-            k: number;
             tR: number;
             xR: number;
             yR: number;
+            vR: number;
           }> = [];
 
-          for (let k = kStart; k <= kEnd; k++) {
-            const rawT = k * cycleDuration + dynamicRPeakOffset;
+          for (const rawT of scheduledTimes) {
             const tR = snapToWaveExtremum(rawT, calcLead, "auto", 0.080, 0.0005);
             const xR = traceStart + (tR - tMin) * pixelsPerSecond;
 
             if (xR >= traceStart + 6 && xR <= leadEndX - 6) {
               const vR = calculateLeadEcgVoltage(tR, calcLead, rhythm, bpm);
               const yR = midY - vR * voltageScale;
-              detectedRPeaks.push({ k, tR, xR, yR });
+              detectedRPeaks.push({ tR, xR, yR, vR });
             }
           }
 
@@ -1365,7 +1356,14 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
               ? `|<── R-R₂ = ${deltaMs2}ms (${boxes2} ô lớn) ──>|`
               : `|<── R-R₂ = ${deltaMs2}ms ──>|`;
 
-            if (rhythm === "atrial_fibrillation") {
+            if (rhythm === "av_block_mobitz_1") {
+              labelText1 = isRhythmStrip
+                ? `|<── R-R₁ = ${deltaMs1}ms (${boxes1} ô lớn) ──>|`
+                : `|<── R-R₁ = ${deltaMs1}ms ──>|`;
+              labelText2 = isRhythmStrip
+                ? `|<── R-R₂ = ${deltaMs2}ms (${boxes2} ô lớn) ──>|`
+                : `|<── R-R₂ = ${deltaMs2}ms ──>|`;
+            } else if (rhythm === "atrial_fibrillation") {
               labelText1 = isRhythmStrip
                 ? `|<── R-R₁ = ${deltaMs1}ms (${boxes1} ô) • Tiêu chuẩn: Loạn nhịp hoàn toàn ──>|`
                 : `|<── R-R₁ = ${deltaMs1}ms [Loạn nhịp] ──>|`;
@@ -1419,20 +1417,33 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
             });
 
             // Badge đối chiếu so sánh lâm sàng tại điểm nối R2 (Junction)
+            // ĐỘ CAO VÀ VỊ TRÍ AN TOÀN TRIỆT TIÊU ĐÈ LẤN:
             const diffMs = Math.abs(deltaMs1 - deltaMs2);
-            const isRegular = diffMs <= 160 && rhythm !== "atrial_fibrillation" && rhythm !== "av_block_mobitz_1";
-            const compText = isRegular
-              ? isRhythmStrip
-                ? `✓ Đều đặn: R-R₁ = R-R₂ = ${deltaMs1}ms (${bpm} bpm)`
-                : `✓ Đều: R-R₁ = R-R₂`
-              : `✕ Loạn nhịp: ΔRR = ${diffMs}ms`;
+            let compText = "";
+            if (rhythm === "av_block_mobitz_1") {
+              compText = isRhythmStrip
+                ? `✓ R-R ngắn dần trước nhát rớt: ${deltaMs1}ms → ${deltaMs2}ms (QRS hẹp ${metrics.qrsDurationMs || 88}ms)`
+                : `✓ R-R: ${deltaMs1}ms → ${deltaMs2}ms`;
+            } else {
+              const isRegular = diffMs <= 160 && rhythm !== "atrial_fibrillation";
+              compText = isRegular
+                ? isRhythmStrip
+                  ? `✓ Đều đặn: R-R₁ = R-R₂ = ${deltaMs1}ms (${bpm} bpm)`
+                  : `✓ Đều: R-R₁ = R-R₂`
+                : `✕ Loạn nhịp: ΔRR = ${diffMs}ms`;
+            }
 
+            ctx.font = "bold 8px monospace";
             const twComp = ctx.measureText(compText).width;
+            // Căn giữa toàn dải chuỗi 2 thước đo: (r1.xR + r3.xR) / 2
+            const badgeCenterX = (r1.xR + r3.xR) / 2;
+            const badgeSafeY = calY - (isRhythmStrip ? 24 : 20);
+
             itemsToRender.push({
               ann: { ...rrAnnotation, label: "RR_COMPARISON_BADGE" },
-              targetTime: r2.tR,
-              targetX: r2.xR,
-              targetY: calY - 16,
+              targetTime: (r1.tR + r3.tR) / 2,
+              targetX: badgeCenterX,
+              targetY: badgeSafeY,
               pillW: twComp + 8,
               pillH: 14,
               isTop: true,
@@ -1453,9 +1464,26 @@ export const RealisticPinkEcgPaper: React.FC<RealisticPinkEcgPaperProps> = ({
 
             const deltaMs = Math.round(((r2.xR - r1.xR) / pixelsPerSecond) * 1000);
             const boxes = (deltaMs / 200).toFixed(1);
+
             let labelText = isRhythmStrip
               ? `|<── R-R = ${deltaMs}ms (${boxes} ô lớn) • ${bpm} bpm ──>|`
               : `|<── R-R = ${deltaMs}ms ──>|`;
+
+            if (rhythm === "av_block_mobitz_1") {
+              if (deltaMs > 1300) {
+                labelText = isRhythmStrip
+                  ? `|<── Khoảng dừng rớt nhát = ${deltaMs}ms (${boxes} ô lớn) ──>|`
+                  : `|<- Rớt nhát: ${deltaMs}ms ->|`;
+              } else {
+                labelText = isRhythmStrip
+                  ? `|<── R-R = ${deltaMs}ms (${boxes} ô lớn) ──>|`
+                  : `|<- R-R: ${deltaMs}ms ->|`;
+              }
+            } else if (rhythm === "atrial_fibrillation") {
+              labelText = isRhythmStrip
+                ? `|<── R-R = ${deltaMs}ms (${boxes} ô) • Tiêu chuẩn: Loạn nhịp hoàn toàn ──>|`
+                : `|<── R-R = ${deltaMs}ms [Loạn nhịp] ──>|`;
+            }
 
             ctx.font = "bold 8px monospace";
             if (ctx.measureText(labelText).width + 12 > (r2.xR - r1.xR)) {
